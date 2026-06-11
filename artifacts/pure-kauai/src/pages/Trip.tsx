@@ -270,14 +270,24 @@ function InvoicePanel({
                       <p className="text-sm font-medium" style={{ color: "#1A2E35" }}>
                         {item.pricePerUnit === 0 ? "Complimentary" : fmt(item.totalPrice)}
                       </p>
-                      {item.pricePerUnit > 0 && (
+                      {item.pricePerUnit > 0 && item.unit === "flat rate" && (
+                        <p className="text-xs mt-0.5" style={{ color: "#A5948D" }}>Flat rate</p>
+                      )}
+                      {item.pricePerUnit > 0 && item.unit === "per couple" && (
                         <p className="text-xs mt-0.5" style={{ color: "#A5948D" }}>
-                          {fmt(item.pricePerUnit)} × {item.quantity}
+                          {fmt(item.pricePerUnit)} × {item.quantity} {item.quantity !== 1 ? "couples" : "couple"}
                         </p>
                       )}
-                      <p className="text-xs mt-0.5" style={{ color: "#C4BBBA" }}>
-                        {item.unit}
-                      </p>
+                      {item.pricePerUnit > 0 && item.unit !== "flat rate" && item.unit !== "per couple" && (
+                        <p className="text-xs mt-0.5" style={{ color: "#A5948D" }}>
+                          {fmt(item.pricePerUnit)} ×{" "}
+                          {item.unit === "per guest"  ? `${item.quantity} guest${item.quantity !== 1 ? "s" : ""}` :
+                           item.unit === "per adult"  ? `${item.quantity} adult${item.quantity !== 1 ? "s" : ""}` :
+                           item.unit === "per child"  ? `${item.quantity} ${item.quantity !== 1 ? "children" : "child"}` :
+                           item.unit === "per night"  ? `${item.quantity} night${item.quantity !== 1 ? "s" : ""}` :
+                           item.quantity}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

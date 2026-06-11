@@ -155,7 +155,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Renowned sushi chef crafts a bespoke omakase from the day's freshest Kauai catch.",
     duration: "3 hours",
     priceAmount: 325,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "omakase sushi private chef luxury dinner hawaii",
   },
   {
@@ -279,7 +279,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Ancient Hawaiian lomilomi massage delivered at the villa by a master practitioner.",
     duration: "90 minutes",
     priceAmount: 250,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "lomilomi massage hawaii tropical spa wellness",
   },
   {
@@ -299,7 +299,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Full-body lomilomi massage and rejuvenating facial fusion treatment at the villa.",
     duration: "2 hours",
     priceAmount: 295,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "luxury spa massage facial hawaii tropical",
   },
   {
@@ -329,7 +329,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Private Pilates session with portable equipment at the villa, tailored to your level.",
     duration: "1 hour",
     priceAmount: 120,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "pilates workout luxury villa ocean view hawaii",
   },
   {
@@ -349,7 +349,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Certified Reiki master visits the villa for a private energy healing session.",
     duration: "75 minutes",
     priceAmount: 150,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "reiki energy healing spiritual wellness hawaii",
   },
 
@@ -361,7 +361,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Private helicopter charter over Na Pali cliffs, Waimea Canyon, and Jurassic Park locations.",
     duration: "1 hour",
     priceAmount: 395,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "Na Pali Coast aerial Kauai helicopter scenic",
   },
   {
@@ -371,7 +371,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Open-door helicopter experience for unobstructed views of Kauai's most dramatic landscapes.",
     duration: "1.5 hours",
     priceAmount: 450,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "helicopter doors off Kauai aerial Waimea Canyon",
   },
 
@@ -403,7 +403,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Private deep sea fishing charter targeting ahi tuna, mahi mahi, and Kauai's big game fish.",
     duration: "6 hours",
     priceAmount: 350,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "deep sea fishing charter hawaii ocean tuna",
   },
   {
@@ -433,7 +433,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Private kayak and SUP adventure along the Napali coast or Hanalei River.",
     duration: "3 hours",
     priceAmount: 95,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "kayaking paddleboard Hawaii ocean coast adventure",
   },
 
@@ -475,7 +475,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Private ATV tour through Kauai's backcountry jungle, crossing streams and ridgelines.",
     duration: "3 hours",
     priceAmount: 195,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "ATV adventure tour Hawaii jungle off-road Kauai",
   },
   {
@@ -485,7 +485,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Private zipline experience over Kauai's north shore valleys and tropical canopy.",
     duration: "3 hours",
     priceAmount: 175,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "ziplining adventure Hawaii tropical canopy north shore",
   },
   {
@@ -495,7 +495,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Private mountain tubing through historic Kauai irrigation tunnels and plantation channels.",
     duration: "3 hours",
     priceAmount: 145,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "mountain tubing Hawaii irrigation tunnel Kauai adventure",
   },
   {
@@ -505,7 +505,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Private horseback ride through Kauai's paniolo country, ocean bluffs, and jungle trails.",
     duration: "2 hours",
     priceAmount: 175,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "horseback riding Hawaii Kauai ocean trail tropical",
   },
 
@@ -589,7 +589,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     description: "Guaranteed private tee times at the world-famous Princeville Makai Golf Course.",
     duration: "4 hours",
     priceAmount: 395,
-    pricingModel: "per_person",
+    pricingModel: "per_adult",
     unsplashKeyword: "golf course Princeville Makai Kauai ocean view luxury",
   },
   {

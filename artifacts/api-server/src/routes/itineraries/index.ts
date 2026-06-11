@@ -27,19 +27,19 @@ function buildInvoice(
     switch (entry.pricingModel) {
       case "per_person":
         quantity = totalGuests;
-        unit = `per person × ${totalGuests}`;
+        unit = "per guest";
         break;
       case "per_adult":
         quantity = adults;
-        unit = `per adult × ${adults}`;
+        unit = "per adult";
         break;
       case "per_child":
         quantity = Math.max(children, 1);
-        unit = `per child × ${children}`;
+        unit = "per child";
         break;
       case "per_night":
         quantity = numNights;
-        unit = `per night × ${numNights}`;
+        unit = "per night";
         break;
       case "per_couple":
         quantity = Math.max(1, Math.ceil(adults / 2));
@@ -47,7 +47,7 @@ function buildInvoice(
         break;
       case "per_event":
         quantity = 1;
-        unit = "per event";
+        unit = "flat rate";
         break;
       case "complimentary":
         quantity = 1;

@@ -36,12 +36,9 @@ import { PureKauaiLogo } from "@/components/PureKauaiLogo";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function SectionHeader({ number, title, subtitle }: { number: string; title: string; subtitle?: string }) {
+function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="mb-8">
-      <p className="text-xs tracking-[0.28em] uppercase mb-1.5" style={{ color: "#937C66" }}>
-        {number}
-      </p>
       <h2
         className="font-light leading-tight"
         style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "1.55rem", color: "#053E50" }}
@@ -397,7 +394,6 @@ export default function Home() {
               style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
             >
               <SectionHeader
-                number="Section 01"
                 title="Guest Profile"
                 subtitle="Tell us about your guests so we can craft a truly personal experience."
               />
@@ -549,7 +545,6 @@ export default function Home() {
               style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
             >
               <SectionHeader
-                number="Section 02"
                 title="Pre-Arrival Planning"
                 subtitle="We handle every detail before you arrive so your villa is perfectly prepared and waiting."
               />
@@ -572,7 +567,6 @@ export default function Home() {
               style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
             >
               <SectionHeader
-                number="Section 03"
                 title="Airport Pickup & Transportation"
                 subtitle="From the moment you land, your transportation is private, seamless, and entirely taken care of."
               />
@@ -594,7 +588,6 @@ export default function Home() {
               style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
             >
               <SectionHeader
-                number="Section 04"
                 title="Grocery Shopping & Stocking"
                 subtitle="Your villa stocked with everything you love — fresh provisions, fine wines, and any dietary needs."
               />
@@ -633,7 +626,6 @@ export default function Home() {
               style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
             >
               <SectionHeader
-                number="Section 05"
                 title="Daily Housekeeping"
                 subtitle="Immaculate daily care so your villa always feels like the first moment you arrived."
               />
@@ -655,7 +647,6 @@ export default function Home() {
               style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
             >
               <SectionHeader
-                number="Section 06"
                 title="Spa & Fitness Services"
                 subtitle="World-class wellness brought directly to the villa — massages, healing ceremonies, yoga, and more."
               />
@@ -673,7 +664,6 @@ export default function Home() {
               style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
             >
               <SectionHeader
-                number="Section 07"
                 title="Private Chefs & Luaus"
                 subtitle="From intimate candlelit dinners to full private luaus — your villa, your table, your moment."
               />
@@ -692,7 +682,6 @@ export default function Home() {
               style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
             >
               <SectionHeader
-                number="Section 08"
                 title="Personalized Activities & Adventures"
                 subtitle="Private, exclusively arranged excursions across Kauai — by air, sea, and land."
               />
