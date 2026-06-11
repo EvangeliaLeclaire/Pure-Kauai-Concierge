@@ -381,7 +381,7 @@ export default function Home() {
         <div className="text-center mb-12">
           <PureKauaiLogo variant="dark" size="xl" className="mx-auto mb-4" />
           <p className="text-sm tracking-[0.22em] uppercase" style={{ color: "#937C66" }}>
-            Concierge Itinerary Generator
+            Concierge Services
           </p>
         </div>
 
