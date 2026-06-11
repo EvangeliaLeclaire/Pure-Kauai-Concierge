@@ -4,7 +4,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, Sparkles, Check } from "lucide-react";
+import {
+  CalendarIcon, Loader2, Sparkles, Check,
+  Minus, Plus, Users, Car, ShoppingBag, Home as HomeIcon,
+  Flower2, ChefHat, Compass, ClipboardList,
+} from "lucide-react";
 import { useCreateItinerary } from "@workspace/api-client-react";
 
 import { cn } from "@/lib/utils";
@@ -33,23 +37,78 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PureKauaiLogo } from "@/components/PureKauaiLogo";
+import type { LucideIcon } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+function SectionHeader({
+  title,
+  icon: Icon,
+  count,
+}: {
+  title: string;
+  icon?: LucideIcon;
+  count?: number;
+}) {
   return (
-    <div className="mb-8">
-      <h2
-        className="font-light leading-tight"
-        style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "1.55rem", color: "#053E50" }}
-      >
-        {title}
-      </h2>
-      {subtitle && (
-        <p className="mt-2 text-sm leading-relaxed" style={{ color: "#8A7F7D" }}>
-          {subtitle}
-        </p>
+    <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center gap-2.5">
+        {Icon && (
+          <Icon className="h-[1.1rem] w-[1.1rem] shrink-0" style={{ color: "#37729A" }} />
+        )}
+        <h2
+          className="font-light leading-tight"
+          style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "1.3rem", color: "#053E50" }}
+        >
+          {title}
+        </h2>
+      </div>
+      {count !== undefined && count > 0 && (
+        <span
+          className="text-xs font-medium px-2.5 py-1 tracking-wide"
+          style={{ background: "#053E50", color: "#EBE2E0", borderRadius: "2px" }}
+        >
+          {count} selected
+        </span>
       )}
+    </div>
+  );
+}
+
+function Stepper({
+  value,
+  onChange,
+  min = 0,
+  max = 20,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  min?: number;
+  max?: number;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(min, value - 1))}
+        disabled={value <= min}
+        className="w-8 h-8 flex items-center justify-center transition-colors disabled:opacity-30"
+        style={{ border: "1px solid #E8E0DB", borderRadius: "2px", color: "#053E50" }}
+      >
+        <Minus className="h-3.5 w-3.5" />
+      </button>
+      <span className="w-6 text-center text-base font-medium tabular-nums" style={{ color: "#1A2E35" }}>
+        {value}
+      </span>
+      <button
+        type="button"
+        onClick={() => onChange(Math.min(max, value + 1))}
+        disabled={value >= max}
+        className="w-8 h-8 flex items-center justify-center transition-colors disabled:opacity-30"
+        style={{ border: "1px solid #E8E0DB", borderRadius: "2px", color: "#053E50" }}
+      >
+        <Plus className="h-3.5 w-3.5" />
+      </button>
     </div>
   );
 }
@@ -69,7 +128,7 @@ function ToggleSwitch({
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className="w-full flex items-center justify-between gap-4 py-3.5 px-4 text-left transition-colors duration-150 group"
+      className="w-full flex items-center justify-between gap-4 py-3 px-4 text-left transition-colors duration-150"
       style={{
         background: checked ? "rgba(5,62,80,0.045)" : "transparent",
         border: `1px solid ${checked ? "rgba(5,62,80,0.25)" : "#E8E0DB"}`,
@@ -84,14 +143,9 @@ function ToggleSwitch({
           <p className="text-xs mt-0.5" style={{ color: "#A5948D" }}>{sublabel}</p>
         )}
       </div>
-      {/* Toggle pill */}
       <div
-        className="relative flex-shrink-0 w-10 h-5.5 rounded-full transition-colors duration-200"
-        style={{
-          width: "2.5rem",
-          height: "1.375rem",
-          background: checked ? "#053E50" : "#D6CFC9",
-        }}
+        className="relative flex-shrink-0 rounded-full transition-colors duration-200"
+        style={{ width: "2.5rem", height: "1.375rem", background: checked ? "#053E50" : "#D6CFC9" }}
       >
         <div
           className="absolute top-[2px] rounded-full bg-white shadow-sm transition-transform duration-200"
@@ -119,21 +173,22 @@ function TileButton({
     <button
       type="button"
       onClick={onClick}
-      className="relative w-full text-left px-4 py-3.5 text-sm transition-all duration-150 group"
+      className="relative w-full text-left px-3 py-2.5 text-sm transition-all duration-150"
       style={{
         border: selected ? "1.5px solid #053E50" : "1px solid #E8E0DB",
         borderRadius: "2px",
         background: selected ? "rgba(5,62,80,0.06)" : "#FDFCFB",
         color: selected ? "#053E50" : "#3D3533",
         fontWeight: selected ? 500 : 400,
+        lineHeight: "1.35",
       }}
     >
       {selected && (
-        <span className="absolute top-2.5 right-2.5">
+        <span className="absolute top-2 right-2">
           <Check className="h-3 w-3" style={{ color: "#053E50" }} />
         </span>
       )}
-      {label}
+      <span className="pr-4">{label}</span>
     </button>
   );
 }
@@ -149,12 +204,25 @@ function TileGroup({
   selected: string[];
   onToggle: (name: string) => void;
 }) {
+  const selectedInGroup = items.filter((i) => selected.includes(i));
   return (
-    <div className="mb-7">
-      <p className="text-xs tracking-[0.18em] uppercase mb-3 font-medium" style={{ color: "#37729A" }}>
-        {title}
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <div className="mb-5">
+      <div className="flex items-center justify-between mb-2.5">
+        <p className="text-xs tracking-[0.18em] uppercase font-medium" style={{ color: "#37729A" }}>
+          {title}
+        </p>
+        {selectedInGroup.length > 0 && (
+          <button
+            type="button"
+            onClick={() => selectedInGroup.forEach((i) => onToggle(i))}
+            className="text-xs hover:opacity-70 transition-opacity"
+            style={{ color: "#A5948D" }}
+          >
+            Clear {selectedInGroup.length}
+          </button>
+        )}
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
         {items.map((item) => (
           <TileButton
             key={item}
@@ -316,6 +384,8 @@ export default function Home() {
   const excursions  = form.watch("excursions") ?? [];
   const groceryOn   = villaServs.includes("Pre-Arrival Grocery Stocking");
 
+  const totalSelected = villaServs.length + inVilla.length + excursions.length;
+
   function toggleField(field: "villaServices" | "inVillaExperiences" | "excursions", name: string) {
     const current = form.getValues(field) ?? [];
     form.setValue(field, current.includes(name) ? current.filter((s) => s !== name) : [...current, name]);
@@ -358,15 +428,10 @@ export default function Home() {
         <div className="text-center px-6">
           <PureKauaiLogo variant="dark" size="lg" className="mx-auto mb-10" />
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-5" style={{ color: "#937C66" }} />
-          <p
-            className="text-xl font-light"
-            style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}
-          >
+          <p className="text-xl font-light" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
             Crafting your bespoke Kauai journey…
           </p>
-          <p className="text-sm mt-3" style={{ color: "#8A7F7D" }}>
-            This takes about 30 seconds
-          </p>
+          <p className="text-sm mt-3" style={{ color: "#8A7F7D" }}>This takes about 30 seconds</p>
         </div>
       </div>
     );
@@ -374,11 +439,11 @@ export default function Home() {
 
   // ── Main form ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8" style={{ background: "#FAF8F6" }}>
+    <div className="min-h-screen pb-28 px-4 sm:px-6 lg:px-8 pt-10" style={{ background: "#FAF8F6" }}>
       <div className="max-w-3xl mx-auto">
 
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-10">
           <PureKauaiLogo variant="dark" size="xl" className="mx-auto mb-4" />
           <p className="text-sm tracking-[0.22em] uppercase" style={{ color: "#937C66" }}>
             Concierge Services
@@ -388,17 +453,11 @@ export default function Home() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
 
-            {/* ══ SECTION 1: Guest Profile ════════════════════════════════════ */}
-            <div
-              className="rounded-sm p-8 sm:p-10 mb-3"
-              style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
-            >
-              <SectionHeader
-                title="Guest Profile"
-                subtitle="Tell us about your guests so we can craft a truly personal experience."
-              />
+            {/* ══ GUEST PROFILE ══════════════════════════════════════════════ */}
+            <div className="rounded-sm p-6 sm:p-8 mb-2" style={{ background: "#FFFFFF", boxShadow: "0 1px 12px rgba(5,62,80,0.07)" }}>
+              <SectionHeader title="Guest Profile" icon={Users} />
 
-              {/* Guest Name */}
+              {/* Name */}
               <FormField control={form.control} name="guestName" render={({ field }) => (
                 <FormItem className="mb-5">
                   <FormLabel className="form-label">Guest Name</FormLabel>
@@ -413,16 +472,13 @@ export default function Home() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                 <FormField control={form.control} name="checkIn" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="form-label">Check-in Date</FormLabel>
+                    <FormLabel className="form-label">Check-in</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn("w-full justify-start text-left font-normal form-input", !field.value && "text-muted-foreground")}
-                          >
+                          <Button variant="outline" className={cn("w-full justify-start text-left font-normal form-input", !field.value && "text-muted-foreground")}>
                             <CalendarIcon className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                            {field.value ? format(field.value, "MMMM d, yyyy") : "Select date"}
+                            {field.value ? format(field.value, "MMM d, yyyy") : "Select date"}
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -433,19 +489,15 @@ export default function Home() {
                     <FormMessage />
                   </FormItem>
                 )} />
-
                 <FormField control={form.control} name="checkOut" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="form-label">Check-out Date</FormLabel>
+                    <FormLabel className="form-label">Check-out</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn("w-full justify-start text-left font-normal form-input", !field.value && "text-muted-foreground")}
-                          >
+                          <Button variant="outline" className={cn("w-full justify-start text-left font-normal form-input", !field.value && "text-muted-foreground")}>
                             <CalendarIcon className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                            {field.value ? format(field.value, "MMMM d, yyyy") : "Select date"}
+                            {field.value ? format(field.value, "MMM d, yyyy") : "Select date"}
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -458,13 +510,13 @@ export default function Home() {
                 )} />
               </div>
 
-              {/* Adults / Children */}
-              <div className="grid grid-cols-2 gap-4 mb-5">
+              {/* Adults / Children — steppers */}
+              <div className="grid grid-cols-2 gap-6 mb-5">
                 <FormField control={form.control} name="adults" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="form-label">Adults</FormLabel>
                     <FormControl>
-                      <Input type="number" min={1} className="form-input" {...field} />
+                      <Stepper value={Number(field.value)} onChange={(v) => field.onChange(v)} min={1} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -473,14 +525,14 @@ export default function Home() {
                   <FormItem>
                     <FormLabel className="form-label">Children</FormLabel>
                     <FormControl>
-                      <Input type="number" min={0} className="form-input" {...field} />
+                      <Stepper value={Number(field.value)} onChange={(v) => field.onChange(v)} min={0} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
               </div>
 
-              {/* Children's ages (conditional) */}
+              {/* Children's ages — conditional */}
               {children > 0 && (
                 <FormField control={form.control} name="childrenAges" render={({ field }) => (
                   <FormItem className="mb-5">
@@ -488,16 +540,15 @@ export default function Home() {
                     <FormControl>
                       <Input placeholder="e.g. 4, 7, 12" className="form-input" {...field} />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )} />
               )}
 
-              {/* Pets toggle */}
+              {/* Pets */}
               <div className="mb-5">
-                <p className="form-label mb-2">Bringing Pets?</p>
+                <p className="form-label mb-2">Pets</p>
                 <ToggleSwitch
-                  label="Yes, we're bringing our pet(s)"
+                  label="Bringing pet(s)"
                   checked={hasPets}
                   onChange={(v) => form.setValue("hasPets", v)}
                 />
@@ -514,39 +565,35 @@ export default function Home() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {["None", "Anniversary", "Honeymoon", "Birthday", "Family Reunion", "Corporate Retreat", "Vow Renewal", "Milestone Celebration"].map((o) => (
+                      {["None","Anniversary","Honeymoon","Birthday","Family Reunion","Corporate Retreat","Vow Renewal","Milestone Celebration"].map((o) => (
                         <SelectItem key={o} value={o}>{o}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
                 </FormItem>
               )} />
 
-              {/* Special Notes */}
+              {/* Notes */}
               <FormField control={form.control} name="specialNotes" render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="form-label">Tell us about your trip</FormLabel>
+                  <FormLabel className="form-label">Guest Notes & Preferences</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Share anything that will help us create your perfect Kauai experience — dietary preferences, interests, pace of travel, anything that matters…"
-                      className="form-input min-h-[110px] resize-none"
+                      placeholder="Dietary requirements, interests, pace of travel, allergies, favourite wines, anything the team should know…"
+                      className="form-input min-h-[90px] resize-none"
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )} />
             </div>
 
-            {/* ══ SECTION 2: Pre-Arrival Planning ══════════════════════════════ */}
-            <div
-              className="rounded-sm p-8 sm:p-10 mb-3"
-              style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
-            >
+            {/* ══ PRE-ARRIVAL PLANNING ═══════════════════════════════════════ */}
+            <div className="rounded-sm p-6 sm:p-8 mb-2" style={{ background: "#FFFFFF", boxShadow: "0 1px 12px rgba(5,62,80,0.07)" }}>
               <SectionHeader
                 title="Pre-Arrival Planning"
-                subtitle="We handle every detail before you arrive so your villa is perfectly prepared and waiting."
+                icon={ClipboardList}
+                count={PRE_ARRIVAL_SERVICES.filter(s => villaServs.includes(s)).length || undefined}
               />
               <div className="space-y-2">
                 {PRE_ARRIVAL_SERVICES.map((service) => (
@@ -561,14 +608,12 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ══ SECTION 3: Airport Pickup & Transportation ════════════════════ */}
-            <div
-              className="rounded-sm p-8 sm:p-10 mb-3"
-              style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
-            >
+            {/* ══ AIRPORT PICKUP & TRANSPORTATION ═══════════════════════════ */}
+            <div className="rounded-sm p-6 sm:p-8 mb-2" style={{ background: "#FFFFFF", boxShadow: "0 1px 12px rgba(5,62,80,0.07)" }}>
               <SectionHeader
                 title="Airport Pickup & Transportation"
-                subtitle="From the moment you land, your transportation is private, seamless, and entirely taken care of."
+                icon={Car}
+                count={TRANSPORT_SERVICES.filter(s => villaServs.includes(s)).length || undefined}
               />
               <div className="space-y-2">
                 {TRANSPORT_SERVICES.map((service) => (
@@ -582,14 +627,12 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ══ SECTION 4: Grocery Shopping & Stocking ═══════════════════════ */}
-            <div
-              className="rounded-sm p-8 sm:p-10 mb-3"
-              style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
-            >
+            {/* ══ GROCERY SHOPPING & STOCKING ════════════════════════════════ */}
+            <div className="rounded-sm p-6 sm:p-8 mb-2" style={{ background: "#FFFFFF", boxShadow: "0 1px 12px rgba(5,62,80,0.07)" }}>
               <SectionHeader
                 title="Grocery Shopping & Stocking"
-                subtitle="Your villa stocked with everything you love — fresh provisions, fine wines, and any dietary needs."
+                icon={ShoppingBag}
+                count={GROCERY_SERVICES.filter(s => villaServs.includes(s)).length || undefined}
               />
               <div className="space-y-2">
                 {GROCERY_SERVICES.map((service) => (
@@ -601,13 +644,13 @@ export default function Home() {
                       onChange={() => toggleField("villaServices", service)}
                     />
                     {service === "Pre-Arrival Grocery Stocking" && groceryOn && (
-                      <div className="mt-2 ml-1">
+                      <div className="mt-2">
                         <FormField control={form.control} name="groceryNotes" render={({ field }) => (
                           <FormItem>
                             <FormControl>
                               <Textarea
-                                placeholder="Dietary requirements, preferences, favorite items, wines…"
-                                className="form-input min-h-[80px] resize-none text-sm"
+                                placeholder="Dietary requirements, preferences, favourite items, wines…"
+                                className="form-input min-h-[70px] resize-none text-sm"
                                 {...field}
                               />
                             </FormControl>
@@ -620,194 +663,172 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ══ SECTION 5: Daily Housekeeping ════════════════════════════════ */}
-            <div
-              className="rounded-sm p-8 sm:p-10 mb-3"
-              style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
-            >
+            {/* ══ DAILY HOUSEKEEPING ═════════════════════════════════════════ */}
+            <div className="rounded-sm p-6 sm:p-8 mb-2" style={{ background: "#FFFFFF", boxShadow: "0 1px 12px rgba(5,62,80,0.07)" }}>
               <SectionHeader
                 title="Daily Housekeeping"
-                subtitle="Immaculate daily care so your villa always feels like the first moment you arrived."
+                icon={HomeIcon}
+                count={HOUSEKEEPING_SERVICES.filter(s => villaServs.includes(s)).length || undefined}
               />
               <div className="space-y-2">
-                {HOUSEKEEPING_SERVICES.filter((s) => s !== "Childcare & Nanny Service" || children > 0).map((service) => (
-                  <ToggleSwitch
-                    key={service}
-                    label={service}
-                    checked={villaServs.includes(service)}
-                    onChange={() => toggleField("villaServices", service)}
-                  />
-                ))}
+                {HOUSEKEEPING_SERVICES
+                  .filter((s) => s !== "Childcare & Nanny Service" || children > 0)
+                  .map((service) => (
+                    <ToggleSwitch
+                      key={service}
+                      label={service}
+                      checked={villaServs.includes(service)}
+                      onChange={() => toggleField("villaServices", service)}
+                    />
+                  ))}
               </div>
             </div>
 
-            {/* ══ SECTION 6: Spa & Fitness Services ════════════════════════════ */}
-            <div
-              className="rounded-sm p-8 sm:p-10 mb-3"
-              style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
-            >
+            {/* ══ SPA & FITNESS SERVICES ═════════════════════════════════════ */}
+            <div className="rounded-sm p-6 sm:p-8 mb-2" style={{ background: "#FFFFFF", boxShadow: "0 1px 12px rgba(5,62,80,0.07)" }}>
               <SectionHeader
                 title="Spa & Fitness Services"
-                subtitle="World-class wellness brought directly to the villa — massages, healing ceremonies, yoga, and more."
+                icon={Flower2}
+                count={inVilla.filter(s => IN_VILLA_WELLNESS.includes(s)).length || undefined}
               />
-              <TileGroup title="Wellness & Restoration" items={IN_VILLA_WELLNESS} selected={inVilla} onToggle={(n) => toggleField("inVillaExperiences", n)} />
-              {inVilla.filter((s) => IN_VILLA_WELLNESS.includes(s)).length > 0 && (
-                <p className="mt-1 text-xs" style={{ color: "#937C66" }}>
-                  {inVilla.filter((s) => IN_VILLA_WELLNESS.includes(s)).length} service{inVilla.filter((s) => IN_VILLA_WELLNESS.includes(s)).length !== 1 ? "s" : ""} selected
-                </p>
-              )}
+              <TileGroup
+                title="Wellness & Restoration"
+                items={IN_VILLA_WELLNESS}
+                selected={inVilla}
+                onToggle={(n) => toggleField("inVillaExperiences", n)}
+              />
             </div>
 
-            {/* ══ SECTION 7: Private Chefs & Luaus ═════════════════════════════ */}
-            <div
-              className="rounded-sm p-8 sm:p-10 mb-3"
-              style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
-            >
+            {/* ══ PRIVATE CHEFS & LUAUS ══════════════════════════════════════ */}
+            <div className="rounded-sm p-6 sm:p-8 mb-2" style={{ background: "#FFFFFF", boxShadow: "0 1px 12px rgba(5,62,80,0.07)" }}>
               <SectionHeader
                 title="Private Chefs & Luaus"
-                subtitle="From intimate candlelit dinners to full private luaus — your villa, your table, your moment."
+                icon={ChefHat}
+                count={inVilla.filter(s => [...IN_VILLA_DINING, ...IN_VILLA_ENTERTAINMENT].includes(s)).length || undefined}
               />
-              <TileGroup title="Private Dining" items={IN_VILLA_DINING} selected={inVilla} onToggle={(n) => toggleField("inVillaExperiences", n)} />
-              <TileGroup title="Entertainment & Culture" items={IN_VILLA_ENTERTAINMENT} selected={inVilla} onToggle={(n) => toggleField("inVillaExperiences", n)} />
-              {inVilla.filter((s) => [...IN_VILLA_DINING, ...IN_VILLA_ENTERTAINMENT].includes(s)).length > 0 && (
-                <p className="mt-1 text-xs" style={{ color: "#937C66" }}>
-                  {inVilla.filter((s) => [...IN_VILLA_DINING, ...IN_VILLA_ENTERTAINMENT].includes(s)).length} experience{inVilla.filter((s) => [...IN_VILLA_DINING, ...IN_VILLA_ENTERTAINMENT].includes(s)).length !== 1 ? "s" : ""} selected
-                </p>
-              )}
+              <TileGroup
+                title="Private Dining"
+                items={IN_VILLA_DINING}
+                selected={inVilla}
+                onToggle={(n) => toggleField("inVillaExperiences", n)}
+              />
+              <TileGroup
+                title="Entertainment & Culture"
+                items={IN_VILLA_ENTERTAINMENT}
+                selected={inVilla}
+                onToggle={(n) => toggleField("inVillaExperiences", n)}
+              />
             </div>
 
-            {/* ══ SECTION 8: Personalized Activities & Adventures ══════════════ */}
-            <div
-              className="rounded-sm p-8 sm:p-10 mb-3"
-              style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
-            >
+            {/* ══ PERSONALIZED ACTIVITIES & ADVENTURES ══════════════════════ */}
+            <div className="rounded-sm p-6 sm:p-8 mb-2" style={{ background: "#FFFFFF", boxShadow: "0 1px 12px rgba(5,62,80,0.07)" }}>
               <SectionHeader
                 title="Personalized Activities & Adventures"
-                subtitle="Private, exclusively arranged excursions across Kauai — by air, sea, and land."
+                icon={Compass}
+                count={excursions.length || undefined}
               />
-              <TileGroup title="By Air" items={EXCURSIONS_AIR} selected={excursions} onToggle={(n) => toggleField("excursions", n)} />
-              <TileGroup title="By Sea" items={EXCURSIONS_SEA} selected={excursions} onToggle={(n) => toggleField("excursions", n)} />
-              <TileGroup title="By Land" items={EXCURSIONS_LAND} selected={excursions} onToggle={(n) => toggleField("excursions", n)} />
+              <TileGroup title="By Air"       items={EXCURSIONS_AIR}    selected={excursions} onToggle={(n) => toggleField("excursions", n)} />
+              <TileGroup title="By Sea"       items={EXCURSIONS_SEA}    selected={excursions} onToggle={(n) => toggleField("excursions", n)} />
+              <TileGroup title="By Land"      items={EXCURSIONS_LAND}   selected={excursions} onToggle={(n) => toggleField("excursions", n)} />
               <TileGroup title="Family & Kids" items={EXCURSIONS_FAMILY} selected={excursions} onToggle={(n) => toggleField("excursions", n)} />
-              <TileGroup title="Gear & Extras" items={EXCURSIONS_GEAR} selected={excursions} onToggle={(n) => toggleField("excursions", n)} />
+              <TileGroup title="Gear & Extras" items={EXCURSIONS_GEAR}  selected={excursions} onToggle={(n) => toggleField("excursions", n)} />
 
-              <div className="mt-4">
-                <div className="h-px mb-6" style={{ background: "#EBE2E0" }} />
+              <div className="mt-2">
+                <div className="h-px mb-5" style={{ background: "#EBE2E0" }} />
                 <FormField control={form.control} name="customRequest" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="form-label">Anything Else?</FormLabel>
+                    <FormLabel className="form-label">Additional Requests</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="We can arrange almost anything — special deliveries, private beaches, custom proposals, surprise arrangements…"
-                        className="form-input min-h-[90px] resize-none"
+                        placeholder="Special arrangements, private beaches, surprise setups, custom proposals…"
+                        className="form-input min-h-[80px] resize-none"
                         {...field}
                       />
                     </FormControl>
                   </FormItem>
                 )} />
               </div>
-
-              {excursions.length > 0 && (
-                <p className="mt-4 text-xs" style={{ color: "#937C66" }}>
-                  {excursions.length} excursion{excursions.length !== 1 ? "s" : ""} selected
-                </p>
-              )}
             </div>
 
-            {/* ══ CONCIERGE INFO ════════════════════════════════════════════════ */}
-            <div
-              className="rounded-sm p-8 sm:p-10 mb-8"
-              style={{ background: "#053E50" }}
-            >
-              <div className="mb-8">
-                <p className="text-xs tracking-[0.28em] uppercase mb-1.5" style={{ color: "rgba(235,226,224,0.5)" }}>
-                  Concierge
-                </p>
-                <h2
-                  className="font-light leading-tight"
-                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "1.55rem", color: "#EBE2E0" }}
-                >
+            {/* ══ CONCIERGE DETAILS ══════════════════════════════════════════ */}
+            <div className="rounded-sm p-6 sm:p-8 mb-6" style={{ background: "#053E50" }}>
+              <div className="mb-6">
+                <h2 className="font-light" style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "1.3rem", color: "#EBE2E0" }}>
                   Your Details
                 </h2>
-                <p className="mt-2 text-sm" style={{ color: "rgba(235,226,224,0.55)" }}>
-                  Displayed on the guest itinerary so they can reach you directly.
+                <p className="mt-1 text-xs" style={{ color: "rgba(235,226,224,0.5)" }}>
+                  Shown on the guest itinerary so they can reach you directly.
                 </p>
               </div>
 
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <FormField control={form.control} name="hostName" render={({ field }) => (
                   <FormItem>
-                    <FormLabel style={{ color: "rgba(235,226,224,0.7)", fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>Your Name</FormLabel>
+                    <FormLabel className="concierge-label">Name</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="e.g. Malia Fonoti"
-                        className="text-sm"
-                        style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(235,226,224,0.2)", color: "#EBE2E0", borderRadius: "2px" }}
-                        {...field}
-                      />
+                      <Input placeholder="Malia Fonoti" className="concierge-input" {...field} />
                     </FormControl>
                     <FormMessage style={{ color: "#f87171" }} />
                   </FormItem>
                 )} />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField control={form.control} name="hostEmail" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel style={{ color: "rgba(235,226,224,0.7)", fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>Your Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="you@purekauai.com"
-                          className="text-sm"
-                          style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(235,226,224,0.2)", color: "#EBE2E0", borderRadius: "2px" }}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage style={{ color: "#f87171" }} />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="hostPhone" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel style={{ color: "rgba(235,226,224,0.7)", fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>Your Phone</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="+1 808 000 0000"
-                          className="text-sm"
-                          style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(235,226,224,0.2)", color: "#EBE2E0", borderRadius: "2px" }}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage style={{ color: "#f87171" }} />
-                    </FormItem>
-                  )} />
-                </div>
+                <FormField control={form.control} name="hostEmail" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="concierge-label">Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="you@purekauai.com" className="concierge-input" {...field} />
+                    </FormControl>
+                    <FormMessage style={{ color: "#f87171" }} />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="hostPhone" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="concierge-label">Phone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="+1 808 000 0000" className="concierge-input" {...field} />
+                    </FormControl>
+                    <FormMessage style={{ color: "#f87171" }} />
+                  </FormItem>
+                )} />
               </div>
             </div>
 
-            {/* Submit */}
-            <Button
-              type="submit"
-              className="w-full py-6 text-base tracking-[0.14em] uppercase text-white transition-opacity duration-200 hover:opacity-90 disabled:opacity-50"
-              style={{ background: "#053E50", borderRadius: "2px" }}
-              disabled={isGenerating}
-            >
-              <Sparkles className="mr-3 h-5 w-5" />
-              Generate Itinerary
-            </Button>
-
-            {createItinerary.isError && (
-              <p className="mt-4 text-sm text-center text-red-600">
-                Something went wrong. Please try again.
-              </p>
-            )}
           </form>
         </Form>
       </div>
 
-      {/* Inline style for form labels */}
+      {/* ── Sticky bottom bar ──────────────────────────────────────────────── */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-40 px-4 py-4 border-t"
+        style={{ background: "rgba(250,248,246,0.97)", borderColor: "#E8E0DB", backdropFilter: "blur(8px)" }}
+      >
+        <div className="max-w-3xl mx-auto flex items-center gap-4">
+          {totalSelected > 0 && (
+            <p className="text-xs whitespace-nowrap" style={{ color: "#8A7F7D" }}>
+              <span className="font-medium" style={{ color: "#053E50" }}>{totalSelected}</span> service{totalSelected !== 1 ? "s" : ""} selected
+            </p>
+          )}
+          <Button
+            type="button"
+            onClick={form.handleSubmit(onSubmit)}
+            className="flex-1 py-5 text-sm tracking-[0.14em] uppercase text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ background: "#053E50", borderRadius: "2px" }}
+            disabled={isGenerating}
+          >
+            <Sparkles className="mr-2.5 h-4 w-4" />
+            Generate Itinerary
+          </Button>
+          {createItinerary.isError && (
+            <p className="text-xs text-red-600 whitespace-nowrap">Something went wrong.</p>
+          )}
+        </div>
+      </div>
+
       <style>{`
         .form-label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: #6B7280; font-weight: 500; margin-bottom: 6px; display: block; }
         .form-input { border-color: #E8E0DB; border-radius: 2px; background: #FDFCFB; font-size: 0.9rem; }
         .form-input:focus { border-color: rgba(5,62,80,0.4); box-shadow: none; outline: none; }
+        .concierge-label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(235,226,224,0.6); font-weight: 500; margin-bottom: 6px; display: block; }
+        .concierge-input { font-size: 0.875rem; background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(235,226,224,0.2) !important; color: #EBE2E0 !important; border-radius: 2px; }
       `}</style>
     </div>
   );
