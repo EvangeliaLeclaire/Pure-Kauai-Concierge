@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react";
 import { useParams } from "wouter";
 import { format, parseISO } from "date-fns";
-import { Clock, Users, MapPin, Printer, Check, Link2 } from "lucide-react";
+import { Clock, Users, MapPin, Printer, Check, Link2, Mail } from "lucide-react";
 import { useGetItinerary, useApproveItinerary, getGetItineraryQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -67,6 +67,14 @@ export default function Trip() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleEmailGuest = () => {
+    const subject = encodeURIComponent(`Your Pure Kauai Itinerary — ${itinerary.guestName}`);
+    const body = encodeURIComponent(
+      `Dear ${itinerary.guestName},\n\nYour bespoke Kauai itinerary is ready. Please find your personalized journey and quote at the link below:\n\n${window.location.href}\n\nWe look forward to welcoming you to the island.\n\nWarm aloha,\nPure Kauai Concierge`
+    );
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -99,13 +107,22 @@ export default function Trip() {
               {totalGuests} Guests ({itinerary.adults} Adults{itinerary.children > 0 ? `, ${itinerary.children} Children` : ""})
             </div>
           </div>
-          <button
-            onClick={handleCopyLink}
-            className="print-hide mt-6 inline-flex items-center gap-2 text-sm border border-white/30 hover:border-white/60 bg-white/10 hover:bg-white/20 text-white/90 hover:text-white rounded-full px-4 py-2 transition-all duration-200"
-          >
-            {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-            {copied ? "Link copied!" : "Copy shareable link"}
-          </button>
+          <div className="print-hide mt-6 flex flex-wrap gap-3">
+            <button
+              onClick={handleCopyLink}
+              className="inline-flex items-center gap-2 text-sm border border-white/30 hover:border-white/60 bg-white/10 hover:bg-white/20 text-white/90 hover:text-white rounded-full px-4 py-2 transition-all duration-200"
+            >
+              {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+              {copied ? "Link copied!" : "Copy shareable link"}
+            </button>
+            <button
+              onClick={handleEmailGuest}
+              className="inline-flex items-center gap-2 text-sm border border-white/30 hover:border-white/60 bg-white/10 hover:bg-white/20 text-white/90 hover:text-white rounded-full px-4 py-2 transition-all duration-200"
+            >
+              <Mail className="h-4 w-4" />
+              Email to guest
+            </button>
+          </div>
         </div>
       </div>
 
