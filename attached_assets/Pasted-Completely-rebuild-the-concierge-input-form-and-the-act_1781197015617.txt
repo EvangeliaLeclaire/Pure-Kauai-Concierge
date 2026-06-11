@@ -1,0 +1,138 @@
+Completely rebuild the concierge input form and the activities database using Pure Kauai's exact services. Here is everything:
+FORM STRUCTURE — 4 sections:
+SECTION 1: Guest Profile
+
+Guest Name (text field)
+Check-in Date (date picker)
+Check-out Date (date picker)
+Number of Adults (number stepper)
+Number of Children (number stepper)
+Children's Ages (text field, only appears if children > 0)
+Bringing Pets? (yes/no toggle)
+Special Occasion (dropdown: None, Anniversary, Honeymoon, Birthday, Family Reunion, Corporate Retreat, Vow Renewal, Milestone Celebration)
+Tell us about your trip (large text area — "Share anything that will help us create your perfect Kauai experience")
+
+SECTION 2: Arrival & Villa Setup
+These are all yes/no toggle switches:
+
+Villa Greeting & Orientation
+Vehicle Delivery
+Private Transportation (daily driver)
+Pre-Arrival Grocery Stocking (if yes, show text field: "Dietary requirements, preferences, favorite items")
+Daily Housekeeping
+Evening Turndown Service
+Butler & Personal Assistants
+Childcare & Nanny Service (only show if children > 0)
+
+SECTION 3: In-Villa Experiences
+Use elegant multi-select tile cards for each category:
+Private Dining (multi-select tiles):
+
+Private Chef — Breakfast
+Private Chef — Lunch
+Private Chef — Dinner
+Sushi & Omakase Chef
+Private Bartender & Mixologist
+Wine Sommelier & Cellar Curation
+Private Cooking Class with Chef
+
+Wellness & Restoration (multi-select tiles):
+
+Lomilomi Massage (Traditional Hawaiian)
+Couples Massage
+Massage & Facial Fusion
+Sound Bath & Healing Ceremony
+Restorative Yoga
+Private Pilates Session
+Meditation & Breathwork
+Reiki & Energy Healing
+
+Entertainment & Culture (multi-select tiles):
+
+Private Luau & Fire Show
+Hula Performance & Cultural Ceremony
+Ukulele Lesson & Hawaiian Storytelling
+Lei Making & Cultural Workshop
+Recording Studio Session
+Private Outdoor Movie Night
+Live Hawaiian Music at the Villa
+Sunset Bonfire on the Beach
+
+SECTION 4: Excursions & Adventures
+Use elegant multi-select tile cards:
+By Air:
+
+Sightseeing Helicopter Charter
+Doors-Off Helicopter — Na Pali & Waimea Canyon
+
+By Sea:
+
+Na Pali Coast Private Boat Charter
+Sunset Sailing Cruise
+Deep Sea Fishing Charter
+Whale Watching Charter
+Private Snorkeling Tour
+Kayaking & Stand Up Paddleboarding
+
+By Land:
+
+North Shore Waterfall Hike (private guide)
+Waimea Canyon Guided Tour
+North Shore Wildlife & Botanical Hike
+ATV Adventure Tour
+Ziplining — North Shore
+Mountain Tubing
+Horseback Riding
+
+Family & Kids:
+
+Family Surf Lesson at Hanalei Bay
+Kids Surf Camp
+Family Lifestyle & Portrait Photoshoot
+Drone Photography & Videography
+Tide Pool & Starfish Exploration
+Junior Chef Cooking Class
+
+Gear & Extras:
+
+Gear Rentals (snorkel, paddleboard, bikes)
+Private Golf Tee Times — Princeville Makai
+Stargazing Experience with Astronomer
+
+Custom Request (text field): "Anything else? We can arrange almost anything."
+CONCIERGE INFO SECTION (at the bottom of the form):
+
+Concierge Name
+Concierge Email
+Concierge Phone
+Concierge Photo (optional upload or initials avatar fallback)
+
+FORM DESIGN REQUIREMENTS:
+
+Each section has a clear elegant heading in Source Serif 4
+Subtle dividers between sections
+Multi-select tiles have a hover state and selected state (teal border + light teal background when selected)
+Toggle switches are clean and modern
+The form scrolls smoothly on mobile
+Brand colors: #053E50 dark teal, #37729A blue, #EBE2E0 sand, #937C66 warm brown
+Submit button says "Generate Itinerary" in white on dark teal
+Form should feel like a luxury concierge intake sheet — professional, elegant, comprehensive
+
+UPDATE THE AI SYSTEM PROMPT to use all of these services. Claude should:
+
+Only include services that were selected on the form
+Write each day in the voice of a world-class Hawaiian concierge
+Open with a personal letter to the guest by name
+Name each day beautifully (Day 1: A Hawaiian Welcome, Day 2: Kauai by Air, etc.)
+Weave in-villa services and excursions together naturally across the days
+For special occasions, acknowledge them warmly and build the relevant day around them
+Generate two separate invoice arrays: one for in-villa services, one for excursions
+
+UPDATE THE GUEST ITINERARY PAGE to show:
+
+Tab 1: "Your Journey" — beautiful day-by-day timeline
+Tab 2: "In-Villa Services" invoice — itemized, elegant, printable
+Tab 3: "Excursions" invoice — itemized, elegant, printable
+Concierge contact card on every tab with name, photo/avatar, phone, email
+"Request a Change" button on each activity card
+Sticky bottom bar with: Copy Link, Email to Guest, Approve Itinerary

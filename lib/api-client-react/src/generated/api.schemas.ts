@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Pure Kauai Luxury Travel Concierge API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 export interface HealthStatus {
   status: string;
@@ -12,14 +12,6 @@ export interface HealthStatus {
 export interface ErrorResponse {
   error: string;
 }
-
-export type ItineraryInputBudgetTier = typeof ItineraryInputBudgetTier[keyof typeof ItineraryInputBudgetTier];
-
-
-export const ItineraryInputBudgetTier = {
-  Premium: 'Premium',
-  'Ultra-Luxury': 'Ultra-Luxury',
-} as const;
 
 export type ItineraryInputSpecialOccasion = typeof ItineraryInputSpecialOccasion[keyof typeof ItineraryInputSpecialOccasion];
 
@@ -30,6 +22,9 @@ export const ItineraryInputSpecialOccasion = {
   Honeymoon: 'Honeymoon',
   Birthday: 'Birthday',
   Family_Reunion: 'Family Reunion',
+  Corporate_Retreat: 'Corporate Retreat',
+  Vow_Renewal: 'Vow Renewal',
+  Milestone_Celebration: 'Milestone Celebration',
 } as const;
 
 export interface ItineraryInput {
@@ -40,11 +35,18 @@ export interface ItineraryInput {
   adults: number;
   /** @minimum 0 */
   children: number;
-  interests: string[];
-  budgetTier: ItineraryInputBudgetTier;
+  /** @nullable */
+  childrenAges?: string | null;
+  /** @nullable */
+  hasPets?: boolean | null;
   specialOccasion: ItineraryInputSpecialOccasion;
   /** @nullable */
   specialNotes?: string | null;
+  villaServices?: string[];
+  inVillaExperiences?: string[];
+  excursions?: string[];
+  /** @nullable */
+  customRequest?: string | null;
   /** @nullable */
   hostName?: string | null;
   /** @nullable */
@@ -53,21 +55,39 @@ export interface ItineraryInput {
   hostPhone?: string | null;
 }
 
+export interface InvoiceItem {
+  name: string;
+  category: string;
+  description: string;
+  /** @nullable */
+  duration?: string | null;
+  pricePerUnit: number;
+  quantity: number;
+  unit: string;
+  totalPrice: number;
+  /** @nullable */
+  unsplashKeyword?: string | null;
+  /** @nullable */
+  photoUrl?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
 export interface ItineraryActivity {
   time: string;
   name: string;
+  category: string;
   description: string;
   duration: string;
-  pricePerPerson: number;
+  serviceType: string;
   unsplashKeyword: string;
-  /** @nullable */
-  category?: string | null;
   /** @nullable */
   photoUrl?: string | null;
 }
 
 export interface ItineraryDay {
   day: number;
+  dayTitle: string;
   date: string;
   activities: ItineraryActivity[];
 }
@@ -79,11 +99,18 @@ export interface Itinerary {
   checkOut: string;
   adults: number;
   children: number;
-  interests: string[];
-  budgetTier: string;
+  /** @nullable */
+  childrenAges?: string | null;
+  /** @nullable */
+  hasPets?: boolean | null;
   specialOccasion: string;
   /** @nullable */
   specialNotes?: string | null;
+  villaServices: string[];
+  inVillaExperiences: string[];
+  excursions: string[];
+  /** @nullable */
+  customRequest?: string | null;
   /** @nullable */
   hostName?: string | null;
   /** @nullable */
@@ -93,18 +120,9 @@ export interface Itinerary {
   /** @nullable */
   welcomeMessage?: string | null;
   days: ItineraryDay[];
+  inVillaInvoice: InvoiceItem[];
+  excursionInvoice: InvoiceItem[];
   approved: boolean;
   createdAt: string;
-}
-
-export interface Activity {
-  name: string;
-  category: string;
-  description: string;
-  duration: string;
-  pricePerPerson: number;
-  bestFor: string;
-  timeOfDay: string;
-  unsplashKeyword: string;
 }
 

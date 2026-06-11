@@ -3,18 +3,17 @@
  * Do not edit manually.
  * Api
  * Pure Kauai Luxury Travel Concierge API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface ItineraryActivity {
   time: string;
   name: string;
+  category: string;
   description: string;
   duration: string;
-  pricePerPerson: number;
+  serviceType: string;
   unsplashKeyword: string;
-  /** @nullable */
-  category?: string | null;
   /** @nullable */
   photoUrl?: string | null;
 }

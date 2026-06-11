@@ -3,9 +3,8 @@
  * Do not edit manually.
  * Api
  * Pure Kauai Luxury Travel Concierge API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
-import type { ItineraryInputBudgetTier } from './itineraryInputBudgetTier';
 import type { ItineraryInputSpecialOccasion } from './itineraryInputSpecialOccasion';
 
 export interface ItineraryInput {
@@ -16,11 +15,18 @@ export interface ItineraryInput {
   adults: number;
   /** @minimum 0 */
   children: number;
-  interests: string[];
-  budgetTier: ItineraryInputBudgetTier;
+  /** @nullable */
+  childrenAges?: string | null;
+  /** @nullable */
+  hasPets?: boolean | null;
   specialOccasion: ItineraryInputSpecialOccasion;
   /** @nullable */
   specialNotes?: string | null;
+  villaServices?: string[];
+  inVillaExperiences?: string[];
+  excursions?: string[];
+  /** @nullable */
+  customRequest?: string | null;
   /** @nullable */
   hostName?: string | null;
   /** @nullable */

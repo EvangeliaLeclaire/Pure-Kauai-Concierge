@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Pure Kauai Luxury Travel Concierge API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import {
   useMutation,
@@ -20,7 +20,6 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  Activity,
   ErrorResponse,
   HealthStatus,
   Itinerary,
@@ -333,81 +332,4 @@ export const useApproveItinerary = <TError = ErrorType<ErrorResponse>,
       > => {
       return useMutation(getApproveItineraryMutationOptions(options));
     }
-
-export const getListActivitiesUrl = () => {
-
-
-
-
-  return `/api/activities`
-}
-
-/**
- * @summary List all available activities
- */
-export const listActivities = async ( options?: RequestInit): Promise<Activity[]> => {
-
-  return customFetch<Activity[]>(getListActivitiesUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getListActivitiesQueryKey = () => {
-    return [
-    `/api/activities`
-    ] as const;
-    }
-
-
-export const getListActivitiesQueryOptions = <TData = Awaited<ReturnType<typeof listActivities>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listActivities>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListActivitiesQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listActivities>>> = ({ signal }) => listActivities({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listActivities>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type ListActivitiesQueryResult = NonNullable<Awaited<ReturnType<typeof listActivities>>>
-export type ListActivitiesQueryError = ErrorType<unknown>
-
-
-/**
- * @summary List all available activities
- */
-
-export function useListActivities<TData = Awaited<ReturnType<typeof listActivities>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listActivities>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getListActivitiesQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
 

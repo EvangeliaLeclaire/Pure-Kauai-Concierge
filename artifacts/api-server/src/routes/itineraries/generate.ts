@@ -1,99 +1,97 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { ACTIVITY_CATALOG, catalogByName } from "../../data/catalog.js";
+import { catalogByName } from "../../data/catalog.js";
 import type { ItineraryActivity, ItineraryDay } from "./types.js";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-interface GuestInput {
+interface GenerateInput {
   guestName: string;
   checkIn: string;
   checkOut: string;
   adults: number;
   children: number;
-  interests: string[];
-  budgetTier: string;
+  childrenAges: string | null | undefined;
+  hasPets: boolean | null | undefined;
   specialOccasion: string;
-  specialNotes?: string | null;
+  specialNotes: string | null | undefined;
+  villaServices: string[];
+  inVillaExperiences: string[];
+  excursions: string[];
+  customRequest: string | null | undefined;
 }
 
-interface GeneratedItinerary {
+interface GeneratedNarrative {
   welcomeMessage: string;
   days: ItineraryDay[];
 }
 
-// Format the catalog clearly for Claude
-const catalogText = ACTIVITY_CATALOG.map((a) =>
-  `- "${a.name}" | ${a.category} | ${a.duration} | $${a.pricePerPerson}/person | Best for: ${a.bestFor.join(", ")} | Time: ${a.timeOfDay}`
-).join("\n");
+function listSection(title: string, items: string[]): string {
+  if (!items.length) return "";
+  return `\n${title}:\n${items.map((s) => `  • ${s}`).join("\n")}`;
+}
 
-export async function generateItinerary(input: GuestInput): Promise<GeneratedItinerary> {
+export async function generateItinerary(input: GenerateInput): Promise<GeneratedNarrative> {
   const checkInDate = new Date(input.checkIn);
   const checkOutDate = new Date(input.checkOut);
   const numDays = Math.max(1, Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)));
-  const isUltraLuxury = input.budgetTier === "Ultra-Luxury";
 
-  const systemPrompt = `You are the head concierge of Pure Kauai — the most exclusive private villa concierge service on the island. You have curated experiences for royalty, A-list celebrities, and the world's most discerning families. You know every hidden waterfall, every master chef, every secret cove.
+  const allSelected = [...input.inVillaExperiences, ...input.excursions];
+  const hasAnything = allSelected.length > 0 || input.customRequest;
 
-You write with the warm, unhurried elegance of a trusted personal friend who happens to know Kauai better than anyone alive. You address guests by name. You weave in their occasion, their interests, their children's names if provided. Every word should feel handwritten on thick cream stationery.
+  const systemPrompt = `You are the head concierge of Pure Kauai — the most exclusive private villa concierge on Kauai's north shore. You have arranged experiences for royalty, A-list celebrities, and the world's most discerning families.
 
-Your itineraries are built EXCLUSIVELY from the Pure Kauai activity catalog. You select the most relevant experiences for each guest and describe them as if you personally arranged every detail — because you did.`;
+You write with the warm, unhurried elegance of a trusted personal friend who knows Kauai better than anyone alive. Your words feel like a handwritten note on thick cream stationery — personal, unhurried, and alive with the spirit of the island.
 
-  const userPrompt = `Create a complete bespoke itinerary for the following guest. Select activities ONLY from the Pure Kauai catalog below.
+Your job is to arrange the SELECTED services into a beautiful, chronological day-by-day narrative. You do not add or invent services — you arrange what has already been chosen and give each one life through your words.`;
+
+  const userPrompt = `Create a bespoke itinerary for the following guest. Use ONLY the selected services listed below — do not add anything that isn't listed.
 
 ━━━ GUEST PROFILE ━━━
 Name: ${input.guestName}
-Arrival: ${input.checkIn}
-Departure: ${input.checkOut}
-Duration: ${numDays} night${numDays !== 1 ? "s" : ""}
-Adults: ${input.adults}${input.children > 0 ? `\nChildren: ${input.children}` : ""}
-Interests: ${input.interests.join(", ")}
-Budget Tier: ${input.budgetTier}
+Arrival: ${input.checkIn}  |  Departure: ${input.checkOut}
+Duration: ${numDays} day${numDays !== 1 ? "s" : ""}
+Adults: ${input.adults}${input.children > 0 ? `  |  Children: ${input.children}${input.childrenAges ? ` (ages: ${input.childrenAges})` : ""}` : ""}
+${input.hasPets ? "Pets: Yes — please acknowledge this warmly in the welcome letter." : ""}
 Special Occasion: ${input.specialOccasion !== "None" ? input.specialOccasion : "None"}
-Special Notes: ${input.specialNotes || "None"}
+${input.specialNotes ? `Guest Notes: ${input.specialNotes}` : ""}
 
-━━━ PURE KAUAI ACTIVITY CATALOG ━━━
-${catalogText}
+━━━ SELECTED SERVICES ━━━${listSection("Villa Services Selected", input.villaServices)}${listSection("In-Villa Experiences Selected", input.inVillaExperiences)}${listSection("Excursions Selected", input.excursions)}${input.customRequest ? `\nCustom Request: ${input.customRequest}` : ""}
+${!hasAnything ? "No experiences selected — write a beautiful relaxation-focused itinerary celebrating the villa, the island, and the natural luxury of simply being in Kauai." : ""}
 
-━━━ SELECTION RULES ━━━
-1. Select 2–4 activities per day from the catalog above. Use EXACT activity names as they appear.
-2. Match activities to the guest's stated interests and occasion. Do not repeat the same activity on multiple days.
-3. Do not schedule the "Pre-Arrival Grocery Stocking" as a day activity — it is handled automatically on arrival.
-${isUltraLuxury ? `4. ULTRA-LUXURY REQUIREMENT: You MUST include "Sightseeing Helicopter Charter" (Day 1 or 2), "Private Chef Dinner at the Villa" (at least once), and at least one wellness experience (Massage & Facial Fusion, Sunrise Restorative Yoga, Sound Bath & Healing Ceremony, or Private Pilates Session). These are non-negotiable for Ultra-Luxury guests.` : `4. Select activities appropriate for the ${input.budgetTier} budget tier.`}
-${input.specialOccasion !== "None" ? `5. This is a ${input.specialOccasion} — weave that celebration through the welcome message and at least one special evening activity.` : ""}
-
-━━━ WRITING VOICE ━━━
-- Address ${input.guestName} by name in the welcome message
-- Welcome message: 3–4 sentences, warm and personal, referencing their occasion and what awaits them
-- Activity descriptions: rewrite each description in your personal concierge voice (2–3 evocative, sensory sentences). Do not copy catalog text verbatim.
-- Use time-of-day: "Morning", "Afternoon", or "Evening"
+━━━ INSTRUCTIONS ━━━
+1. Write a personal welcome letter addressed to ${input.guestName} by name. Reference the occasion if not "None". Warm, personal, 4-5 sentences.
+2. Spread ALL selected in-villa experiences and excursions across the ${numDays} days. Balance the days — morning excursions, afternoon wellness, evening dining.
+3. Give each day a poetic, evocative title that captures its essence (e.g. "A Hawaiian Welcome", "The Island by Air", "Sea, Sky & Stillness").
+4. Write 2-4 activities per day. Each description: 2-3 evocative, sensory sentences in concierge voice.
+5. Use: "Morning", "Afternoon", or "Evening" for time.
+6. For unsplashKeyword, write a specific, descriptive search phrase (5-8 words) that would find a stunning real photo of that experience.
 
 ━━━ RESPONSE FORMAT ━━━
-Respond ONLY with valid JSON. No markdown. No explanation. Just the JSON object.
+Respond ONLY with valid JSON. No markdown, no explanation.
 
 {
   "welcomeMessage": "...",
   "days": [
     {
       "day": 1,
+      "dayTitle": "A Hawaiian Welcome",
       "date": "${input.checkIn}",
       "activities": [
         {
           "time": "Morning",
-          "name": "EXACT activity name from catalog",
-          "category": "category from catalog",
-          "description": "Your personal concierge description in 2-3 sentences.",
-          "duration": "duration from catalog",
-          "pricePerPerson": 000,
-          "unsplashKeyword": "unsplashKeyword from catalog"
+          "name": "Exact service name from selected list",
+          "category": "...",
+          "serviceType": "in_villa OR excursion",
+          "description": "2-3 evocative sentences.",
+          "duration": "...",
+          "unsplashKeyword": "descriptive 5-8 word search phrase"
         }
       ]
     }
   ]
 }
 
-Generate exactly ${numDays} day${numDays !== 1 ? "s" : ""}. Make ${input.guestName}'s journey extraordinary.`;
+Generate exactly ${numDays} day${numDays !== 1 ? "s" : ""}. Make ${input.guestName}'s journey unforgettable.`;
 
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-5",
@@ -103,38 +101,37 @@ Generate exactly ${numDays} day${numDays !== 1 ? "s" : ""}. Make ${input.guestNa
   });
 
   const content = message.content[0];
-  if (content.type !== "text") {
-    throw new Error("Unexpected response type from Claude");
-  }
+  if (content.type !== "text") throw new Error("Unexpected response from Claude");
 
   const jsonMatch = content.text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error("Could not extract JSON from Claude response");
-  }
+  if (!jsonMatch) throw new Error("Could not parse JSON from Claude");
 
-  const parsed = JSON.parse(jsonMatch[0]) as GeneratedItinerary;
+  const parsed = JSON.parse(jsonMatch[0]) as GeneratedNarrative;
 
-  // Collect all activities with their resolved keywords, then fetch photos in parallel
+  // Collect all activities for photo fetching
   const activities: Array<{ activity: ItineraryActivity; keyword: string }> = [];
-
   for (const day of parsed.days) {
     for (const activity of day.activities) {
       const catalogEntry = catalogByName.get(activity.name.toLowerCase());
-      const keyword = catalogEntry?.unsplashKeyword ?? (activity as unknown as Record<string, string>).unsplashKeyword ?? activity.name;
-
-      if (catalogEntry && !activity.category) {
-        activity.category = catalogEntry.category;
-      }
-
+      const keyword = catalogEntry?.unsplashKeyword ?? activity.unsplashKeyword ?? activity.name;
       activities.push({ activity, keyword });
     }
   }
 
-  // Fetch all photos in parallel — Unsplash if key present, picsum fallback
+  // Fetch photos in parallel
+  await fetchUnsplashPhotos(activities.map(({ activity, keyword }) => ({ item: activity, keyword })));
+
+  return parsed;
+}
+
+// Generic Unsplash photo fetcher — works for both activities and invoice items
+export async function fetchUnsplashPhotos(
+  items: Array<{ item: { photoUrl?: string | null; unsplashKeyword?: string | null }; keyword: string }>
+): Promise<void> {
   const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
 
   await Promise.all(
-    activities.map(async ({ activity, keyword }) => {
+    items.map(async ({ item, keyword }) => {
       if (unsplashKey) {
         try {
           const query = encodeURIComponent(keyword + " hawaii landscape");
@@ -145,21 +142,17 @@ Generate exactly ${numDays} day${numDays !== 1 ? "s" : ""}. Make ${input.guestNa
           if (res.ok) {
             const data = await res.json() as { results: Array<{ urls: { regular: string } }> };
             if (data.results.length > 0) {
-              // Pick a result based on activity name hash so each activity gets a consistent but varied photo
-              const idx = activity.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % data.results.length;
-              activity.photoUrl = data.results[idx].urls.regular;
+              const idx = keyword.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % data.results.length;
+              item.photoUrl = data.results[idx].urls.regular;
               return;
             }
           }
         } catch {
-          // fall through to picsum
+          // fall through
         }
       }
-      // Fallback: picsum with deterministic seed
       const seed = keyword.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40);
-      activity.photoUrl = `https://picsum.photos/seed/${seed}/900/560`;
+      item.photoUrl = `https://picsum.photos/seed/${seed}/900/560`;
     })
   );
-
-  return parsed;
 }

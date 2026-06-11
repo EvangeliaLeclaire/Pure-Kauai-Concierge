@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Pure Kauai Luxury Travel Concierge API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export type ItineraryInputSpecialOccasion = typeof ItineraryInputSpecialOccasion[keyof typeof ItineraryInputSpecialOccasion];
@@ -15,4 +15,7 @@ export const ItineraryInputSpecialOccasion = {
   Honeymoon: 'Honeymoon',
   Birthday: 'Birthday',
   Family_Reunion: 'Family Reunion',
+  Corporate_Retreat: 'Corporate Retreat',
+  Vow_Renewal: 'Vow Renewal',
+  Milestone_Celebration: 'Milestone Celebration',
 } as const;

@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Pure Kauai Luxury Travel Concierge API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import * as zod from 'zod';
 
@@ -30,10 +30,14 @@ export const CreateItineraryBody = zod.object({
   "checkOut": zod.string(),
   "adults": zod.number().min(1),
   "children": zod.number().min(createItineraryBodyChildrenMin),
-  "interests": zod.array(zod.string()),
-  "budgetTier": zod.enum(['Premium', 'Ultra-Luxury']),
-  "specialOccasion": zod.enum(['None', 'Anniversary', 'Honeymoon', 'Birthday', 'Family Reunion']),
+  "childrenAges": zod.string().nullish(),
+  "hasPets": zod.boolean().nullish(),
+  "specialOccasion": zod.enum(['None', 'Anniversary', 'Honeymoon', 'Birthday', 'Family Reunion', 'Corporate Retreat', 'Vow Renewal', 'Milestone Celebration']),
   "specialNotes": zod.string().nullish(),
+  "villaServices": zod.array(zod.string()).optional(),
+  "inVillaExperiences": zod.array(zod.string()).optional(),
+  "excursions": zod.array(zod.string()).optional(),
+  "customRequest": zod.string().nullish(),
   "hostName": zod.string().nullish(),
   "hostEmail": zod.string().nullish(),
   "hostPhone": zod.string().nullish()
@@ -54,27 +58,58 @@ export const GetItineraryResponse = zod.object({
   "checkOut": zod.string(),
   "adults": zod.number(),
   "children": zod.number(),
-  "interests": zod.array(zod.string()),
-  "budgetTier": zod.string(),
+  "childrenAges": zod.string().nullish(),
+  "hasPets": zod.boolean().nullish(),
   "specialOccasion": zod.string(),
   "specialNotes": zod.string().nullish(),
+  "villaServices": zod.array(zod.string()),
+  "inVillaExperiences": zod.array(zod.string()),
+  "excursions": zod.array(zod.string()),
+  "customRequest": zod.string().nullish(),
   "hostName": zod.string().nullish(),
   "hostEmail": zod.string().nullish(),
   "hostPhone": zod.string().nullish(),
   "welcomeMessage": zod.string().nullish(),
   "days": zod.array(zod.object({
   "day": zod.number(),
+  "dayTitle": zod.string(),
   "date": zod.string(),
   "activities": zod.array(zod.object({
   "time": zod.string(),
   "name": zod.string(),
+  "category": zod.string(),
   "description": zod.string(),
   "duration": zod.string(),
-  "pricePerPerson": zod.number(),
+  "serviceType": zod.string(),
   "unsplashKeyword": zod.string(),
-  "category": zod.string().nullish(),
   "photoUrl": zod.string().nullish()
 }))
+})),
+  "inVillaInvoice": zod.array(zod.object({
+  "name": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "duration": zod.string().nullish(),
+  "pricePerUnit": zod.number(),
+  "quantity": zod.number(),
+  "unit": zod.string(),
+  "totalPrice": zod.number(),
+  "unsplashKeyword": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "notes": zod.string().nullish()
+})),
+  "excursionInvoice": zod.array(zod.object({
+  "name": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "duration": zod.string().nullish(),
+  "pricePerUnit": zod.number(),
+  "quantity": zod.number(),
+  "unit": zod.string(),
+  "totalPrice": zod.number(),
+  "unsplashKeyword": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "notes": zod.string().nullish()
 })),
   "approved": zod.boolean(),
   "createdAt": zod.string()
@@ -95,46 +130,61 @@ export const ApproveItineraryResponse = zod.object({
   "checkOut": zod.string(),
   "adults": zod.number(),
   "children": zod.number(),
-  "interests": zod.array(zod.string()),
-  "budgetTier": zod.string(),
+  "childrenAges": zod.string().nullish(),
+  "hasPets": zod.boolean().nullish(),
   "specialOccasion": zod.string(),
   "specialNotes": zod.string().nullish(),
+  "villaServices": zod.array(zod.string()),
+  "inVillaExperiences": zod.array(zod.string()),
+  "excursions": zod.array(zod.string()),
+  "customRequest": zod.string().nullish(),
   "hostName": zod.string().nullish(),
   "hostEmail": zod.string().nullish(),
   "hostPhone": zod.string().nullish(),
   "welcomeMessage": zod.string().nullish(),
   "days": zod.array(zod.object({
   "day": zod.number(),
+  "dayTitle": zod.string(),
   "date": zod.string(),
   "activities": zod.array(zod.object({
   "time": zod.string(),
   "name": zod.string(),
+  "category": zod.string(),
   "description": zod.string(),
   "duration": zod.string(),
-  "pricePerPerson": zod.number(),
+  "serviceType": zod.string(),
   "unsplashKeyword": zod.string(),
-  "category": zod.string().nullish(),
   "photoUrl": zod.string().nullish()
 }))
+})),
+  "inVillaInvoice": zod.array(zod.object({
+  "name": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "duration": zod.string().nullish(),
+  "pricePerUnit": zod.number(),
+  "quantity": zod.number(),
+  "unit": zod.string(),
+  "totalPrice": zod.number(),
+  "unsplashKeyword": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "notes": zod.string().nullish()
+})),
+  "excursionInvoice": zod.array(zod.object({
+  "name": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "duration": zod.string().nullish(),
+  "pricePerUnit": zod.number(),
+  "quantity": zod.number(),
+  "unit": zod.string(),
+  "totalPrice": zod.number(),
+  "unsplashKeyword": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "notes": zod.string().nullish()
 })),
   "approved": zod.boolean(),
   "createdAt": zod.string()
 })
-
-
-/**
- * @summary List all available activities
- */
-export const ListActivitiesResponseItem = zod.object({
-  "name": zod.string(),
-  "category": zod.string(),
-  "description": zod.string(),
-  "duration": zod.string(),
-  "pricePerPerson": zod.number(),
-  "bestFor": zod.string(),
-  "timeOfDay": zod.string(),
-  "unsplashKeyword": zod.string()
-})
-export const ListActivitiesResponse = zod.array(ListActivitiesResponseItem)
 
 

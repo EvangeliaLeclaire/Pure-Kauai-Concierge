@@ -8,6 +8,7 @@ import {
   Phone, MessageSquare,
 } from "lucide-react";
 import { useGetItinerary, useApproveItinerary, getGetItineraryQueryKey } from "@workspace/api-client-react";
+import type { InvoiceItem } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PureKauaiLogo } from "@/components/PureKauaiLogo";
@@ -33,6 +34,10 @@ function timeBg(time: string) {
 function getInitials(name: string | null | undefined): string {
   if (!name) return "PK";
   return name.trim().split(/\s+/).filter(Boolean).map(n => n[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function fmt(n: number) {
+  return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 }
 
 // ─── Request Change Modal ─────────────────────────────────────────────────────
@@ -78,7 +83,7 @@ function RequestChangeModal({
           <textarea
             className="w-full border border-[#E8E0DB] focus:border-[#053E50]/40 outline-none resize-none text-sm leading-relaxed px-4 py-3 transition-colors"
             style={{ borderRadius: "1px", color: "#1A2E35", minHeight: "120px", background: "#FAF8F6" }}
-            placeholder="e.g. Could we move this to the morning? Or swap for a different activity?"
+            placeholder="e.g. Could we move this to the morning? Or swap for something else?"
             value={message}
             onChange={(e) => onMessageChange(e.target.value)}
             autoFocus
@@ -116,7 +121,7 @@ function ApproveModal({ guestName, onClose }: { guestName: string; onClose: () =
           <h2 className="text-2xl font-serif font-light text-[#053E50] mb-3">Itinerary Approved</h2>
           <p className="text-[#5C5350] leading-relaxed text-sm">
             Thank you, <span className="font-medium text-[#053E50]">{guestName}</span>.
-            Your concierge will be in touch within 24 hours to confirm your experiences and arrange any final details.
+            Your concierge will be in touch within 24 hours to confirm all experiences and arrange any final details.
             We look forward to welcoming you to Kauai.
           </p>
           <div className="mt-5 mx-auto w-10 h-px bg-[#EBE2E0]" />
@@ -130,7 +135,230 @@ function ApproveModal({ guestName, onClose }: { guestName: string; onClose: () =
   );
 }
 
+// ─── Invoice Panel ────────────────────────────────────────────────────────────
+
+function InvoicePanel({
+  title, items, guestName, checkIn, checkOut, adults, children,
+  hostName, hostEmail, hostPhone, itineraryId, approved,
+  onApprove, isPending,
+}: {
+  title: string;
+  items: InvoiceItem[];
+  guestName: string;
+  checkIn: string;
+  checkOut: string;
+  adults: number;
+  children: number;
+  hostName: string | null | undefined;
+  hostEmail: string | null | undefined;
+  hostPhone: string | null | undefined;
+  itineraryId: string;
+  approved: boolean;
+  onApprove: () => void;
+  isPending: boolean;
+}) {
+  const totalGuests = adults + children;
+  const subtotal = items.reduce((s, i) => s + i.totalPrice, 0);
+  const deposit  = subtotal * 0.5;
+
+  // Group by category
+  const grouped = items.reduce<Record<string, InvoiceItem[]>>((acc, item) => {
+    acc[item.category] = acc[item.category] ?? [];
+    acc[item.category].push(item);
+    return acc;
+  }, {});
+  const categories = Object.keys(grouped);
+
+  return (
+    <div className="pb-40">
+      <div className="max-w-3xl mx-auto px-6 sm:px-8 md:px-10 py-12 md:py-16">
+
+        {/* Letterhead */}
+        <div className="flex justify-between items-start pb-8 mb-10 border-b-2 border-[#053E50]">
+          <div>
+            <PureKauaiLogo variant="dark" size="lg" />
+            <div className="mt-5 space-y-0.5">
+              <p className="text-xs" style={{ color: "#8A7F7D" }}>North Shore, Kauai, Hawaii 96714</p>
+              <p className="text-xs" style={{ color: "#8A7F7D" }}>
+                {hostEmail ?? "concierge@purekauai.com"} · {hostPhone ?? "+1 808 826 0000"}
+              </p>
+              {hostName && <p className="text-xs font-medium" style={{ color: "#053E50" }}>{hostName}, Pure Kauai Concierge</p>}
+            </div>
+          </div>
+          <div className="text-right">
+            <h2 className="text-2xl font-light" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
+              {title}
+            </h2>
+            {approved && (
+              <div className="inline-flex items-center gap-1.5 mt-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs tracking-[0.12em] uppercase px-3 py-1.5">
+                <Check className="h-3 w-3" />
+                Approved
+              </div>
+            )}
+            <div className="mt-3 space-y-0.5">
+              <p className="text-xs" style={{ color: "#B0A9A6" }}>Ref: {itineraryId.slice(0, 8).toUpperCase()}</p>
+              <p className="text-xs" style={{ color: "#B0A9A6" }}>{format(new Date(), "MMMM d, yyyy")}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Guest block */}
+        <div className="grid grid-cols-2 gap-8 mb-10 pb-8 border-b border-[#E8E0DB]">
+          <div>
+            <p className="text-xs tracking-[0.18em] uppercase mb-2" style={{ color: "#8A7F7D" }}>Prepared for</p>
+            <p className="font-medium text-lg" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>{guestName}</p>
+          </div>
+          <div>
+            <p className="text-xs tracking-[0.18em] uppercase mb-2" style={{ color: "#8A7F7D" }}>Travel Dates</p>
+            <p className="text-sm font-medium" style={{ color: "#053E50" }}>
+              {format(parseISO(checkIn), "MMMM d")} — {format(parseISO(checkOut), "MMMM d, yyyy")}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: "#8A7F7D" }}>
+              {totalGuests} Guest{totalGuests !== 1 ? "s" : ""}
+              {adults > 0 && ` (${adults} adult${adults !== 1 ? "s" : ""}${children > 0 ? `, ${children} child${children !== 1 ? "ren" : ""}` : ""})`}
+            </p>
+          </div>
+        </div>
+
+        {/* Empty state */}
+        {items.length === 0 && (
+          <div className="py-16 text-center">
+            <p className="text-sm" style={{ color: "#A5948D" }}>No services selected for this category.</p>
+          </div>
+        )}
+
+        {/* Line items by category */}
+        {categories.map((cat) => (
+          <div key={cat} className="mb-8">
+            <p className="text-xs tracking-[0.22em] uppercase mb-4 font-medium pb-2 border-b border-[#F0ECEA]" style={{ color: "#37729A" }}>
+              {cat}
+            </p>
+            {grouped[cat].map((item, i) => (
+              <div
+                key={i}
+                className="flex gap-4 py-5 border-b border-[#F7F3F1] items-start"
+              >
+                {/* Photo */}
+                {item.photoUrl && (
+                  <div className="shrink-0 w-20 h-16 overflow-hidden" style={{ borderRadius: "2px" }}>
+                    <img
+                      src={item.photoUrl}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const el = e.currentTarget as HTMLImageElement;
+                        el.src = `https://picsum.photos/seed/${item.name.replace(/\s+/g,"-").toLowerCase()}/160/128`;
+                        el.onerror = null;
+                      }}
+                    />
+                  </div>
+                )}
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-sm leading-snug" style={{ color: "#1A2E35" }}>{item.name}</p>
+                      <p className="text-xs mt-0.5 leading-relaxed line-clamp-2" style={{ color: "#8A7F7D" }}>{item.description}</p>
+                      {item.duration && item.duration !== "N/A" && (
+                        <p className="text-xs mt-1 inline-flex items-center gap-1" style={{ color: "#B0A9A6" }}>
+                          <Clock className="h-3 w-3" />
+                          {item.duration}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-medium" style={{ color: "#1A2E35" }}>
+                        {item.pricePerUnit === 0 ? "Complimentary" : fmt(item.totalPrice)}
+                      </p>
+                      {item.pricePerUnit > 0 && (
+                        <p className="text-xs mt-0.5" style={{ color: "#A5948D" }}>
+                          {fmt(item.pricePerUnit)} × {item.quantity}
+                        </p>
+                      )}
+                      <p className="text-xs mt-0.5" style={{ color: "#C4BBBA" }}>
+                        {item.unit}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        {/* Totals */}
+        {items.length > 0 && (
+          <div className="mt-6 flex justify-end">
+            <div className="w-full max-w-xs space-y-3">
+              <div className="flex justify-between text-sm pb-4 border-b border-[#E8E0DB]">
+                <span style={{ color: "#8A7F7D" }}>Subtotal</span>
+                <span className="font-medium" style={{ color: "#1A2E35" }}>{fmt(subtotal)}</span>
+              </div>
+              <div className="flex justify-between items-baseline pt-1">
+                <div>
+                  <div className="text-sm font-medium" style={{ color: "#053E50" }}>Deposit Due Now</div>
+                  <div className="text-xs mt-0.5" style={{ color: "#8A7F7D" }}>50% to confirm reservation</div>
+                </div>
+                <span className="text-2xl font-light" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
+                  {fmt(deposit)}
+                </span>
+              </div>
+              <div className="flex justify-between items-baseline pt-2">
+                <div>
+                  <div className="text-sm" style={{ color: "#8A7F7D" }}>Balance Due</div>
+                  <div className="text-xs mt-0.5" style={{ color: "#B0A9A6" }}>30 days prior to arrival</div>
+                </div>
+                <span className="text-sm font-medium" style={{ color: "#5C5350" }}>{fmt(deposit)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Fine print */}
+        <div className="mt-10 pt-8 border-t border-[#E8E0DB]">
+          <p className="text-xs leading-relaxed" style={{ color: "#B0A9A6" }}>
+            This proposal is prepared exclusively for {guestName} and is valid for 14 days from the date above.
+            All experiences are subject to availability and confirmed upon receipt of deposit.
+            Rates are quoted in USD. Taxes, gratuities, and transportation not included unless stated.
+          </p>
+        </div>
+
+        {/* Invoice actions */}
+        <div className="print-hide mt-10 flex flex-col sm:flex-row gap-3">
+          {!approved ? (
+            <button
+              onClick={onApprove}
+              disabled={isPending}
+              className="flex-1 flex items-center justify-center gap-2.5 text-white text-sm tracking-[0.12em] uppercase py-4 transition-opacity duration-200 disabled:opacity-60"
+              style={{ background: "#053E50", borderRadius: "1px" }}
+            >
+              {isPending ? (
+                <><span className="h-4 w-4 border border-white/40 border-t-white rounded-full animate-spin" />Confirming…</>
+              ) : (
+                <><Check className="h-4 w-4" />Approve & Confirm Itinerary</>
+              )}
+            </button>
+          ) : (
+            <div className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm tracking-[0.1em] uppercase py-4" style={{ borderRadius: "1px" }}>
+              <Check className="h-4 w-4" />Approved & Confirmed
+            </div>
+          )}
+          <button
+            onClick={() => window.print()}
+            className="flex items-center justify-center gap-2 border border-[#E8E0DB] hover:border-[#053E50]/30 text-sm tracking-[0.1em] uppercase py-4 px-6 transition-colors duration-200"
+            style={{ color: "#5C5350", borderRadius: "1px" }}
+          >
+            <Printer className="h-4 w-4" />Print
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
+
+type Tab = "journey" | "in_villa" | "excursions";
 
 export default function Trip() {
   const { id } = useParams<{ id: string }>();
@@ -142,7 +370,7 @@ export default function Trip() {
   const approveItinerary = useApproveItinerary();
   const [copied,       setCopied]       = useState(false);
   const [showModal,    setShowModal]    = useState(false);
-  const [activeTab,    setActiveTab]    = useState<"journey" | "invoice">("journey");
+  const [activeTab,    setActiveTab]    = useState<Tab>("journey");
   const [requestModal, setRequestModal] = useState<string | null>(null);
   const [requestMsg,   setRequestMsg]   = useState("");
 
@@ -158,13 +386,11 @@ export default function Trip() {
         <div className="max-w-3xl mx-auto px-6 py-16 space-y-6">
           <Skeleton className="h-[200px] w-full rounded-none" />
           <Skeleton className="h-[300px] w-full rounded-none" />
-          <Skeleton className="h-[300px] w-full rounded-none" />
         </div>
       </div>
     );
   }
 
-  // ── Not found ─────────────────────────────────────────────────────────────
   if (!itinerary) {
     return (
       <div className="min-h-screen bg-[#FAF8F6] flex items-center justify-center">
@@ -179,11 +405,10 @@ export default function Trip() {
 
   // ── Derived values ────────────────────────────────────────────────────────
   const totalGuests = itinerary.adults + itinerary.children;
-  const subtotal = itinerary.days.reduce(
-    (acc, day) => acc + day.activities.reduce((s, a) => s + a.pricePerPerson * totalGuests, 0), 0
-  );
-  const deposit = subtotal * 0.5;
   const hasHost = !!(itinerary.hostName || itinerary.hostEmail || itinerary.hostPhone);
+  const inVillaTotal = (itinerary.inVillaInvoice ?? []).reduce((s, i) => s + i.totalPrice, 0);
+  const excursionTotal = (itinerary.excursionInvoice ?? []).reduce((s, i) => s + i.totalPrice, 0);
+  const grandTotal = inVillaTotal + excursionTotal;
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handleApprove = () => {
@@ -204,43 +429,54 @@ export default function Trip() {
   const handleEmailGuest = () => {
     const subject = encodeURIComponent(`Your Pure Kauai Itinerary — ${itinerary.guestName}`);
     const body = encodeURIComponent(
-      `Dear ${itinerary.guestName},\n\nYour bespoke Kauai itinerary is ready. Please find your personalized journey and quote at the link below:\n\n${window.location.href}\n\nWe look forward to welcoming you to the island.\n\nWarm aloha,\n${itinerary.hostName ?? "Pure Kauai Concierge"}`
+      `Dear ${itinerary.guestName},\n\nYour bespoke Kauai itinerary is ready. Please find your personalized journey at the link below:\n\n${window.location.href}\n\nWarm aloha,\n${itinerary.hostName ?? "Pure Kauai Concierge"}`
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
 
-  const handlePrint = () => window.print();
-
   // ── Render ────────────────────────────────────────────────────────────────
+  const TABS: { id: Tab; label: string; count?: number }[] = [
+    { id: "journey",    label: "Your Journey" },
+    { id: "in_villa",   label: "In-Villa Services",  count: itinerary.inVillaInvoice?.length  ?? 0 },
+    { id: "excursions", label: "Excursions",          count: itinerary.excursionInvoice?.length ?? 0 },
+  ];
+
   return (
     <div className="min-h-screen font-sans" style={{ background: "#FAF8F6" }}>
+
+      {/* Modals */}
+      {showModal && <ApproveModal guestName={itinerary.guestName} onClose={() => setShowModal(false)} />}
+      {requestModal && (
+        <RequestChangeModal
+          activityName={requestModal}
+          hostEmail={itinerary.hostEmail}
+          guestName={itinerary.guestName}
+          tripId={id}
+          message={requestMsg}
+          onMessageChange={setRequestMsg}
+          onClose={() => setRequestModal(null)}
+        />
+      )}
 
       {/* ══ CINEMATIC HERO ══════════════════════════════════════════════════ */}
       <header
         className="relative h-screen max-h-[700px] min-h-[520px] flex flex-col justify-end overflow-hidden print-hide"
         style={{ background: "#053E50" }}
       >
-        {/* Aerial photo */}
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1505118380757-91f5f5632de0?q=80&w=2400&auto=format&fit=crop')" }}
         />
-        {/* Dual gradient: subtle top for logo readability, rich bottom for text */}
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(5,62,80,0.6) 0%, rgba(5,62,80,0.15) 30%, rgba(5,62,80,0.1) 55%, rgba(2,36,48,0.92) 100%)" }} />
 
-        {/* Logo — top center */}
         <div className="absolute top-8 left-0 right-0 flex justify-center z-10 px-6">
           <PureKauaiLogo variant="light" size="md" />
         </div>
 
-        {/* Hero content — bottom */}
         <div className="relative z-10 max-w-5xl mx-auto w-full px-6 sm:px-10 md:px-16 pb-14 md:pb-20">
-          {/* Eyebrow */}
           <p className="text-xs tracking-[0.35em] uppercase mb-4" style={{ color: "rgba(235,226,224,0.55)" }}>
             A Bespoke Journey · Kauai, Hawaii
           </p>
-
-          {/* Guest name */}
           <h1
             className="font-light leading-[1.05] mb-6"
             style={{
@@ -252,8 +488,6 @@ export default function Trip() {
           >
             {itinerary.guestName}
           </h1>
-
-          {/* Meta */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm" style={{ color: "rgba(235,226,224,0.65)" }}>
             <span className="flex items-center gap-2">
               <Calendar className="h-3.5 w-3.5 shrink-0" style={{ color: "#937C66" }} />
@@ -271,11 +505,17 @@ export default function Trip() {
                 <span style={{ color: "rgba(235,226,224,0.65)" }}>{itinerary.specialOccasion}</span>
               </>
             )}
+            {grandTotal > 0 && (
+              <>
+                <span style={{ color: "rgba(235,226,224,0.25)" }}>·</span>
+                <span style={{ color: "rgba(235,226,224,0.65)" }}>{fmt(grandTotal)} total</span>
+              </>
+            )}
           </div>
         </div>
       </header>
 
-      {/* ══ PERSONAL LETTER + CONCIERGE (screen only, always visible) ═══════ */}
+      {/* ══ PERSONAL LETTER + CONCIERGE ═════════════════════════════════════ */}
       {(itinerary.welcomeMessage || hasHost) && (
         <section className="print-hide" style={{ background: "linear-gradient(180deg, #EDE5DF 0%, #F5EFE9 40%, #FAF8F6 100%)" }}>
           <div className="max-w-3xl mx-auto px-6 sm:px-10 md:px-12 py-16 md:py-20">
@@ -283,31 +523,14 @@ export default function Trip() {
             {/* Concierge byline */}
             {hasHost && (
               <div className="flex items-center gap-4 mb-10">
-                {/* Avatar with initials */}
-                <div
-                  className="flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center"
-                  style={{ background: "#053E50" }}
-                >
-                  <span
-                    style={{
-                      fontFamily: "'Source Serif 4', Georgia, serif",
-                      fontSize: "1.25rem",
-                      fontWeight: 300,
-                      color: "#EBE2E0",
-                      lineHeight: 1,
-                    }}
-                  >
+                <div className="flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "#053E50" }}>
+                  <span style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "1.25rem", fontWeight: 300, color: "#EBE2E0", lineHeight: 1 }}>
                     {getInitials(itinerary.hostName)}
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs tracking-[0.22em] uppercase mb-0.5" style={{ color: "#937C66" }}>
-                    Your Personal Concierge
-                  </p>
-                  <p
-                    className="text-lg font-light"
-                    style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}
-                  >
+                  <p className="text-xs tracking-[0.22em] uppercase mb-0.5" style={{ color: "#937C66" }}>Your Personal Concierge</p>
+                  <p className="text-lg font-light" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
                     {itinerary.hostName ?? "Pure Kauai Concierge"}
                   </p>
                 </div>
@@ -317,110 +540,48 @@ export default function Trip() {
             {/* The Letter */}
             {itinerary.welcomeMessage && (
               <div>
-                {/* Decorative opening mark */}
-                <div
-                  aria-hidden="true"
-                  style={{
-                    fontFamily: "'Source Serif 4', Georgia, serif",
-                    fontSize: "5rem",
-                    lineHeight: 0.75,
-                    color: "#937C66",
-                    opacity: 0.25,
-                    marginBottom: "1rem",
-                    userSelect: "none",
-                  }}
-                >
-                  "
-                </div>
-
-                {/* Salutation */}
-                <p
-                  className="mb-4 text-xl"
-                  style={{
-                    fontFamily: "'Source Serif 4', Georgia, serif",
-                    fontStyle: "italic",
-                    fontWeight: 300,
-                    color: "#053E50",
-                  }}
-                >
+                <div aria-hidden="true" style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "5rem", lineHeight: 0.75, color: "#937C66", opacity: 0.25, marginBottom: "1rem", userSelect: "none" }}>"</div>
+                <p className="mb-4 text-xl" style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontStyle: "italic", fontWeight: 300, color: "#053E50" }}>
                   Dear {itinerary.guestName},
                 </p>
-
-                {/* Body */}
-                <p
-                  style={{
-                    fontFamily: "'Source Serif 4', Georgia, serif",
-                    fontStyle: "italic",
-                    fontWeight: 300,
-                    fontSize: "1.1rem",
-                    lineHeight: 1.9,
-                    color: "#2D4A55",
-                    marginBottom: "2rem",
-                  }}
-                >
+                <p style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontStyle: "italic", fontWeight: 300, fontSize: "1.1rem", lineHeight: 1.9, color: "#2D4A55", marginBottom: "2rem" }}>
                   {itinerary.welcomeMessage}
                 </p>
-
-                {/* Sign-off */}
                 <div>
                   <p className="text-sm mb-2" style={{ color: "#A5948D" }}>With warm aloha,</p>
-                  <p
-                    className="text-xl font-light"
-                    style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}
-                  >
+                  <p className="text-xl font-light" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
                     {itinerary.hostName ?? "Your Pure Kauai Concierge"}
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Contact + action buttons */}
+            {/* Contact */}
             {hasHost && (
               <div className="mt-10 pt-8 border-t border-[#DDD5CF] flex flex-col sm:flex-row sm:items-center gap-5">
-                {/* Contact details */}
                 <div className="flex flex-wrap gap-x-6 gap-y-2 flex-1">
                   {itinerary.hostPhone && (
-                    <a
-                      href={`tel:${itinerary.hostPhone}`}
-                      className="inline-flex items-center gap-1.5 text-sm transition-colors hover:opacity-70"
-                      style={{ color: "#37729A" }}
-                    >
+                    <a href={`tel:${itinerary.hostPhone}`} className="inline-flex items-center gap-1.5 text-sm transition-colors hover:opacity-70" style={{ color: "#37729A" }}>
                       <Phone className="h-3.5 w-3.5 shrink-0" />
                       {itinerary.hostPhone}
                     </a>
                   )}
                   {itinerary.hostEmail && (
-                    <a
-                      href={`mailto:${itinerary.hostEmail}`}
-                      className="inline-flex items-center gap-1.5 text-sm transition-colors hover:opacity-70"
-                      style={{ color: "#37729A" }}
-                    >
+                    <a href={`mailto:${itinerary.hostEmail}`} className="inline-flex items-center gap-1.5 text-sm transition-colors hover:opacity-70" style={{ color: "#37729A" }}>
                       <Mail className="h-3.5 w-3.5 shrink-0" />
                       {itinerary.hostEmail}
                     </a>
                   )}
                 </div>
-
-                {/* CTA buttons */}
                 <div className="flex flex-wrap gap-3 shrink-0">
                   {itinerary.hostPhone && (
-                    <a
-                      href={`tel:${itinerary.hostPhone}`}
-                      className="inline-flex items-center gap-2 text-sm tracking-[0.10em] uppercase px-5 py-2.5 border transition-colors duration-200 hover:bg-white"
-                      style={{ borderColor: "#C9BAB0", color: "#053E50", borderRadius: "1px" }}
-                    >
-                      <Phone className="h-3.5 w-3.5" />
-                      Call
+                    <a href={`tel:${itinerary.hostPhone}`} className="inline-flex items-center gap-2 text-sm tracking-[0.10em] uppercase px-5 py-2.5 border transition-colors duration-200 hover:bg-white" style={{ borderColor: "#C9BAB0", color: "#053E50", borderRadius: "1px" }}>
+                      <Phone className="h-3.5 w-3.5" />Call
                     </a>
                   )}
                   {itinerary.hostEmail && (
-                    <a
-                      href={`mailto:${itinerary.hostEmail}`}
-                      className="inline-flex items-center gap-2 text-sm tracking-[0.10em] uppercase px-5 py-2.5 transition-colors duration-200 hover:opacity-90"
-                      style={{ background: "#053E50", color: "#EBE2E0", borderRadius: "1px" }}
-                    >
-                      <Mail className="h-3.5 w-3.5" />
-                      Email
+                    <a href={`mailto:${itinerary.hostEmail}`} className="inline-flex items-center gap-2 text-sm tracking-[0.10em] uppercase px-5 py-2.5 transition-colors duration-200 hover:opacity-90" style={{ background: "#053E50", color: "#EBE2E0", borderRadius: "1px" }}>
+                      <Mail className="h-3.5 w-3.5" />Email
                     </a>
                   )}
                 </div>
@@ -444,17 +605,28 @@ export default function Trip() {
       {/* ══ TAB NAV (screen only) ════════════════════════════════════════════ */}
       <nav className="print-hide sticky top-0 z-20 bg-[#FAF8F6]/97 backdrop-blur-md border-b border-[#E8E0DB]">
         <div className="max-w-5xl mx-auto px-6 md:px-10">
-          <div className="flex">
-            {(["journey", "invoice"] as const).map((tab) => (
+          <div className="flex overflow-x-auto scrollbar-hide">
+            {TABS.map((tab) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`relative py-5 mr-8 text-sm tracking-wide transition-colors duration-200 ${
-                  activeTab === tab ? "text-[#053E50] font-medium" : "text-[#8A7F7D] hover:text-[#053E50]"
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative py-5 mr-6 sm:mr-8 text-sm tracking-wide transition-colors duration-200 whitespace-nowrap flex items-center gap-1.5 ${
+                  activeTab === tab.id ? "text-[#053E50] font-medium" : "text-[#8A7F7D] hover:text-[#053E50]"
                 }`}
               >
-                {tab === "journey" ? "Your Journey" : "Quote & Invoice"}
-                {activeTab === tab && (
+                {tab.label}
+                {tab.count !== undefined && tab.count > 0 && (
+                  <span
+                    className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                    style={{
+                      background: activeTab === tab.id ? "#053E50" : "#E8E0DB",
+                      color:      activeTab === tab.id ? "#EBE2E0"  : "#8A7F7D",
+                    }}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+                {activeTab === tab.id && (
                   <span className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: "#053E50" }} />
                 )}
               </button>
@@ -463,36 +635,31 @@ export default function Trip() {
         </div>
       </nav>
 
-      {/* ══ JOURNEY TAB ══════════════════════════════════════════════════════ */}
+      {/* ══ YOUR JOURNEY TAB ═════════════════════════════════════════════════ */}
       <main className={`pb-40 ${activeTab === "journey" ? "block print-hide" : "hidden"}`}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-10 py-14 md:py-20">
           <div className="space-y-20 md:space-y-28">
 
             {itinerary.days.map((day, dayIdx) => (
               <section key={day.day}>
-
-                {/* ── Chapter header ──────────────────────────────────── */}
+                {/* Chapter header */}
                 <div className="mb-10">
-                  {/* Chapter word */}
                   <p className="text-xs tracking-[0.35em] uppercase mb-2" style={{ color: "#937C66" }}>
                     Chapter {CHAPTERS[dayIdx] ?? dayIdx + 1}
                   </p>
-                  {/* Day date — editorial serif */}
                   <h2
-                    className="font-light leading-tight mb-4"
-                    style={{
-                      fontFamily: "'Source Serif 4', Georgia, serif",
-                      fontSize: "clamp(1.6rem, 4vw, 2.4rem)",
-                      color: "#053E50",
-                    }}
+                    className="font-light leading-tight mb-1"
+                    style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "clamp(1.6rem, 4vw, 2.4rem)", color: "#053E50" }}
                   >
-                    {format(parseISO(day.date), "EEEE, MMMM d")}
+                    {day.dayTitle ?? format(parseISO(day.date), "EEEE, MMMM d")}
                   </h2>
-                  {/* Accent rule */}
+                  <p className="text-sm mb-4" style={{ color: "#8A7F7D" }}>
+                    {format(parseISO(day.date), "EEEE, MMMM d")}
+                  </p>
                   <div className="h-[2px] w-12" style={{ background: "#937C66" }} />
                 </div>
 
-                {/* ── Activity cards ───────────────────────────────────── */}
+                {/* Activity cards */}
                 <div className="space-y-8">
                   {day.activities.map((activity, idx) => (
                     <article
@@ -516,27 +683,20 @@ export default function Trip() {
                             }}
                           />
                         )}
-                        {/* Cinematic gradient overlay */}
                         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 45%, rgba(5,62,80,0.4) 100%)" }} />
 
-                        {/* Time badge — top left */}
+                        {/* Time badge */}
                         <div className="absolute top-4 left-4">
-                          <span
-                            className={`inline-flex items-center gap-1.5 text-xs font-medium border px-3 py-1.5 backdrop-blur-sm ${timeBg(activity.time)}`}
-                            style={{ borderRadius: "1px" }}
-                          >
+                          <span className={`inline-flex items-center gap-1.5 text-xs font-medium border px-3 py-1.5 backdrop-blur-sm ${timeBg(activity.time)}`} style={{ borderRadius: "1px" }}>
                             <TimeIcon time={activity.time} />
                             {activity.time}
                           </span>
                         </div>
 
-                        {/* Category badge — top right */}
+                        {/* Category badge */}
                         {activity.category && (
                           <div className="absolute top-4 right-4">
-                            <span
-                              className="text-xs tracking-[0.14em] uppercase px-3 py-1.5 bg-[#053E50]/70 backdrop-blur-sm"
-                              style={{ color: "#EBE2E0", borderRadius: "1px" }}
-                            >
+                            <span className="text-xs tracking-[0.14em] uppercase px-3 py-1.5 bg-[#053E50]/70 backdrop-blur-sm" style={{ color: "#EBE2E0", borderRadius: "1px" }}>
                               {activity.category}
                             </span>
                           </div>
@@ -547,36 +707,19 @@ export default function Trip() {
                       <div className="px-7 py-8 sm:px-9 sm:py-9">
                         <h3
                           className="font-light mb-3 leading-snug"
-                          style={{
-                            fontFamily: "'Source Serif 4', Georgia, serif",
-                            fontSize: "clamp(1.2rem, 3vw, 1.5rem)",
-                            color: "#053E50",
-                          }}
+                          style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "clamp(1.2rem, 3vw, 1.5rem)", color: "#053E50" }}
                         >
                           {activity.name}
                         </h3>
-                        <p
-                          className="leading-relaxed mb-6"
-                          style={{ fontSize: "0.925rem", color: "#4A4340", lineHeight: 1.75 }}
-                        >
+                        <p className="leading-relaxed mb-6" style={{ fontSize: "0.925rem", color: "#4A4340", lineHeight: 1.75 }}>
                           {activity.description}
                         </p>
 
-                        {/* Footer: meta + request */}
                         <div className="flex flex-wrap items-center gap-4 pt-5 border-t border-[#F0ECEA]">
                           <span className="inline-flex items-center gap-1.5 text-xs" style={{ color: "#937C66" }}>
                             <Clock className="h-3.5 w-3.5" />
                             {activity.duration}
                           </span>
-                          {activity.pricePerPerson > 0 && (
-                            <span className="text-xs" style={{ color: "#A5948D" }}>
-                              From{" "}
-                              <strong style={{ color: "#053E50", fontWeight: 500 }}>
-                                ${activity.pricePerPerson.toLocaleString()}
-                              </strong>{" "}
-                              per person
-                            </span>
-                          )}
                           <button
                             onClick={() => { setRequestModal(activity.name); setRequestMsg(""); }}
                             className="ml-auto inline-flex items-center gap-1.5 text-xs transition-opacity hover:opacity-60"
@@ -595,213 +738,71 @@ export default function Trip() {
 
           </div>
 
-          {/* ── CTA ──────────────────────────────────────────────────── */}
+          {/* Journey CTA */}
           <div className="mt-20 text-center pt-12 border-t border-[#E8E0DB]">
             <p className="text-sm mb-2" style={{ color: "#A5948D" }}>
               {itinerary.days.length} days · {itinerary.days.reduce((a, d) => a + d.activities.length, 0)} curated experiences
             </p>
-            <p
-              className="text-lg font-light mb-8"
-              style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}
-            >
-              Ready to make this journey yours?
+            <p className="text-lg font-light mb-8" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
+              Ready to review the details?
             </p>
-            <button
-              onClick={() => setActiveTab("invoice")}
-              className="inline-flex items-center gap-3 text-sm tracking-[0.14em] uppercase text-white px-12 py-4 transition-opacity duration-300 hover:opacity-85"
-              style={{ background: "#053E50", borderRadius: "1px" }}
-            >
-              Review Quote &amp; Approve
-              <ChevronRight className="h-4 w-4" />
-            </button>
+            <div className="flex flex-wrap justify-center gap-3">
+              {(itinerary.inVillaInvoice?.length ?? 0) > 0 && (
+                <button onClick={() => setActiveTab("in_villa")} className="inline-flex items-center gap-3 text-sm tracking-[0.14em] uppercase text-white px-8 py-4 transition-opacity duration-300 hover:opacity-85" style={{ background: "#053E50", borderRadius: "1px" }}>
+                  In-Villa Services <ChevronRight className="h-4 w-4" />
+                </button>
+              )}
+              {(itinerary.excursionInvoice?.length ?? 0) > 0 && (
+                <button onClick={() => setActiveTab("excursions")} className="inline-flex items-center gap-3 text-sm tracking-[0.14em] uppercase border px-8 py-4 transition-opacity duration-300 hover:opacity-85" style={{ borderColor: "#053E50", color: "#053E50", borderRadius: "1px" }}>
+                  Excursions <ChevronRight className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </main>
 
-      {/* ══ INVOICE TAB ══════════════════════════════════════════════════════ */}
-      <div
-        id="invoice-document"
-        className={`pb-40 ${activeTab === "invoice" ? "block" : "hidden print-show"}`}
-      >
-        <div className="max-w-3xl mx-auto px-6 sm:px-8 md:px-10 py-12 md:py-16">
-
-          {/* Letterhead */}
-          <div className="flex justify-between items-start pb-8 mb-10 border-b-2 border-[#053E50]">
-            <div>
-              <PureKauaiLogo variant="dark" size="lg" />
-              <div className="mt-5 space-y-0.5">
-                <p className="text-xs" style={{ color: "#8A7F7D" }}>North Shore, Kauai, Hawaii 96714</p>
-                <p className="text-xs" style={{ color: "#8A7F7D" }}>
-                  {itinerary.hostEmail ?? "concierge@purekauai.com"} ·{" "}
-                  {itinerary.hostPhone ?? "+1 808 826 0000"}
-                </p>
-                {itinerary.hostName && (
-                  <p className="text-xs font-medium" style={{ color: "#053E50" }}>
-                    {itinerary.hostName}, Pure Kauai Concierge
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="text-right">
-              <h2
-                className="text-2xl font-light"
-                style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}
-              >
-                Travel Proposal
-              </h2>
-              {itinerary.approved && (
-                <div className="inline-flex items-center gap-1.5 mt-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs tracking-[0.12em] uppercase px-3 py-1.5">
-                  <Check className="h-3 w-3" />
-                  Approved & Confirmed
-                </div>
-              )}
-              <div className="mt-3 space-y-0.5">
-                <p className="text-xs" style={{ color: "#B0A9A6" }}>Ref: {id?.slice(0, 8).toUpperCase()}</p>
-                <p className="text-xs" style={{ color: "#B0A9A6" }}>{format(new Date(), "MMMM d, yyyy")}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Guest block */}
-          <div className="grid grid-cols-2 gap-8 mb-10 pb-8 border-b border-[#E8E0DB]">
-            <div>
-              <p className="text-xs tracking-[0.18em] uppercase mb-2" style={{ color: "#8A7F7D" }}>Prepared for</p>
-              <p className="font-medium text-lg" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
-                {itinerary.guestName}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs tracking-[0.18em] uppercase mb-2" style={{ color: "#8A7F7D" }}>Travel Dates</p>
-              <p className="text-sm font-medium" style={{ color: "#053E50" }}>
-                {format(parseISO(itinerary.checkIn), "MMMM d")} — {format(parseISO(itinerary.checkOut), "MMMM d, yyyy")}
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: "#8A7F7D" }}>
-                {totalGuests} Guest{totalGuests !== 1 ? "s" : ""}
-                {itinerary.adults > 0 && ` (${itinerary.adults} adult${itinerary.adults !== 1 ? "s" : ""}${itinerary.children > 0 ? `, ${itinerary.children} child${itinerary.children !== 1 ? "ren" : ""}` : ""})`}
-              </p>
-            </div>
-          </div>
-
-          {/* Line items */}
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ borderBottom: "2px solid #E8E0DB" }}>
-                <th className="text-left pb-3 text-xs tracking-[0.18em] uppercase font-medium" style={{ color: "#8A7F7D" }}>Experience</th>
-                <th className="text-right pb-3 text-xs tracking-[0.18em] uppercase font-medium px-3" style={{ color: "#8A7F7D" }}>Rate</th>
-                <th className="text-right pb-3 text-xs tracking-[0.18em] uppercase font-medium px-3" style={{ color: "#8A7F7D" }}>Guests</th>
-                <th className="text-right pb-3 text-xs tracking-[0.18em] uppercase font-medium pl-4" style={{ color: "#8A7F7D" }}>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {itinerary.days.map((day) => (
-                <Fragment key={day.day}>
-                  <tr>
-                    <td colSpan={4} className="pt-7 pb-2">
-                      <span className="text-xs tracking-[0.2em] uppercase font-medium" style={{ color: "#37729A" }}>
-                        {format(parseISO(day.date), "EEEE, MMMM d")}
-                      </span>
-                    </td>
-                  </tr>
-                  {day.activities.map((activity, idx) => (
-                    <tr key={idx} style={{ borderBottom: "1px solid #F4F0EE" }}>
-                      <td className="py-4 pr-3">
-                        <div className="font-medium text-sm" style={{ color: "#1A2E35" }}>{activity.name}</div>
-                        <div className="text-xs mt-0.5" style={{ color: "#8A7F7D" }}>{activity.time} · {activity.duration}</div>
-                      </td>
-                      <td className="py-4 px-3 text-right text-sm" style={{ color: "#5C5350" }}>
-                        ${activity.pricePerPerson.toLocaleString()}
-                      </td>
-                      <td className="py-4 px-3 text-right text-sm" style={{ color: "#5C5350" }}>
-                        {totalGuests}
-                      </td>
-                      <td className="py-4 pl-4 text-right text-sm font-medium" style={{ color: "#1A2E35" }}>
-                        ${(activity.pricePerPerson * totalGuests).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Totals */}
-          <div className="mt-8 flex justify-end">
-            <div className="w-full max-w-xs space-y-3">
-              <div className="flex justify-between text-sm pb-4 border-b border-[#E8E0DB]">
-                <span style={{ color: "#8A7F7D" }}>Subtotal</span>
-                <span className="font-medium" style={{ color: "#1A2E35" }}>${subtotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-baseline pt-1">
-                <div>
-                  <div className="text-sm font-medium" style={{ color: "#053E50" }}>Deposit Due Now</div>
-                  <div className="text-xs mt-0.5" style={{ color: "#8A7F7D" }}>50% to confirm reservation</div>
-                </div>
-                <span className="text-2xl font-light" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
-                  ${deposit.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between items-baseline pt-2">
-                <div>
-                  <div className="text-sm" style={{ color: "#8A7F7D" }}>Balance Due</div>
-                  <div className="text-xs mt-0.5" style={{ color: "#B0A9A6" }}>30 days prior to arrival</div>
-                </div>
-                <span className="text-sm font-medium" style={{ color: "#5C5350" }}>${deposit.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Fine print */}
-          <div className="mt-10 pt-8 border-t border-[#E8E0DB]">
-            <p className="text-xs leading-relaxed" style={{ color: "#B0A9A6" }}>
-              This proposal is prepared exclusively for {itinerary.guestName} and is valid for 14 days from the date above.
-              All experiences are subject to availability and confirmed upon receipt of deposit. Rates are quoted in USD.
-              Taxes, gratuities, and transportation not included unless stated.
-            </p>
-          </div>
-
-          {/* Invoice actions (screen only) */}
-          <div className="print-hide mt-10 flex flex-col sm:flex-row gap-3">
-            {!itinerary.approved ? (
-              <button
-                onClick={handleApprove}
-                disabled={approveItinerary.isPending}
-                className="flex-1 flex items-center justify-center gap-2.5 text-white text-sm tracking-[0.12em] uppercase py-4 transition-opacity duration-200 disabled:opacity-60"
-                style={{ background: "#053E50", borderRadius: "1px" }}
-              >
-                {approveItinerary.isPending ? (
-                  <>
-                    <span className="h-4 w-4 border border-white/40 border-t-white rounded-full animate-spin" />
-                    Confirming…
-                  </>
-                ) : (
-                  <>
-                    <Check className="h-4 w-4" />
-                    Approve & Confirm Itinerary
-                  </>
-                )}
-              </button>
-            ) : (
-              <div
-                className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm tracking-[0.1em] uppercase py-4"
-                style={{ borderRadius: "1px" }}
-              >
-                <Check className="h-4 w-4" />
-                Approved & Confirmed
-              </div>
-            )}
-            <button
-              onClick={handlePrint}
-              className="flex items-center justify-center gap-2 border border-[#E8E0DB] hover:border-[#053E50]/30 text-sm tracking-[0.1em] uppercase py-4 px-6 transition-colors duration-200"
-              style={{ color: "#5C5350", borderRadius: "1px" }}
-            >
-              <Printer className="h-4 w-4" />
-              Print Invoice
-            </button>
-          </div>
-        </div>
+      {/* ══ IN-VILLA SERVICES TAB ════════════════════════════════════════════ */}
+      <div className={activeTab === "in_villa" ? "block" : "hidden"}>
+        <InvoicePanel
+          title="In-Villa Services"
+          items={itinerary.inVillaInvoice ?? []}
+          guestName={itinerary.guestName}
+          checkIn={itinerary.checkIn}
+          checkOut={itinerary.checkOut}
+          adults={itinerary.adults}
+          children={itinerary.children}
+          hostName={itinerary.hostName}
+          hostEmail={itinerary.hostEmail}
+          hostPhone={itinerary.hostPhone}
+          itineraryId={id}
+          approved={itinerary.approved}
+          onApprove={handleApprove}
+          isPending={approveItinerary.isPending}
+        />
       </div>
 
-      {/* ══ STICKY ACTION BAR (screen only) ════════════════════════════════ */}
+      {/* ══ EXCURSIONS TAB ═══════════════════════════════════════════════════ */}
+      <div className={activeTab === "excursions" ? "block" : "hidden"}>
+        <InvoicePanel
+          title="Excursions"
+          items={itinerary.excursionInvoice ?? []}
+          guestName={itinerary.guestName}
+          checkIn={itinerary.checkIn}
+          checkOut={itinerary.checkOut}
+          adults={itinerary.adults}
+          children={itinerary.children}
+          hostName={itinerary.hostName}
+          hostEmail={itinerary.hostEmail}
+          hostPhone={itinerary.hostPhone}
+          itineraryId={id}
+          approved={itinerary.approved}
+          onApprove={handleApprove}
+          isPending={approveItinerary.isPending}
+        />
+      </div>
+
+      {/* ══ STICKY ACTION BAR ════════════════════════════════════════════════ */}
       <div
         className="print-hide fixed bottom-0 left-0 right-0 z-30 border-t border-[#E8E0DB]"
         style={{ background: "rgba(250,248,246,0.97)", backdropFilter: "blur(12px)" }}
@@ -825,13 +826,17 @@ export default function Trip() {
             <span className="hidden xs:inline sm:inline">Email Guest</span>
           </button>
 
-          <div className="flex-1 hidden sm:block" />
+          {grandTotal > 0 && (
+            <div className="hidden sm:flex flex-col items-end mx-3">
+              <span className="text-xs" style={{ color: "#A5948D" }}>Total estimate</span>
+              <span className="text-sm font-medium" style={{ color: "#053E50" }}>{fmt(grandTotal)}</span>
+            </div>
+          )}
+
+          <div className="flex-1" />
 
           {itinerary.approved ? (
-            <div
-              className="flex items-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase py-3.5 px-5 sm:px-8 bg-emerald-50 border border-emerald-200 text-emerald-700"
-              style={{ borderRadius: "1px" }}
-            >
+            <div className="flex items-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase py-3.5 px-5 sm:px-8 bg-emerald-50 border border-emerald-200 text-emerald-700" style={{ borderRadius: "1px" }}>
               <Check className="h-4 w-4 shrink-0" />
               <span>Confirmed</span>
             </div>
@@ -839,38 +844,20 @@ export default function Trip() {
             <button
               onClick={handleApprove}
               disabled={approveItinerary.isPending}
-              className="flex items-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase text-white py-3.5 px-5 sm:px-8 transition-opacity duration-200 disabled:opacity-60 hover:opacity-90"
+              className="flex items-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase text-white py-3.5 px-5 sm:px-8 transition-opacity duration-200 disabled:opacity-60"
               style={{ background: "#053E50", borderRadius: "1px" }}
             >
               {approveItinerary.isPending ? (
-                <span className="h-4 w-4 border border-white/40 border-t-white rounded-full animate-spin" />
+                <span className="h-4 w-4 border border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <Check className="h-4 w-4 shrink-0" />
               )}
-              <span>Approve Itinerary</span>
+              <span>Approve</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* ══ MODALS ══════════════════════════════════════════════════════════ */}
-      {showModal && (
-        <ApproveModal
-          guestName={itinerary.guestName}
-          onClose={() => setShowModal(false)}
-        />
-      )}
-      {requestModal && (
-        <RequestChangeModal
-          activityName={requestModal}
-          hostEmail={itinerary.hostEmail}
-          guestName={itinerary.guestName}
-          tripId={id}
-          message={requestMsg}
-          onMessageChange={setRequestMsg}
-          onClose={() => { setRequestModal(null); setRequestMsg(""); }}
-        />
-      )}
     </div>
   );
 }

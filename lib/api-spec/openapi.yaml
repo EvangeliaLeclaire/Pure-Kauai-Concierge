@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Api
-  version: 0.1.0
+  version: 0.2.0
   description: Pure Kauai Luxury Travel Concierge API
 servers:
   - url: /api
@@ -11,8 +11,6 @@ tags:
     description: Health operations
   - name: itineraries
     description: Itinerary operations
-  - name: activities
-    description: Activity catalog operations
 paths:
   /healthz:
     get:
@@ -108,21 +106,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /activities:
-    get:
-      operationId: listActivities
-      tags: [activities]
-      summary: List all available activities
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Activity"
-
 components:
   schemas:
     HealthStatus:
@@ -149,8 +132,6 @@ components:
         - checkOut
         - adults
         - children
-        - interests
-        - budgetTier
         - specialOccasion
       properties:
         guestName:
@@ -165,17 +146,36 @@ components:
         children:
           type: integer
           minimum: 0
-        interests:
+        childrenAges:
+          type: ["string", "null"]
+        hasPets:
+          type: ["boolean", "null"]
+        specialOccasion:
+          type: string
+          enum:
+            - None
+            - Anniversary
+            - Honeymoon
+            - Birthday
+            - "Family Reunion"
+            - "Corporate Retreat"
+            - "Vow Renewal"
+            - "Milestone Celebration"
+        specialNotes:
+          type: ["string", "null"]
+        villaServices:
           type: array
           items:
             type: string
-        budgetTier:
-          type: string
-          enum: [Premium, Ultra-Luxury]
-        specialOccasion:
-          type: string
-          enum: [None, Anniversary, Honeymoon, Birthday, Family Reunion]
-        specialNotes:
+        inVillaExperiences:
+          type: array
+          items:
+            type: string
+        excursions:
+          type: array
+          items:
+            type: string
+        customRequest:
           type: ["string", "null"]
         hostName:
           type: ["string", "null"]
@@ -184,48 +184,86 @@ components:
         hostPhone:
           type: ["string", "null"]
 
-    ItineraryDay:
+    InvoiceItem:
       type: object
       required:
-        - day
-        - date
-        - activities
+        - name
+        - category
+        - description
+        - pricePerUnit
+        - quantity
+        - unit
+        - totalPrice
       properties:
-        day:
-          type: integer
-        date:
+        name:
           type: string
-        activities:
-          type: array
-          items:
-            $ref: "#/components/schemas/ItineraryActivity"
+        category:
+          type: string
+        description:
+          type: string
+        duration:
+          type: ["string", "null"]
+        pricePerUnit:
+          type: number
+        quantity:
+          type: number
+        unit:
+          type: string
+        totalPrice:
+          type: number
+        unsplashKeyword:
+          type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
 
     ItineraryActivity:
       type: object
       required:
         - time
         - name
+        - category
         - description
         - duration
-        - pricePerPerson
+        - serviceType
         - unsplashKeyword
       properties:
         time:
           type: string
         name:
           type: string
+        category:
+          type: string
         description:
           type: string
         duration:
           type: string
-        pricePerPerson:
-          type: number
+        serviceType:
+          type: string
         unsplashKeyword:
           type: string
-        category:
-          type: ["string", "null"]
         photoUrl:
           type: ["string", "null"]
+
+    ItineraryDay:
+      type: object
+      required:
+        - day
+        - dayTitle
+        - date
+        - activities
+      properties:
+        day:
+          type: integer
+        dayTitle:
+          type: string
+        date:
+          type: string
+        activities:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItineraryActivity"
 
     Itinerary:
       type: object
@@ -236,10 +274,13 @@ components:
         - checkOut
         - adults
         - children
-        - interests
-        - budgetTier
         - specialOccasion
+        - villaServices
+        - inVillaExperiences
+        - excursions
         - days
+        - inVillaInvoice
+        - excursionInvoice
         - approved
         - createdAt
       properties:
@@ -255,15 +296,27 @@ components:
           type: integer
         children:
           type: integer
-        interests:
-          type: array
-          items:
-            type: string
-        budgetTier:
-          type: string
+        childrenAges:
+          type: ["string", "null"]
+        hasPets:
+          type: ["boolean", "null"]
         specialOccasion:
           type: string
         specialNotes:
+          type: ["string", "null"]
+        villaServices:
+          type: array
+          items:
+            type: string
+        inVillaExperiences:
+          type: array
+          items:
+            type: string
+        excursions:
+          type: array
+          items:
+            type: string
+        customRequest:
           type: ["string", "null"]
         hostName:
           type: ["string", "null"]
@@ -277,36 +330,15 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ItineraryDay"
+        inVillaInvoice:
+          type: array
+          items:
+            $ref: "#/components/schemas/InvoiceItem"
+        excursionInvoice:
+          type: array
+          items:
+            $ref: "#/components/schemas/InvoiceItem"
         approved:
           type: boolean
         createdAt:
-          type: string
-
-    Activity:
-      type: object
-      required:
-        - name
-        - category
-        - description
-        - duration
-        - pricePerPerson
-        - bestFor
-        - timeOfDay
-        - unsplashKeyword
-      properties:
-        name:
-          type: string
-        category:
-          type: string
-        description:
-          type: string
-        duration:
-          type: string
-        pricePerPerson:
-          type: number
-        bestFor:
-          type: string
-        timeOfDay:
-          type: string
-        unsplashKeyword:
           type: string

@@ -3,12 +3,13 @@
  * Do not edit manually.
  * Api
  * Pure Kauai Luxury Travel Concierge API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import type { ItineraryActivity } from './itineraryActivity';
 
 export interface ItineraryDay {
   day: number;
+  dayTitle: string;
   date: string;
   activities: ItineraryActivity[];
 }

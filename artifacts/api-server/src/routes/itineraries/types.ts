@@ -1,16 +1,31 @@
+export interface InvoiceItem {
+  name: string;
+  category: string;
+  description: string;
+  duration: string | null;
+  pricePerUnit: number;
+  quantity: number;
+  unit: string;
+  totalPrice: number;
+  unsplashKeyword: string | null;
+  photoUrl: string | null;
+  notes: string | null;
+}
+
 export interface ItineraryActivity {
   time: string;
   name: string;
   category: string;
   description: string;
   duration: string;
-  pricePerPerson: number;
+  serviceType: string; // "in_villa" | "excursion"
   unsplashKeyword: string;
   photoUrl: string | null;
 }
 
 export interface ItineraryDay {
   day: number;
+  dayTitle: string;
   date: string;
   activities: ItineraryActivity[];
 }
@@ -22,15 +37,21 @@ export interface Itinerary {
   checkOut: string;
   adults: number;
   children: number;
-  interests: string[];
-  budgetTier: string;
+  childrenAges: string | null;
+  hasPets: boolean | null;
   specialOccasion: string;
   specialNotes: string | null;
+  villaServices: string[];
+  inVillaExperiences: string[];
+  excursions: string[];
+  customRequest: string | null;
   hostName: string | null;
   hostEmail: string | null;
   hostPhone: string | null;
   welcomeMessage: string | null;
   days: ItineraryDay[];
+  inVillaInvoice: InvoiceItem[];
+  excursionInvoice: InvoiceItem[];
   approved: boolean;
   createdAt: string;
 }
