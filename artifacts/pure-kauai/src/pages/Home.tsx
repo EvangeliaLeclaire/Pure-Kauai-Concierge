@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PureKauaiLogo } from "@/components/PureKauaiLogo";
 
 const interestsOptions = [
   "Beach & Water",
@@ -115,8 +116,8 @@ export default function Home() {
     <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl font-serif text-primary mb-3">Pure Kauai</h1>
-          <p className="text-lg text-muted-foreground font-serif italic">Concierge Itinerary Generator</p>
+          <PureKauaiLogo variant="dark" size="xl" className="mx-auto mb-4" />
+          <p className="text-sm tracking-[0.22em] uppercase" style={{ color: "#937C66" }}>Concierge Itinerary Generator</p>
         </div>
 
         <Card className="border-0 shadow-xl bg-card">
