@@ -5,6 +5,7 @@ import {
   Clock, Users, MapPin, Calendar,
   Sun, Sunset, Moon,
   Printer, Check, Link2, Mail, X, ChevronRight,
+  Phone, MessageSquare,
 } from "lucide-react";
 import { useGetItinerary, useApproveItinerary, getGetItineraryQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -25,6 +26,96 @@ function timeBg(time: string) {
   if (t.includes("morning"))   return "bg-amber-50  text-amber-800  border-amber-200";
   if (t.includes("afternoon")) return "bg-sky-50    text-sky-800    border-sky-200";
   return                               "bg-[#053E50]/8 text-[#053E50] border-[#053E50]/20";
+}
+
+// ─── Request Change modal ────────────────────────────────────────────────────
+
+function RequestChangeModal({
+  activityName,
+  hostEmail,
+  guestName,
+  tripId,
+  message,
+  onMessageChange,
+  onClose,
+}: {
+  activityName: string;
+  hostEmail: string | null | undefined;
+  guestName: string;
+  tripId: string;
+  message: string;
+  onMessageChange: (v: string) => void;
+  onClose: () => void;
+}) {
+  const handleSend = () => {
+    if (!hostEmail) { onClose(); return; }
+    const subject = encodeURIComponent(`Change Request — ${guestName}: ${activityName}`);
+    const body = encodeURIComponent(
+      `Trip ID: ${tripId}\nGuest: ${guestName}\nActivity: ${activityName}\n\nRequest:\n${message}`
+    );
+    window.location.href = `mailto:${hostEmail}?subject=${subject}&body=${body}`;
+    onClose();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        className="bg-white w-full max-w-md mx-auto shadow-2xl relative animate-in fade-in zoom-in-95 duration-300"
+        style={{ borderRadius: "2px" }}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 text-[#A5948D] hover:text-[#053E50] transition-colors"
+          aria-label="Close"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        <div className="px-8 py-10">
+          <p className="text-xs tracking-[0.18em] uppercase mb-1" style={{ color: "#937C66" }}>Request a Change</p>
+          <h2
+            className="text-xl font-light mb-1 leading-snug pr-8"
+            style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}
+          >
+            {activityName}
+          </h2>
+          <p className="text-xs mb-6" style={{ color: "#A5948D" }}>
+            Describe what you'd like adjusted. Your concierge will follow up personally.
+          </p>
+
+          <textarea
+            className="w-full border border-[#E8E0DB] focus:border-[#053E50]/40 outline-none resize-none text-sm leading-relaxed px-4 py-3 transition-colors"
+            style={{ borderRadius: "1px", color: "#1A2E35", minHeight: "120px", background: "#FAF8F6" }}
+            placeholder="e.g. Could we move this to the morning instead? Or swap for a kayaking alternative?"
+            value={message}
+            onChange={(e) => onMessageChange(e.target.value)}
+            autoFocus
+          />
+
+          <div className="flex gap-3 mt-5">
+            <button
+              onClick={onClose}
+              className="flex-1 border border-[#E8E0DB] hover:border-[#053E50]/30 text-sm tracking-[0.10em] uppercase py-3 transition-colors"
+              style={{ borderRadius: "1px", color: "#8A7F7D" }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSend}
+              disabled={!message.trim()}
+              className="flex-1 text-white text-sm tracking-[0.10em] uppercase py-3 transition-opacity disabled:opacity-40"
+              style={{ background: "#053E50", borderRadius: "1px" }}
+            >
+              Send Request
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ─── Approve modal ───────────────────────────────────────────────────────────
@@ -98,9 +189,11 @@ export default function Trip() {
   });
 
   const approveItinerary = useApproveItinerary();
-  const [copied,      setCopied]      = useState(false);
-  const [showModal,   setShowModal]   = useState(false);
-  const [activeTab,   setActiveTab]   = useState<"journey" | "invoice">("journey");
+  const [copied,        setCopied]        = useState(false);
+  const [showModal,     setShowModal]     = useState(false);
+  const [activeTab,     setActiveTab]     = useState<"journey" | "invoice">("journey");
+  const [requestModal,  setRequestModal]  = useState<string | null>(null);
+  const [requestMsg,    setRequestMsg]    = useState("");
 
   // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading) {
@@ -270,7 +363,52 @@ export default function Trip() {
       <main
         className={`pb-36 ${activeTab === "journey" ? "block print-hide" : "hidden"}`}
       >
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-12 md:py-16 space-y-16 md:space-y-20">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-12 md:py-16">
+
+          {/* Concierge contact card */}
+          {(itinerary.hostName || itinerary.hostEmail || itinerary.hostPhone) && (
+            <div
+              className="mb-14 flex flex-col sm:flex-row sm:items-center gap-6 p-7 sm:p-8"
+              style={{ background: "#F5EFE9", borderLeft: "3px solid #937C66" }}
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-xs tracking-[0.18em] uppercase mb-2" style={{ color: "#937C66" }}>Your Personal Concierge</p>
+                <p
+                  className="text-xl font-light leading-snug"
+                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}
+                >
+                  {itinerary.hostName}
+                </p>
+                <p className="text-sm mt-1" style={{ color: "#8A7F7D" }}>
+                  Available throughout your journey for any request, large or small.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3 shrink-0">
+                {itinerary.hostPhone && (
+                  <a
+                    href={`tel:${itinerary.hostPhone}`}
+                    className="inline-flex items-center gap-2 text-sm tracking-[0.10em] uppercase px-5 py-3 border transition-colors duration-200 hover:bg-white"
+                    style={{ borderColor: "#C9BAB0", color: "#053E50", borderRadius: "1px" }}
+                  >
+                    <Phone className="h-3.5 w-3.5" />
+                    Call Concierge
+                  </a>
+                )}
+                {itinerary.hostEmail && (
+                  <a
+                    href={`mailto:${itinerary.hostEmail}`}
+                    className="inline-flex items-center gap-2 text-sm tracking-[0.10em] uppercase px-5 py-3 transition-colors duration-200 hover:opacity-90"
+                    style={{ background: "#053E50", color: "#EBE2E0", borderRadius: "1px" }}
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    Email Concierge
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-16 md:space-y-20">
           {itinerary.days.map((day, dayIdx) => (
             <section key={day.day}>
               {/* Day header */}
@@ -358,6 +496,14 @@ export default function Trip() {
                             From <strong style={{ color: "#053E50" }}>${activity.pricePerPerson.toLocaleString()}</strong> per person
                           </span>
                         )}
+                        <button
+                          onClick={() => { setRequestModal(activity.name); setRequestMsg(""); }}
+                          className="ml-auto inline-flex items-center gap-1.5 text-xs transition-colors duration-200 hover:opacity-70"
+                          style={{ color: "#A5948D" }}
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          Request Change
+                        </button>
                       </div>
                     </div>
                   </article>
@@ -365,6 +511,8 @@ export default function Trip() {
               </div>
             </section>
           ))}
+
+          </div>{/* /space-y-16 day cards */}
 
           {/* CTA to invoice */}
           <div className="text-center pt-4 border-t border-[#E8E0DB]">
@@ -619,6 +767,19 @@ export default function Trip() {
         <ApproveModal
           guestName={itinerary.guestName}
           onClose={() => setShowModal(false)}
+        />
+      )}
+
+      {/* ══ REQUEST CHANGE MODAL ════════════════════════════════════════════ */}
+      {requestModal && (
+        <RequestChangeModal
+          activityName={requestModal}
+          hostEmail={itinerary.hostEmail}
+          guestName={itinerary.guestName}
+          tripId={id}
+          message={requestMsg}
+          onMessageChange={setRequestMsg}
+          onClose={() => { setRequestModal(null); setRequestMsg(""); }}
         />
       )}
     </div>

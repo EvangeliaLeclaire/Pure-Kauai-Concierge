@@ -14,5 +14,7 @@ export interface ItineraryActivity {
   pricePerPerson: number;
   unsplashKeyword: string;
   /** @nullable */
+  category?: string | null;
+  /** @nullable */
   photoUrl?: string | null;
 }

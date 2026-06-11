@@ -45,6 +45,12 @@ export interface ItineraryInput {
   specialOccasion: ItineraryInputSpecialOccasion;
   /** @nullable */
   specialNotes?: string | null;
+  /** @nullable */
+  hostName?: string | null;
+  /** @nullable */
+  hostEmail?: string | null;
+  /** @nullable */
+  hostPhone?: string | null;
 }
 
 export interface ItineraryActivity {
@@ -54,6 +60,8 @@ export interface ItineraryActivity {
   duration: string;
   pricePerPerson: number;
   unsplashKeyword: string;
+  /** @nullable */
+  category?: string | null;
   /** @nullable */
   photoUrl?: string | null;
 }
@@ -76,6 +84,12 @@ export interface Itinerary {
   specialOccasion: string;
   /** @nullable */
   specialNotes?: string | null;
+  /** @nullable */
+  hostName?: string | null;
+  /** @nullable */
+  hostEmail?: string | null;
+  /** @nullable */
+  hostPhone?: string | null;
   /** @nullable */
   welcomeMessage?: string | null;
   days: ItineraryDay[];

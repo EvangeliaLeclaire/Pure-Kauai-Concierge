@@ -26,6 +26,9 @@ export interface Itinerary {
   budgetTier: string;
   specialOccasion: string;
   specialNotes: string | null;
+  hostName: string | null;
+  hostEmail: string | null;
+  hostPhone: string | null;
   welcomeMessage: string | null;
   days: ItineraryDay[];
   approved: boolean;

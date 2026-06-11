@@ -17,6 +17,9 @@ router.post("/itineraries", async (req, res) => {
     budgetTier,
     specialOccasion,
     specialNotes,
+    hostName,
+    hostEmail,
+    hostPhone,
   } = req.body as {
     guestName: string;
     checkIn: string;
@@ -27,6 +30,9 @@ router.post("/itineraries", async (req, res) => {
     budgetTier: string;
     specialOccasion: string;
     specialNotes?: string | null;
+    hostName?: string | null;
+    hostEmail?: string | null;
+    hostPhone?: string | null;
   };
 
   if (!guestName || !checkIn || !checkOut || !adults || !interests || !budgetTier || !specialOccasion) {
@@ -57,6 +63,9 @@ router.post("/itineraries", async (req, res) => {
     budgetTier,
     specialOccasion,
     specialNotes: specialNotes ?? null,
+    hostName: hostName ?? null,
+    hostEmail: hostEmail ?? null,
+    hostPhone: hostPhone ?? null,
     welcomeMessage: generated.welcomeMessage,
     days: generated.days,
     approved: false,

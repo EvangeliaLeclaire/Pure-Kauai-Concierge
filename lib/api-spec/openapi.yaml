@@ -177,6 +177,12 @@ components:
           enum: [None, Anniversary, Honeymoon, Birthday, Family Reunion]
         specialNotes:
           type: ["string", "null"]
+        hostName:
+          type: ["string", "null"]
+        hostEmail:
+          type: ["string", "null"]
+        hostPhone:
+          type: ["string", "null"]
 
     ItineraryDay:
       type: object
@@ -216,6 +222,8 @@ components:
           type: number
         unsplashKeyword:
           type: string
+        category:
+          type: ["string", "null"]
         photoUrl:
           type: ["string", "null"]
 
@@ -256,6 +264,12 @@ components:
         specialOccasion:
           type: string
         specialNotes:
+          type: ["string", "null"]
+        hostName:
+          type: ["string", "null"]
+        hostEmail:
+          type: ["string", "null"]
+        hostPhone:
           type: ["string", "null"]
         welcomeMessage:
           type: ["string", "null"]

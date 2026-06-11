@@ -47,6 +47,9 @@ const interestsOptions = [
 ];
 
 const formSchema = z.object({
+  hostName: z.string().min(2, "Your name is required"),
+  hostEmail: z.string().email("A valid email is required"),
+  hostPhone: z.string().min(7, "A phone number is required"),
   guestName: z.string().min(2, "Guest name is required"),
   checkIn: z.date({ required_error: "Check-in date is required" }),
   checkOut: z.date({ required_error: "Check-out date is required" }),
@@ -65,6 +68,9 @@ export default function Home() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      hostName: "",
+      hostEmail: "",
+      hostPhone: "",
       guestName: "",
       adults: 2,
       children: 0,
@@ -81,6 +87,9 @@ export default function Home() {
     createItinerary.mutate(
       {
         data: {
+          hostName: values.hostName,
+          hostEmail: values.hostEmail,
+          hostPhone: values.hostPhone,
           guestName: values.guestName,
           checkIn: format(values.checkIn, "yyyy-MM-dd"),
           checkOut: format(values.checkOut, "yyyy-MM-dd"),
@@ -133,8 +142,61 @@ export default function Home() {
               <CardContent className="pt-8 px-8 pb-8">
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                    
-                    <div className="space-y-6">
+
+                    {/* ── Host Details ─────────────────────────────────── */}
+                    <div className="space-y-4">
+                      <div className="pb-1">
+                        <p className="text-base font-serif text-foreground">Your Details</p>
+                        <p className="text-sm text-muted-foreground mt-0.5">Displayed on the guest itinerary so they can reach you directly.</p>
+                      </div>
+                      <FormField
+                        control={form.control}
+                        name="hostName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-foreground/80 font-medium">Your Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g. Malia Fonoti" className="bg-transparent" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="hostEmail"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-foreground/80 font-medium">Your Email</FormLabel>
+                              <FormControl>
+                                <Input type="email" placeholder="you@purekauai.com" className="bg-transparent" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="hostPhone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-foreground/80 font-medium">Your Phone</FormLabel>
+                              <FormControl>
+                                <Input type="tel" placeholder="+1 808 000 0000" className="bg-transparent" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    {/* ── Guest Profile ─────────────────────────────────── */}
+                    <div className="space-y-6 pt-6 border-t border-border/50">
+                      <div className="pb-1">
+                        <p className="text-base font-serif text-foreground">Guest Profile</p>
+                      </div>
                       <FormField
                         control={form.control}
                         name="guestName"

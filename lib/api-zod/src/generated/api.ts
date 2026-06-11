@@ -33,7 +33,10 @@ export const CreateItineraryBody = zod.object({
   "interests": zod.array(zod.string()),
   "budgetTier": zod.enum(['Premium', 'Ultra-Luxury']),
   "specialOccasion": zod.enum(['None', 'Anniversary', 'Honeymoon', 'Birthday', 'Family Reunion']),
-  "specialNotes": zod.string().nullish()
+  "specialNotes": zod.string().nullish(),
+  "hostName": zod.string().nullish(),
+  "hostEmail": zod.string().nullish(),
+  "hostPhone": zod.string().nullish()
 })
 
 
@@ -55,6 +58,9 @@ export const GetItineraryResponse = zod.object({
   "budgetTier": zod.string(),
   "specialOccasion": zod.string(),
   "specialNotes": zod.string().nullish(),
+  "hostName": zod.string().nullish(),
+  "hostEmail": zod.string().nullish(),
+  "hostPhone": zod.string().nullish(),
   "welcomeMessage": zod.string().nullish(),
   "days": zod.array(zod.object({
   "day": zod.number(),
@@ -66,6 +72,7 @@ export const GetItineraryResponse = zod.object({
   "duration": zod.string(),
   "pricePerPerson": zod.number(),
   "unsplashKeyword": zod.string(),
+  "category": zod.string().nullish(),
   "photoUrl": zod.string().nullish()
 }))
 })),
@@ -92,6 +99,9 @@ export const ApproveItineraryResponse = zod.object({
   "budgetTier": zod.string(),
   "specialOccasion": zod.string(),
   "specialNotes": zod.string().nullish(),
+  "hostName": zod.string().nullish(),
+  "hostEmail": zod.string().nullish(),
+  "hostPhone": zod.string().nullish(),
   "welcomeMessage": zod.string().nullish(),
   "days": zod.array(zod.object({
   "day": zod.number(),
@@ -103,6 +113,7 @@ export const ApproveItineraryResponse = zod.object({
   "duration": zod.string(),
   "pricePerPerson": zod.number(),
   "unsplashKeyword": zod.string(),
+  "category": zod.string().nullish(),
   "photoUrl": zod.string().nullish()
 }))
 })),

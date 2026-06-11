@@ -21,4 +21,10 @@ export interface ItineraryInput {
   specialOccasion: ItineraryInputSpecialOccasion;
   /** @nullable */
   specialNotes?: string | null;
+  /** @nullable */
+  hostName?: string | null;
+  /** @nullable */
+  hostEmail?: string | null;
+  /** @nullable */
+  hostPhone?: string | null;
 }

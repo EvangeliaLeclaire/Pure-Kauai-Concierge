@@ -20,6 +20,12 @@ export interface Itinerary {
   /** @nullable */
   specialNotes?: string | null;
   /** @nullable */
+  hostName?: string | null;
+  /** @nullable */
+  hostEmail?: string | null;
+  /** @nullable */
+  hostPhone?: string | null;
+  /** @nullable */
   welcomeMessage?: string | null;
   days: ItineraryDay[];
   approved: boolean;
