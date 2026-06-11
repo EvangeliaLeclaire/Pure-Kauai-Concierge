@@ -114,24 +114,52 @@ Generate exactly ${numDays} day${numDays !== 1 ? "s" : ""}. Make ${input.guestNa
 
   const parsed = JSON.parse(jsonMatch[0]) as GeneratedItinerary;
 
-  // For each activity, look up the catalog entry to get the canonical unsplashKeyword.
-  // If Claude matched a known activity name, use the catalog's curated keyword.
-  // Fall back to whatever Claude provided.
+  // Collect all activities with their resolved keywords, then fetch photos in parallel
+  const activities: Array<{ activity: ItineraryActivity; keyword: string }> = [];
+
   for (const day of parsed.days) {
     for (const activity of day.activities) {
       const catalogEntry = catalogByName.get(activity.name.toLowerCase());
-      const keyword = catalogEntry?.unsplashKeyword ?? activity.unsplashKeyword;
+      const keyword = catalogEntry?.unsplashKeyword ?? (activity as unknown as Record<string, string>).unsplashKeyword ?? activity.name;
 
-      // Attach category from catalog if not set
       if (catalogEntry && !activity.category) {
         activity.category = catalogEntry.category;
       }
 
-      // Use picsum.photos with the keyword as a deterministic seed — reliable, no API key, beautiful photos
-      const seed = keyword.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40);
-      activity.photoUrl = `https://picsum.photos/seed/${seed}/900/560`;
+      activities.push({ activity, keyword });
     }
   }
+
+  // Fetch all photos in parallel — Unsplash if key present, picsum fallback
+  const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
+
+  await Promise.all(
+    activities.map(async ({ activity, keyword }) => {
+      if (unsplashKey) {
+        try {
+          const query = encodeURIComponent(keyword + " hawaii landscape");
+          const res = await fetch(
+            `https://api.unsplash.com/search/photos?query=${query}&per_page=3&orientation=landscape&content_filter=high`,
+            { headers: { Authorization: `Client-ID ${unsplashKey}` } }
+          );
+          if (res.ok) {
+            const data = await res.json() as { results: Array<{ urls: { regular: string } }> };
+            if (data.results.length > 0) {
+              // Pick a result based on activity name hash so each activity gets a consistent but varied photo
+              const idx = activity.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % data.results.length;
+              activity.photoUrl = data.results[idx].urls.regular;
+              return;
+            }
+          }
+        } catch {
+          // fall through to picsum
+        }
+      }
+      // Fallback: picsum with deterministic seed
+      const seed = keyword.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40);
+      activity.photoUrl = `https://picsum.photos/seed/${seed}/900/560`;
+    })
+  );
 
   return parsed;
 }
