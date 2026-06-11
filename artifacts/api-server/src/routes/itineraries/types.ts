@@ -1,6 +1,7 @@
 export interface ItineraryActivity {
   time: string;
   name: string;
+  category: string;
   description: string;
   duration: string;
   pricePerPerson: number;

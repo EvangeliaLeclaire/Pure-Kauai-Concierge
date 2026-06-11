@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { ACTIVITY_CATALOG, catalogByName } from "../../data/catalog.js";
 import type { ItineraryActivity, ItineraryDay } from "./types.js";
 
 const anthropic = new Anthropic({
@@ -22,39 +23,57 @@ interface GeneratedItinerary {
   days: ItineraryDay[];
 }
 
+// Format the catalog clearly for Claude
+const catalogText = ACTIVITY_CATALOG.map((a) =>
+  `- "${a.name}" | ${a.category} | ${a.duration} | $${a.pricePerPerson}/person | Best for: ${a.bestFor.join(", ")} | Time: ${a.timeOfDay}`
+).join("\n");
+
 export async function generateItinerary(input: GuestInput): Promise<GeneratedItinerary> {
   const checkInDate = new Date(input.checkIn);
   const checkOutDate = new Date(input.checkOut);
   const numDays = Math.max(1, Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)));
-  const totalGuests = input.adults + input.children;
+  const isUltraLuxury = input.budgetTier === "Ultra-Luxury";
 
-  const prompt = `You are the head concierge for Pure Kauai, an ultra-luxury travel company in Kauai, Hawaii. You create bespoke, personalized itineraries for the world's most discerning travelers.
+  const systemPrompt = `You are the head concierge of Pure Kauai — the most exclusive private villa concierge service on the island. You have curated experiences for royalty, A-list celebrities, and the world's most discerning families. You know every hidden waterfall, every master chef, every secret cove.
 
-Create a complete day-by-day itinerary for the following guest:
+You write with the warm, unhurried elegance of a trusted personal friend who happens to know Kauai better than anyone alive. You address guests by name. You weave in their occasion, their interests, their children's names if provided. Every word should feel handwritten on thick cream stationery.
 
-Guest Name: ${input.guestName}
-Check-in: ${input.checkIn}
-Check-out: ${input.checkOut}
-Number of Days: ${numDays}
-Adults: ${input.adults}
-Children: ${input.children}
+Your itineraries are built EXCLUSIVELY from the Pure Kauai activity catalog. You select the most relevant experiences for each guest and describe them as if you personally arranged every detail — because you did.`;
+
+  const userPrompt = `Create a complete bespoke itinerary for the following guest. Select activities ONLY from the Pure Kauai catalog below.
+
+━━━ GUEST PROFILE ━━━
+Name: ${input.guestName}
+Arrival: ${input.checkIn}
+Departure: ${input.checkOut}
+Duration: ${numDays} night${numDays !== 1 ? "s" : ""}
+Adults: ${input.adults}${input.children > 0 ? `\nChildren: ${input.children}` : ""}
 Interests: ${input.interests.join(", ")}
 Budget Tier: ${input.budgetTier}
-Special Occasion: ${input.specialOccasion}
+Special Occasion: ${input.specialOccasion !== "None" ? input.specialOccasion : "None"}
 Special Notes: ${input.specialNotes || "None"}
 
-Guidelines:
-- Write in warm, luxurious, deeply personalized language befitting a world-class concierge
-- Create 2-4 activities per day that match the guest's interests
-- For ${input.budgetTier === "Ultra-Luxury" ? "Ultra-Luxury" : "Premium"} tier, price activities between ${input.budgetTier === "Ultra-Luxury" ? "$300-$1200" : "$150-$500"} per person
-- If it's a ${input.specialOccasion !== "None" ? input.specialOccasion : "regular"} trip, weave that theme throughout
-- Time activities as Morning, Afternoon, or Evening
-- Each activity description should be 2-3 sentences, evocative and sensory
-- Include a mix of activities across their stated interests
+━━━ PURE KAUAI ACTIVITY CATALOG ━━━
+${catalogText}
 
-Respond ONLY with valid JSON in this exact format:
+━━━ SELECTION RULES ━━━
+1. Select 2–4 activities per day from the catalog above. Use EXACT activity names as they appear.
+2. Match activities to the guest's stated interests and occasion. Do not repeat the same activity on multiple days.
+3. Do not schedule the "Pre-Arrival Grocery Stocking" as a day activity — it is handled automatically on arrival.
+${isUltraLuxury ? `4. ULTRA-LUXURY REQUIREMENT: You MUST include "Sightseeing Helicopter Charter" (Day 1 or 2), "Private Chef Dinner at the Villa" (at least once), and at least one wellness experience (Massage & Facial Fusion, Sunrise Restorative Yoga, Sound Bath & Healing Ceremony, or Private Pilates Session). These are non-negotiable for Ultra-Luxury guests.` : `4. Select activities appropriate for the ${input.budgetTier} budget tier.`}
+${input.specialOccasion !== "None" ? `5. This is a ${input.specialOccasion} — weave that celebration through the welcome message and at least one special evening activity.` : ""}
+
+━━━ WRITING VOICE ━━━
+- Address ${input.guestName} by name in the welcome message
+- Welcome message: 3–4 sentences, warm and personal, referencing their occasion and what awaits them
+- Activity descriptions: rewrite each description in your personal concierge voice (2–3 evocative, sensory sentences). Do not copy catalog text verbatim.
+- Use time-of-day: "Morning", "Afternoon", or "Evening"
+
+━━━ RESPONSE FORMAT ━━━
+Respond ONLY with valid JSON. No markdown. No explanation. Just the JSON object.
+
 {
-  "welcomeMessage": "A warm, personal 3-4 sentence welcome message addressing ${input.guestName} by name, acknowledging any special occasion, and setting the tone for their Kauai journey.",
+  "welcomeMessage": "...",
   "days": [
     {
       "day": 1,
@@ -62,23 +81,25 @@ Respond ONLY with valid JSON in this exact format:
       "activities": [
         {
           "time": "Morning",
-          "name": "Activity Name",
-          "description": "Evocative 2-3 sentence description.",
-          "duration": "X hours",
+          "name": "EXACT activity name from catalog",
+          "category": "category from catalog",
+          "description": "Your personal concierge description in 2-3 sentences.",
+          "duration": "duration from catalog",
           "pricePerPerson": 000,
-          "unsplashKeyword": "specific search keyword for Unsplash photo"
+          "unsplashKeyword": "unsplashKeyword from catalog"
         }
       ]
     }
   ]
 }
 
-Generate exactly ${numDays} days. Make it extraordinary.`;
+Generate exactly ${numDays} day${numDays !== 1 ? "s" : ""}. Make ${input.guestName}'s journey extraordinary.`;
 
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-5",
     max_tokens: 8192,
-    messages: [{ role: "user", content: prompt }],
+    system: systemPrompt,
+    messages: [{ role: "user", content: userPrompt }],
   });
 
   const content = message.content[0];
@@ -93,11 +114,20 @@ Generate exactly ${numDays} days. Make it extraordinary.`;
 
   const parsed = JSON.parse(jsonMatch[0]) as GeneratedItinerary;
 
-  // Add photoUrls using Unsplash source (no API key needed)
+  // For each activity, look up the catalog entry to get the canonical unsplashKeyword.
+  // If Claude matched a known activity name, use the catalog's curated keyword.
+  // Fall back to whatever Claude provided.
   for (const day of parsed.days) {
     for (const activity of day.activities) {
-      const keyword = encodeURIComponent(activity.unsplashKeyword);
-      activity.photoUrl = `https://source.unsplash.com/800x500/?${keyword}`;
+      const catalogEntry = catalogByName.get(activity.name.toLowerCase());
+      const keyword = catalogEntry?.unsplashKeyword ?? activity.unsplashKeyword;
+
+      // Attach category from catalog if not set
+      if (catalogEntry && !activity.category) {
+        activity.category = catalogEntry.category;
+      }
+
+      activity.photoUrl = `https://source.unsplash.com/800x500/?${encodeURIComponent(keyword)}`;
     }
   }
 
