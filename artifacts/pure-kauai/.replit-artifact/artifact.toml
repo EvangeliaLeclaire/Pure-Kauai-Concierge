@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Pure Kauai"
+version = "1.0.0"
+id = "artifacts/pure-kauai"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22625
+
+[services.development]
+run = "pnpm --filter @workspace/pure-kauai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/pure-kauai", "run", "build" ]
+publicDir = "artifacts/pure-kauai/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22625"
+BASE_PATH = "/"
