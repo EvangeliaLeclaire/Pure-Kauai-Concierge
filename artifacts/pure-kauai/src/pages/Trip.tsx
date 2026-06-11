@@ -1,15 +1,9 @@
 import { Fragment, useState } from "react";
 import { useParams } from "wouter";
 import { format, parseISO } from "date-fns";
-import { Clock, Users, MapPin, Printer, Check, Link2, Mail } from "lucide-react";
+import { Clock, Users, MapPin, Printer, Check, Link2, Mail, ChevronRight } from "lucide-react";
 import { useGetItinerary, useApproveItinerary, getGetItineraryQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Trip() {
@@ -23,15 +17,20 @@ export default function Trip() {
   });
 
   const approveItinerary = useApproveItinerary();
+  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<"journey" | "invoice">("journey");
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background p-6 md:p-12 max-w-5xl mx-auto space-y-8">
-        <Skeleton className="h-12 w-64 rounded-lg" />
-        <Skeleton className="h-6 w-96 rounded-lg" />
-        <div className="space-y-4 mt-12">
-          <Skeleton className="h-[400px] w-full rounded-xl" />
-          <Skeleton className="h-[300px] w-full rounded-xl" />
+      <div className="min-h-screen bg-[#FAF8F6]">
+        <div className="h-[55vh] bg-[#053E50]" />
+        <div className="max-w-4xl mx-auto px-6 -mt-24 space-y-6 pb-24">
+          <Skeleton className="h-16 w-72 rounded-none bg-white/20" />
+          <Skeleton className="h-6 w-56 rounded-none bg-white/10" />
+          <div className="mt-20 space-y-6">
+            <Skeleton className="h-[360px] w-full rounded-none" />
+            <Skeleton className="h-[360px] w-full rounded-none" />
+          </div>
         </div>
       </div>
     );
@@ -39,10 +38,11 @@ export default function Trip() {
 
   if (!itinerary) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAF8F6] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-serif text-primary">Itinerary not found</h2>
-          <p className="text-muted-foreground">The journey you are looking for does not exist.</p>
+          <div className="text-xs tracking-[0.25em] text-[#37729A] uppercase mb-6">Pure Kauai</div>
+          <h2 className="text-3xl font-serif font-light text-[#053E50]">Itinerary not found</h2>
+          <p className="text-[#8A7F7D] mt-3">The journey you are looking for does not exist.</p>
         </div>
       </div>
     );
@@ -59,8 +59,6 @@ export default function Trip() {
     );
   };
 
-  const [copied, setCopied] = useState(false);
-
   const handleCopyLink = async () => {
     await navigator.clipboard.writeText(window.location.href);
     setCopied(true);
@@ -75,252 +73,375 @@ export default function Trip() {
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
 
   const totalGuests = itinerary.adults + itinerary.children;
 
+  const subtotal = itinerary.days.reduce((total, day) => {
+    return total + day.activities.reduce((sum, act) => sum + act.pricePerPerson * totalGuests, 0);
+  }, 0);
+  const deposit = subtotal * 0.5;
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div className="bg-primary text-primary-foreground print-hide py-16 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518182170546-076616fdfaaf?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
-        <div className="max-w-5xl mx-auto relative z-10">
-          <h1 className="text-sm uppercase tracking-[0.2em] mb-4 text-accent">Pure Kauai Presents</h1>
-          <h2 className="text-4xl md:text-5xl font-serif font-light mb-6">
-            A Bespoke Journey for {itinerary.guestName}
-          </h2>
-          <div className="flex flex-wrap gap-4 text-sm opacity-90 items-center">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Kauai, Hawaii
-            </div>
-            <div className="hidden sm:block w-1 h-1 rounded-full bg-accent"></div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              {format(parseISO(itinerary.checkIn), "MMM d")} - {format(parseISO(itinerary.checkOut), "MMM d, yyyy")}
-            </div>
-            <div className="hidden sm:block w-1 h-1 rounded-full bg-accent"></div>
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              {totalGuests} Guests ({itinerary.adults} Adults{itinerary.children > 0 ? `, ${itinerary.children} Children` : ""})
-            </div>
+    <div className="min-h-screen bg-[#FAF8F6] font-sans">
+
+      {/* ── CINEMATIC HERO ── */}
+      <div className="relative min-h-[62vh] flex flex-col justify-end overflow-hidden print-hide">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1505118380757-91f5f5632de0?q=80&w=2400&auto=format&fit=crop')" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#053E50]/40 via-[#053E50]/50 to-[#042E3C]/90" />
+
+        {/* Wordmark */}
+        <div className="absolute top-10 left-0 right-0 flex justify-center">
+          <div className="text-center">
+            <div className="text-xs tracking-[0.35em] text-white/60 uppercase">Pure Kauai</div>
           </div>
-          <div className="print-hide mt-6 flex flex-wrap gap-3">
+        </div>
+
+        {/* Hero Content */}
+        <div className="relative z-10 max-w-5xl mx-auto w-full px-8 pb-14">
+          <div className="text-xs tracking-[0.25em] text-[#C9B8A8] uppercase mb-5">A Bespoke Journey</div>
+          <h1 className="text-5xl md:text-6xl font-serif font-light text-white leading-tight mb-6">
+            {itinerary.guestName}
+          </h1>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/70 mb-8">
+            <span className="flex items-center gap-2">
+              <MapPin className="h-3.5 w-3.5 text-[#C9B8A8]" />
+              Kauai, Hawaii
+            </span>
+            <span className="text-white/30">·</span>
+            <span className="flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5 text-[#C9B8A8]" />
+              {format(parseISO(itinerary.checkIn), "MMM d")} — {format(parseISO(itinerary.checkOut), "MMM d, yyyy")}
+            </span>
+            <span className="text-white/30">·</span>
+            <span className="flex items-center gap-2">
+              <Users className="h-3.5 w-3.5 text-[#C9B8A8]" />
+              {totalGuests} Guests
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={handleCopyLink}
-              className="inline-flex items-center gap-2 text-sm border border-white/30 hover:border-white/60 bg-white/10 hover:bg-white/20 text-white/90 hover:text-white rounded-full px-4 py-2 transition-all duration-200"
+              className="inline-flex items-center gap-2 text-xs tracking-[0.1em] uppercase border border-white/25 hover:border-white/50 bg-white/8 hover:bg-white/15 text-white/80 hover:text-white rounded-full px-5 py-2.5 transition-all duration-300"
             >
-              {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-              {copied ? "Link copied!" : "Copy shareable link"}
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
+              {copied ? "Copied" : "Share Link"}
             </button>
             <button
               onClick={handleEmailGuest}
-              className="inline-flex items-center gap-2 text-sm border border-white/30 hover:border-white/60 bg-white/10 hover:bg-white/20 text-white/90 hover:text-white rounded-full px-4 py-2 transition-all duration-200"
+              className="inline-flex items-center gap-2 text-xs tracking-[0.1em] uppercase border border-white/25 hover:border-white/50 bg-white/8 hover:bg-white/15 text-white/80 hover:text-white rounded-full px-5 py-2.5 transition-all duration-300"
             >
-              <Mail className="h-4 w-4" />
-              Email to guest
+              <Mail className="h-3.5 w-3.5" />
+              Email Guest
             </button>
           </div>
         </div>
       </div>
 
-      {/* Print Header (Only visible when printing) */}
-      <div className="hidden print-show text-center mb-12 border-b pb-8">
-        <h1 className="text-3xl font-serif text-primary mb-2">Pure Kauai Itinerary & Invoice</h1>
-        <h2 className="text-2xl font-serif text-foreground mb-4">{itinerary.guestName}</h2>
-        <p className="text-muted-foreground">
-          {format(parseISO(itinerary.checkIn), "MMM d, yyyy")} — {format(parseISO(itinerary.checkOut), "MMM d, yyyy")} • {totalGuests} Guests
+      {/* Print-only header */}
+      <div className="hidden print-show text-center py-12 border-b border-[#E8E0DB]">
+        <div className="text-xs tracking-[0.35em] text-[#8A7F7D] uppercase mb-3">Pure Kauai</div>
+        <h1 className="text-3xl font-serif font-light text-[#053E50] mb-2">{itinerary.guestName}</h1>
+        <p className="text-sm text-[#8A7F7D]">
+          {format(parseISO(itinerary.checkIn), "MMMM d")} — {format(parseISO(itinerary.checkOut), "MMMM d, yyyy")} · {totalGuests} Guests
         </p>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-12">
-        <Tabs defaultValue="journey" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-12 print-hide bg-muted/50 p-1 rounded-lg">
-            <TabsTrigger value="journey" className="font-serif rounded-md">Your Journey</TabsTrigger>
-            <TabsTrigger value="invoice" className="font-serif rounded-md">Quote & Invoice</TabsTrigger>
-          </TabsList>
+      {/* ── NAVIGATION TABS ── */}
+      <div className="print-hide sticky top-0 z-20 bg-[#FAF8F6]/95 backdrop-blur-md border-b border-[#E8E0DB]">
+        <div className="max-w-5xl mx-auto px-8">
+          <div className="flex gap-0">
+            {(["journey", "invoice"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`relative py-5 px-1 mr-10 text-sm tracking-[0.08em] transition-colors duration-200 ${
+                  activeTab === tab
+                    ? "text-[#053E50] font-medium"
+                    : "text-[#8A7F7D] hover:text-[#053E50]"
+                }`}
+              >
+                {tab === "journey" ? "Your Journey" : "Quote & Invoice"}
+                {activeTab === tab && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#053E50]" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
-          <TabsContent value="journey" className="space-y-16 animate-in fade-in duration-500 print-show">
-            {itinerary.welcomeMessage && (
-              <div className="prose prose-lg max-w-none text-muted-foreground bg-accent/30 p-8 rounded-xl border border-accent/50 italic font-serif">
-                <p>"{itinerary.welcomeMessage}"</p>
-                <p className="text-right not-italic text-sm mt-4 text-primary font-medium">— Your Pure Kauai Concierge</p>
+      {/* ── JOURNEY TAB ── */}
+      {activeTab === "journey" && (
+        <div className="print-show">
+          {/* Welcome message */}
+          {itinerary.welcomeMessage && (
+            <div className="bg-[#053E50] px-8 py-16 print-hide">
+              <div className="max-w-3xl mx-auto text-center">
+                <div className="text-[#C9B8A8] text-2xl font-serif font-light italic leading-relaxed mb-6">
+                  "{itinerary.welcomeMessage}"
+                </div>
+                <div className="w-8 h-px bg-[#C9B8A8]/50 mx-auto mb-4" />
+                <div className="text-xs tracking-[0.2em] text-white/50 uppercase">Your Pure Kauai Concierge</div>
+              </div>
+            </div>
+          )}
+
+          {/* Days */}
+          <div className="max-w-5xl mx-auto px-8 py-16 space-y-24">
+            {itinerary.days.map((day, dayIdx) => (
+              <div key={day.day}>
+                {/* Day header */}
+                <div className="flex items-baseline gap-6 mb-10">
+                  <span className="text-[7rem] font-serif font-light leading-none text-[#053E50]/8 select-none -ml-1">
+                    {String(dayIdx + 1).padStart(2, "0")}
+                  </span>
+                  <div className="-ml-12">
+                    <div className="text-xs tracking-[0.25em] text-[#37729A] uppercase mb-1">Day {day.day}</div>
+                    <div className="text-2xl font-serif font-light text-[#053E50]">
+                      {format(parseISO(day.date), "EEEE, MMMM d")}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Activity cards */}
+                <div className="space-y-8">
+                  {day.activities.map((activity, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white shadow-[0_2px_24px_rgba(5,62,80,0.07)] overflow-hidden group"
+                      style={{ borderRadius: "2px" }}
+                    >
+                      {/* Photo */}
+                      <div className="relative h-72 overflow-hidden bg-[#E8E0DB]">
+                        {activity.photoUrl && (
+                          <img
+                            src={activity.photoUrl}
+                            alt={activity.name}
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                            onError={(e) => { e.currentTarget.style.display = "none"; }}
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                        <div className="absolute top-5 left-5 flex gap-2">
+                          <span className="text-xs tracking-[0.12em] uppercase bg-white/90 backdrop-blur-sm text-[#053E50] px-3 py-1.5 font-medium">
+                            {activity.time}
+                          </span>
+                        </div>
+                        {activity.category && (
+                          <div className="absolute top-5 right-5">
+                            <span className="text-xs tracking-[0.12em] uppercase bg-[#053E50]/80 backdrop-blur-sm text-white/90 px-3 py-1.5">
+                              {activity.category}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-8 md:p-10">
+                        <div className="md:flex md:items-start md:justify-between gap-8">
+                          <div className="flex-1">
+                            <h3 className="text-2xl font-serif font-light text-[#053E50] mb-3 leading-snug">
+                              {activity.name}
+                            </h3>
+                            <p className="text-[#5C5350] leading-relaxed text-[0.95rem]">
+                              {activity.description}
+                            </p>
+                          </div>
+                          <div className="mt-6 md:mt-0 md:shrink-0 md:text-right">
+                            <div className="inline-flex items-center gap-2 text-sm text-[#37729A]">
+                              <Clock className="h-3.5 w-3.5" />
+                              <span>{activity.duration}</span>
+                            </div>
+                            {activity.pricePerPerson > 0 && (
+                              <div className="mt-3">
+                                <div className="text-xs tracking-[0.1em] text-[#8A7F7D] uppercase mb-1">From</div>
+                                <div className="text-2xl font-serif font-light text-[#053E50]">
+                                  ${activity.pricePerPerson.toLocaleString()}
+                                </div>
+                                <div className="text-xs text-[#8A7F7D]">per person</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {/* CTA to invoice */}
+            <div className="print-hide pt-8 border-t border-[#E8E0DB] text-center">
+              <p className="text-[#8A7F7D] text-sm mb-6 tracking-wide">Ready to make it official?</p>
+              <button
+                onClick={() => setActiveTab("invoice")}
+                className="inline-flex items-center gap-3 bg-[#053E50] text-white text-sm tracking-[0.12em] uppercase px-10 py-4 hover:bg-[#042E3C] transition-colors duration-300"
+                style={{ borderRadius: "1px" }}
+              >
+                Review Quote & Approve
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── INVOICE TAB ── */}
+      {activeTab === "invoice" && (
+        <div className="print-show max-w-4xl mx-auto px-8 py-16">
+
+          {/* Document header */}
+          <div className="flex justify-between items-start mb-14 pb-10 border-b border-[#E8E0DB]">
+            <div>
+              <div className="text-xs tracking-[0.35em] text-[#8A7F7D] uppercase mb-4">Pure Kauai</div>
+              <h2 className="text-3xl font-serif font-light text-[#053E50] mb-1">Travel Proposal</h2>
+              <p className="text-[#8A7F7D] text-sm mt-2">Prepared exclusively for {itinerary.guestName}</p>
+            </div>
+            <div className="text-right">
+              {itinerary.approved ? (
+                <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs tracking-[0.15em] uppercase px-4 py-2">
+                  <Check className="h-3.5 w-3.5" />
+                  Confirmed
+                </div>
+              ) : (
+                <div className="text-xs tracking-[0.12em] text-[#8A7F7D] uppercase">Awaiting Approval</div>
+              )}
+              <div className="text-xs text-[#B0A9A6] mt-3">
+                Ref: {id?.slice(0, 8).toUpperCase()}
+              </div>
+              <div className="text-xs text-[#B0A9A6] mt-1">
+                {format(new Date(), "MMMM d, yyyy")}
+              </div>
+            </div>
+          </div>
+
+          {/* Line items */}
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#E8E0DB]">
+                <th className="text-left pb-4 text-xs tracking-[0.2em] text-[#8A7F7D] uppercase font-medium pr-8">Experience</th>
+                <th className="text-right pb-4 text-xs tracking-[0.2em] text-[#8A7F7D] uppercase font-medium px-4">Rate</th>
+                <th className="text-right pb-4 text-xs tracking-[0.2em] text-[#8A7F7D] uppercase font-medium px-4">Guests</th>
+                <th className="text-right pb-4 text-xs tracking-[0.2em] text-[#8A7F7D] uppercase font-medium pl-8">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {itinerary.days.map((day) => (
+                <Fragment key={day.day}>
+                  <tr>
+                    <td colSpan={4} className="pt-8 pb-3">
+                      <div className="text-xs tracking-[0.2em] text-[#37729A] uppercase font-medium">
+                        {format(parseISO(day.date), "EEEE, MMMM d")}
+                      </div>
+                    </td>
+                  </tr>
+                  {day.activities.map((activity, idx) => (
+                    <tr key={idx} className="border-b border-[#F0ECEA] group">
+                      <td className="py-4 pr-8">
+                        <div className="font-medium text-[#1A2E35]">{activity.name}</div>
+                        <div className="text-xs text-[#8A7F7D] mt-0.5">{activity.time} · {activity.duration}</div>
+                      </td>
+                      <td className="py-4 px-4 text-right text-[#5C5350]">
+                        ${activity.pricePerPerson.toLocaleString()}
+                      </td>
+                      <td className="py-4 px-4 text-right text-[#5C5350]">{totalGuests}</td>
+                      <td className="py-4 pl-8 text-right font-medium text-[#1A2E35]">
+                        ${(activity.pricePerPerson * totalGuests).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Totals block */}
+          <div className="mt-10 ml-auto max-w-xs">
+            <div className="space-y-3 pb-5 border-b border-[#E8E0DB]">
+              <div className="flex justify-between text-sm">
+                <span className="text-[#8A7F7D]">Subtotal</span>
+                <span className="text-[#1A2E35] font-medium">${subtotal.toLocaleString()}</span>
+              </div>
+            </div>
+            <div className="pt-5 space-y-3">
+              <div className="flex justify-between items-baseline">
+                <div>
+                  <div className="text-sm font-medium text-[#053E50]">Deposit Due Now</div>
+                  <div className="text-xs text-[#8A7F7D] mt-0.5">50% to confirm reservation</div>
+                </div>
+                <span className="text-2xl font-serif font-light text-[#053E50]">${deposit.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm mt-4">
+                <div>
+                  <span className="text-[#8A7F7D]">Balance Due</span>
+                  <div className="text-xs text-[#8A7F7D] mt-0.5">30 days prior to arrival</div>
+                </div>
+                <span className="text-[#5C5350] font-medium">${deposit.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Fine print */}
+          <div className="mt-12 pt-8 border-t border-[#E8E0DB]">
+            <p className="text-xs text-[#B0A9A6] leading-relaxed max-w-lg">
+              This proposal is prepared exclusively for {itinerary.guestName} and is valid for 14 days from the date above. 
+              All experiences are subject to availability. Rates are quoted in USD per person unless otherwise noted.
+            </p>
+          </div>
+
+          {/* Action bar */}
+          <div className="print-hide mt-14 space-y-4">
+            {!itinerary.approved ? (
+              <>
+                <button
+                  onClick={handleApprove}
+                  disabled={approveItinerary.isPending}
+                  className="w-full bg-[#053E50] hover:bg-[#042E3C] disabled:opacity-60 text-white py-5 text-sm tracking-[0.15em] uppercase transition-colors duration-300 flex items-center justify-center gap-3"
+                  style={{ borderRadius: "1px" }}
+                >
+                  {approveItinerary.isPending ? (
+                    <>
+                      <span className="inline-block w-4 h-4 border border-white/40 border-t-white rounded-full animate-spin" />
+                      Confirming…
+                    </>
+                  ) : (
+                    <>
+                      Approve & Confirm Itinerary
+                      <ChevronRight className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+                <p className="text-center text-xs text-[#B0A9A6]">
+                  By approving, you confirm your intent to proceed. A deposit invoice will follow.
+                </p>
+              </>
+            ) : (
+              <div
+                className="w-full bg-emerald-50 border border-emerald-200 py-5 flex items-center justify-center gap-3"
+                style={{ borderRadius: "1px" }}
+              >
+                <Check className="h-5 w-5 text-emerald-600" />
+                <span className="text-sm tracking-[0.12em] uppercase text-emerald-700 font-medium">
+                  Itinerary Approved & Confirmed
+                </span>
               </div>
             )}
 
-            <div className="space-y-16">
-              {itinerary.days.map((day) => (
-                <div key={day.day} className="relative">
-                  <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 py-4 mb-6 border-b border-border/40">
-                    <h3 className="text-2xl font-serif text-primary flex items-baseline gap-3">
-                      Day {day.day}
-                      <span className="text-sm font-sans text-muted-foreground font-normal tracking-wide uppercase">
-                        {format(parseISO(day.date), "EEEE, MMMM d")}
-                      </span>
-                    </h3>
-                  </div>
-                  
-                  <div className="space-y-8 pl-0 md:pl-8 border-l-0 md:border-l-2 border-accent/40 ml-0 md:ml-4">
-                    {day.activities.map((activity, idx) => (
-                      <div key={idx} className="relative">
-                        <div className="hidden md:block absolute -left-[2.85rem] top-8 w-4 h-4 rounded-full bg-accent border-2 border-background"></div>
-                        <Card className="overflow-hidden border-border/40 shadow-sm hover:shadow-md transition-shadow group bg-card">
-                          <div className="grid md:grid-cols-5 gap-0">
-                            <div className="md:col-span-2 h-48 md:h-auto relative overflow-hidden bg-muted">
-                              {activity.photoUrl ? (
-                                <img
-                                  src={activity.photoUrl}
-                                  alt={activity.name}
-                                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                  }}
-                                />
-                              ) : null}
-                              <div className="absolute top-4 left-4">
-                                <Badge variant="secondary" className="bg-background/80 backdrop-blur-md text-foreground hover:bg-background/90 shadow-sm">
-                                  {activity.time}
-                                </Badge>
-                              </div>
-                            </div>
-                            <div className="md:col-span-3 p-6 flex flex-col justify-center">
-                              <h4 className="text-xl font-serif text-foreground mb-2">{activity.name}</h4>
-                              <p className="text-muted-foreground mb-4 leading-relaxed line-clamp-3">
-                                {activity.description}
-                              </p>
-                              <div className="flex items-center text-sm text-primary/80 mt-auto font-medium">
-                                <Clock className="h-4 w-4 mr-2" />
-                                {activity.duration}
-                              </div>
-                            </div>
-                          </div>
-                        </Card>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Call to action at bottom of journey tab */}
-            <div className="mt-16 text-center print-hide border-t pt-12 border-border/50">
-              <h3 className="text-2xl font-serif text-foreground mb-6">Ready to confirm your escape?</h3>
-              <Button 
-                onClick={() => document.querySelector<HTMLButtonElement>('[value="invoice"]')?.click()}
-                variant="outline"
-                className="h-12 px-8 font-serif text-lg"
-              >
-                View Quote & Approve
-              </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="invoice" className="animate-in fade-in duration-500 print-show">
-            <Card className="border-border/50 shadow-sm overflow-hidden bg-card">
-              <CardHeader className="bg-muted/20 border-b border-border/50 pb-8 pt-8 px-8">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-2xl font-serif text-primary mb-2">Quote & Invoice</CardTitle>
-                    <CardDescription className="text-base">Prepared for {itinerary.guestName}</CardDescription>
-                  </div>
-                  {itinerary.approved && (
-                    <Badge className="bg-green-600/10 text-green-700 hover:bg-green-600/20 border-green-600/20 px-4 py-1 text-sm font-medium">
-                      <Check className="w-4 h-4 mr-2" /> Approved & Confirmed
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-muted-foreground uppercase bg-muted/30 border-b border-border/50">
-                      <tr>
-                        <th className="px-8 py-4 font-medium">Date & Activity</th>
-                        <th className="px-8 py-4 font-medium text-right">Price per person</th>
-                        <th className="px-8 py-4 font-medium text-right">Guests</th>
-                        <th className="px-8 py-4 font-medium text-right">Line Total</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/30">
-                      {itinerary.days.map((day) => (
-                        <Fragment key={day.day}>
-                          <tr className="bg-muted/10">
-                            <td colSpan={4} className="px-8 py-3 font-serif text-primary/80 text-base">
-                              {format(parseISO(day.date), "EEEE, MMM d")}
-                            </td>
-                          </tr>
-                          {day.activities.map((activity, idx) => (
-                            <tr key={idx} className="hover:bg-muted/10 transition-colors">
-                              <td className="px-8 py-4">
-                                <div className="font-medium text-foreground">{activity.name}</div>
-                                <div className="text-xs text-muted-foreground mt-1">{activity.time}</div>
-                              </td>
-                              <td className="px-8 py-4 text-right">${activity.pricePerPerson.toLocaleString()}</td>
-                              <td className="px-8 py-4 text-right">{totalGuests}</td>
-                              <td className="px-8 py-4 text-right font-medium text-foreground">
-                                ${(activity.pricePerPerson * totalGuests).toLocaleString()}
-                              </td>
-                            </tr>
-                          ))}
-                        </Fragment>
-                      ))}
-                    </tbody>
-                    <tfoot className="border-t-2 border-border/50 bg-muted/10">
-                      {(() => {
-                        const subtotal = itinerary.days.reduce((total, day) => {
-                          const dayTotal = day.activities.reduce((sum, act) => sum + (act.pricePerPerson * totalGuests), 0);
-                          return total + dayTotal;
-                        }, 0);
-                        const deposit = subtotal * 0.5;
-
-                        return (
-                          <>
-                            <tr>
-                              <td colSpan={3} className="px-8 py-4 text-right text-muted-foreground">Subtotal</td>
-                              <td className="px-8 py-4 text-right font-medium text-foreground">${subtotal.toLocaleString()}</td>
-                            </tr>
-                            <tr className="bg-accent/20">
-                              <td colSpan={3} className="px-8 py-4 text-right font-medium text-primary">50% Deposit Due to Confirm</td>
-                              <td className="px-8 py-4 text-right font-bold text-primary text-lg">${deposit.toLocaleString()}</td>
-                            </tr>
-                            <tr>
-                              <td colSpan={3} className="px-8 py-4 text-right text-muted-foreground">Balance Due 30 Days Prior</td>
-                              <td className="px-8 py-4 text-right font-medium text-muted-foreground">${deposit.toLocaleString()}</td>
-                            </tr>
-                          </>
-                        );
-                      })()}
-                    </tfoot>
-                  </table>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between items-center bg-muted/20 border-t border-border/50 p-8 print-hide">
-                <Button variant="outline" onClick={handlePrint} className="gap-2">
-                  <Printer className="h-4 w-4" />
-                  Print Invoice
-                </Button>
-                
-                {!itinerary.approved ? (
-                  <Button 
-                    onClick={handleApprove} 
-                    disabled={approveItinerary.isPending}
-                    className="h-12 px-8 text-base font-serif"
-                  >
-                    {approveItinerary.isPending ? "Confirming..." : "Approve Itinerary"}
-                  </Button>
-                ) : (
-                  <Button disabled variant="secondary" className="bg-green-600/10 text-green-700 opacity-100 font-serif h-12 px-8">
-                    <Check className="w-4 h-4 mr-2" />
-                    Itinerary Approved
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+            <button
+              onClick={handlePrint}
+              className="w-full border border-[#E8E0DB] hover:border-[#053E50]/30 text-[#5C5350] hover:text-[#053E50] py-4 text-xs tracking-[0.15em] uppercase transition-colors duration-300 flex items-center justify-center gap-2"
+              style={{ borderRadius: "1px" }}
+            >
+              <Printer className="h-4 w-4" />
+              Download / Print
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
