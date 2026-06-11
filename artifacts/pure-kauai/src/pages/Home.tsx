@@ -173,12 +173,21 @@ function TileGroup({
 
 // ─── Service lists ─────────────────────────────────────────────────────────────
 
-const VILLA_SERVICES = [
+const PRE_ARRIVAL_SERVICES = [
   "Villa Greeting & Orientation",
+];
+
+const TRANSPORT_SERVICES = [
   "Airport Pickup & Transportation",
   "Vehicle Delivery",
   "Private Transportation (daily driver)",
+];
+
+const GROCERY_SERVICES = [
   "Pre-Arrival Grocery Stocking",
+];
+
+const HOUSEKEEPING_SERVICES = [
   "Daily Housekeeping",
   "Evening Turndown Service",
   "Butler & Personal Assistants",
@@ -534,25 +543,70 @@ export default function Home() {
               )} />
             </div>
 
-            {/* ══ SECTION 2: Arrival & Villa Setup ══════════════════════════════ */}
+            {/* ══ SECTION 2: Pre-Arrival Planning ══════════════════════════════ */}
             <div
               className="rounded-sm p-8 sm:p-10 mb-3"
               style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
             >
               <SectionHeader
                 number="Section 02"
-                title="Arrival & Villa Setup"
-                subtitle="These services are arranged before and during your stay so your villa is exactly as you wish it."
+                title="Pre-Arrival Planning"
+                subtitle="We handle every detail before you arrive so your villa is perfectly prepared and waiting."
               />
               <div className="space-y-2">
-                {VILLA_SERVICES.filter((s) => s !== "Childcare & Nanny Service" || children > 0).map((service) => (
+                {PRE_ARRIVAL_SERVICES.map((service) => (
+                  <ToggleSwitch
+                    key={service}
+                    label={service}
+                    sublabel="Complimentary"
+                    checked={villaServs.includes(service)}
+                    onChange={() => toggleField("villaServices", service)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* ══ SECTION 3: Airport Pickup & Transportation ════════════════════ */}
+            <div
+              className="rounded-sm p-8 sm:p-10 mb-3"
+              style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
+            >
+              <SectionHeader
+                number="Section 03"
+                title="Airport Pickup & Transportation"
+                subtitle="From the moment you land, your transportation is private, seamless, and entirely taken care of."
+              />
+              <div className="space-y-2">
+                {TRANSPORT_SERVICES.map((service) => (
+                  <ToggleSwitch
+                    key={service}
+                    label={service}
+                    checked={villaServs.includes(service)}
+                    onChange={() => toggleField("villaServices", service)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* ══ SECTION 4: Grocery Shopping & Stocking ═══════════════════════ */}
+            <div
+              className="rounded-sm p-8 sm:p-10 mb-3"
+              style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
+            >
+              <SectionHeader
+                number="Section 04"
+                title="Grocery Shopping & Stocking"
+                subtitle="Your villa stocked with everything you love — fresh provisions, fine wines, and any dietary needs."
+              />
+              <div className="space-y-2">
+                {GROCERY_SERVICES.map((service) => (
                   <div key={service}>
                     <ToggleSwitch
                       label={service}
+                      sublabel="Complimentary"
                       checked={villaServs.includes(service)}
                       onChange={() => toggleField("villaServices", service)}
                     />
-                    {/* Grocery notes sub-field */}
                     {service === "Pre-Arrival Grocery Stocking" && groceryOn && (
                       <div className="mt-2 ml-1">
                         <FormField control={form.control} name="groceryNotes" render={({ field }) => (
@@ -573,36 +627,74 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ══ SECTION 3: In-Villa Experiences ══════════════════════════════ */}
+            {/* ══ SECTION 5: Daily Housekeeping ════════════════════════════════ */}
             <div
               className="rounded-sm p-8 sm:p-10 mb-3"
               style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
             >
               <SectionHeader
-                number="Section 03"
-                title="In-Villa Experiences"
-                subtitle="Select any experiences you'd like arranged at the villa. All are delivered by Pure Kauai's curated specialists."
+                number="Section 05"
+                title="Daily Housekeeping"
+                subtitle="Immaculate daily care so your villa always feels like the first moment you arrived."
               />
-              <TileGroup title="Private Dining" items={IN_VILLA_DINING} selected={inVilla} onToggle={(n) => toggleField("inVillaExperiences", n)} />
-              <TileGroup title="Wellness & Restoration" items={IN_VILLA_WELLNESS} selected={inVilla} onToggle={(n) => toggleField("inVillaExperiences", n)} />
-              <TileGroup title="Entertainment & Culture" items={IN_VILLA_ENTERTAINMENT} selected={inVilla} onToggle={(n) => toggleField("inVillaExperiences", n)} />
+              <div className="space-y-2">
+                {HOUSEKEEPING_SERVICES.filter((s) => s !== "Childcare & Nanny Service" || children > 0).map((service) => (
+                  <ToggleSwitch
+                    key={service}
+                    label={service}
+                    checked={villaServs.includes(service)}
+                    onChange={() => toggleField("villaServices", service)}
+                  />
+                ))}
+              </div>
+            </div>
 
-              {inVilla.length > 0 && (
-                <p className="mt-2 text-xs" style={{ color: "#937C66" }}>
-                  {inVilla.length} experience{inVilla.length !== 1 ? "s" : ""} selected
+            {/* ══ SECTION 6: Spa & Fitness Services ════════════════════════════ */}
+            <div
+              className="rounded-sm p-8 sm:p-10 mb-3"
+              style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
+            >
+              <SectionHeader
+                number="Section 06"
+                title="Spa & Fitness Services"
+                subtitle="World-class wellness brought directly to the villa — massages, healing ceremonies, yoga, and more."
+              />
+              <TileGroup title="Wellness & Restoration" items={IN_VILLA_WELLNESS} selected={inVilla} onToggle={(n) => toggleField("inVillaExperiences", n)} />
+              {inVilla.filter((s) => IN_VILLA_WELLNESS.includes(s)).length > 0 && (
+                <p className="mt-1 text-xs" style={{ color: "#937C66" }}>
+                  {inVilla.filter((s) => IN_VILLA_WELLNESS.includes(s)).length} service{inVilla.filter((s) => IN_VILLA_WELLNESS.includes(s)).length !== 1 ? "s" : ""} selected
                 </p>
               )}
             </div>
 
-            {/* ══ SECTION 4: Excursions & Adventures ════════════════════════════ */}
+            {/* ══ SECTION 7: Private Chefs & Luaus ═════════════════════════════ */}
             <div
               className="rounded-sm p-8 sm:p-10 mb-3"
               style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
             >
               <SectionHeader
-                number="Section 04"
-                title="Excursions & Adventures"
-                subtitle="Select the off-property experiences you'd like included in the itinerary. All are private and exclusively arranged."
+                number="Section 07"
+                title="Private Chefs & Luaus"
+                subtitle="From intimate candlelit dinners to full private luaus — your villa, your table, your moment."
+              />
+              <TileGroup title="Private Dining" items={IN_VILLA_DINING} selected={inVilla} onToggle={(n) => toggleField("inVillaExperiences", n)} />
+              <TileGroup title="Entertainment & Culture" items={IN_VILLA_ENTERTAINMENT} selected={inVilla} onToggle={(n) => toggleField("inVillaExperiences", n)} />
+              {inVilla.filter((s) => [...IN_VILLA_DINING, ...IN_VILLA_ENTERTAINMENT].includes(s)).length > 0 && (
+                <p className="mt-1 text-xs" style={{ color: "#937C66" }}>
+                  {inVilla.filter((s) => [...IN_VILLA_DINING, ...IN_VILLA_ENTERTAINMENT].includes(s)).length} experience{inVilla.filter((s) => [...IN_VILLA_DINING, ...IN_VILLA_ENTERTAINMENT].includes(s)).length !== 1 ? "s" : ""} selected
+                </p>
+              )}
+            </div>
+
+            {/* ══ SECTION 8: Personalized Activities & Adventures ══════════════ */}
+            <div
+              className="rounded-sm p-8 sm:p-10 mb-3"
+              style={{ background: "#FFFFFF", boxShadow: "0 2px 20px rgba(5,62,80,0.07)" }}
+            >
+              <SectionHeader
+                number="Section 08"
+                title="Personalized Activities & Adventures"
+                subtitle="Private, exclusively arranged excursions across Kauai — by air, sea, and land."
               />
               <TileGroup title="By Air" items={EXCURSIONS_AIR} selected={excursions} onToggle={(n) => toggleField("excursions", n)} />
               <TileGroup title="By Sea" items={EXCURSIONS_SEA} selected={excursions} onToggle={(n) => toggleField("excursions", n)} />
@@ -610,7 +702,6 @@ export default function Home() {
               <TileGroup title="Family & Kids" items={EXCURSIONS_FAMILY} selected={excursions} onToggle={(n) => toggleField("excursions", n)} />
               <TileGroup title="Gear & Extras" items={EXCURSIONS_GEAR} selected={excursions} onToggle={(n) => toggleField("excursions", n)} />
 
-              {/* Custom Request */}
               <div className="mt-4">
                 <div className="h-px mb-6" style={{ background: "#EBE2E0" }} />
                 <FormField control={form.control} name="customRequest" render={({ field }) => (

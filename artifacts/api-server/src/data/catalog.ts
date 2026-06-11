@@ -19,21 +19,23 @@ export interface ServiceEntry {
 }
 
 export const SERVICE_CATALOG: ServiceEntry[] = [
-  // ── VILLA SETUP ───────────────────────────────────────────────────────────
+  // ── PRE-ARRIVAL PLANNING ─────────────────────────────────────────────────
   {
     name: "Villa Greeting & Orientation",
     serviceType: "villa",
-    invoiceCategory: "Villa Setup",
+    invoiceCategory: "Pre-Arrival Planning",
     description: "Personal welcome and full villa orientation by your Pure Kauai host on arrival day.",
     duration: "1 hour",
     priceAmount: 0,
     pricingModel: "complimentary",
     unsplashKeyword: "luxury villa hawaii welcome tropical",
   },
+
+  // ── AIRPORT PICKUP & TRANSPORTATION ──────────────────────────────────────
   {
     name: "Airport Pickup & Transportation",
     serviceType: "villa",
-    invoiceCategory: "Villa Setup",
+    invoiceCategory: "Airport Pickup & Transportation",
     description: "Private luxury vehicle pickup from Lihue Airport with meet-and-greet, luggage handling, and seamless transfer to the villa.",
     duration: "Per transfer",
     priceAmount: 250,
@@ -43,7 +45,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Vehicle Delivery",
     serviceType: "villa",
-    invoiceCategory: "Villa Setup",
+    invoiceCategory: "Airport Pickup & Transportation",
     description: "Premium vehicle delivered to the villa for your use throughout the stay.",
     duration: "Full stay",
     priceAmount: 150,
@@ -53,27 +55,31 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Private Transportation (daily driver)",
     serviceType: "villa",
-    invoiceCategory: "Villa Setup",
+    invoiceCategory: "Airport Pickup & Transportation",
     description: "Dedicated private driver available all day for transfers, outings, and airport runs.",
     duration: "Full day",
     priceAmount: 450,
     pricingModel: "per_night",
     unsplashKeyword: "private chauffeur luxury car hawaii",
   },
+
+  // ── GROCERY SHOPPING & STOCKING ───────────────────────────────────────────
   {
     name: "Pre-Arrival Grocery Stocking",
     serviceType: "villa",
-    invoiceCategory: "Villa Setup",
+    invoiceCategory: "Grocery Shopping & Stocking",
     description: "Villa fully stocked before arrival with fresh provisions, fine wines, and all requested dietary items.",
     duration: "N/A",
     priceAmount: 0,
     pricingModel: "complimentary",
     unsplashKeyword: "luxury villa kitchen fresh fruit hawaii organic",
   },
+
+  // ── DAILY HOUSEKEEPING ────────────────────────────────────────────────────
   {
     name: "Daily Housekeeping",
     serviceType: "villa",
-    invoiceCategory: "Villa Setup",
+    invoiceCategory: "Daily Housekeeping",
     description: "Full daily housekeeping service including linens, towels, and villa refresh.",
     duration: "Daily",
     priceAmount: 150,
@@ -83,7 +89,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Evening Turndown Service",
     serviceType: "villa",
-    invoiceCategory: "Villa Setup",
+    invoiceCategory: "Daily Housekeeping",
     description: "Nightly turndown with fresh towels, chocolates, and thoughtful evening touches.",
     duration: "Daily",
     priceAmount: 75,
@@ -93,7 +99,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Butler & Personal Assistants",
     serviceType: "villa",
-    invoiceCategory: "Villa Setup",
+    invoiceCategory: "Daily Housekeeping",
     description: "Dedicated butler and personal assistant available throughout your stay for every need.",
     duration: "Full day",
     priceAmount: 600,
@@ -103,7 +109,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Childcare & Nanny Service",
     serviceType: "villa",
-    invoiceCategory: "Villa Setup",
+    invoiceCategory: "Daily Housekeeping",
     description: "Professional, vetted nanny service for your children throughout the stay.",
     duration: "Full day",
     priceAmount: 300,
@@ -111,11 +117,11 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     unsplashKeyword: "luxury childcare nanny tropical family villa",
   },
 
-  // ── PRIVATE DINING ────────────────────────────────────────────────────────
+  // ── PRIVATE CHEFS & LUAUS — DINING ────────────────────────────────────────
   {
     name: "Private Chef — Breakfast",
     serviceType: "villa",
-    invoiceCategory: "Private Dining",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Full private chef breakfast with freshly prepared Hawaiian dishes and tropical fruits.",
     duration: "1.5 hours",
     priceAmount: 95,
@@ -125,7 +131,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Private Chef — Lunch",
     serviceType: "villa",
-    invoiceCategory: "Private Dining",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Private chef lunch with locally sourced Kauai ingredients and seasonal preparations.",
     duration: "2 hours",
     priceAmount: 150,
@@ -135,7 +141,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Private Chef — Dinner",
     serviceType: "villa",
-    invoiceCategory: "Private Dining",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Multi-course private chef dinner with locally caught fish and Kauai-grown produce.",
     duration: "3 hours",
     priceAmount: 275,
@@ -145,7 +151,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Sushi & Omakase Chef",
     serviceType: "villa",
-    invoiceCategory: "Private Dining",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Renowned sushi chef crafts a bespoke omakase from the day's freshest Kauai catch.",
     duration: "3 hours",
     priceAmount: 325,
@@ -155,7 +161,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Private Bartender & Mixologist",
     serviceType: "villa",
-    invoiceCategory: "Private Dining",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Expert mixologist creates bespoke cocktails and curated drinks for your group.",
     duration: "4 hours",
     priceAmount: 400,
@@ -165,7 +171,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Wine Sommelier & Cellar Curation",
     serviceType: "villa",
-    invoiceCategory: "Private Dining",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Private sommelier selects and presents wines paired to every course and occasion.",
     duration: "Evening",
     priceAmount: 300,
@@ -175,7 +181,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Private Cooking Class with Chef",
     serviceType: "villa",
-    invoiceCategory: "Private Dining",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Hands-on private cooking class with your chef exploring Hawaiian flavors and technique.",
     duration: "3 hours",
     priceAmount: 175,
@@ -183,93 +189,11 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     unsplashKeyword: "cooking class private chef hawaii tropical kitchen",
   },
 
-  // ── WELLNESS ──────────────────────────────────────────────────────────────
-  {
-    name: "Lomilomi Massage (Traditional Hawaiian)",
-    serviceType: "villa",
-    invoiceCategory: "Wellness & Restoration",
-    description: "Ancient Hawaiian lomilomi massage delivered at the villa by a master practitioner.",
-    duration: "90 minutes",
-    priceAmount: 250,
-    pricingModel: "per_person",
-    unsplashKeyword: "lomilomi massage hawaii tropical spa wellness",
-  },
-  {
-    name: "Couples Massage",
-    serviceType: "villa",
-    invoiceCategory: "Wellness & Restoration",
-    description: "Side-by-side massage for two at the villa, deeply restorative and deeply romantic.",
-    duration: "90 minutes",
-    priceAmount: 450,
-    pricingModel: "per_couple",
-    unsplashKeyword: "couples massage luxury spa hawaii romantic",
-  },
-  {
-    name: "Massage & Facial Fusion",
-    serviceType: "villa",
-    invoiceCategory: "Wellness & Restoration",
-    description: "Full-body lomilomi massage and rejuvenating facial fusion treatment at the villa.",
-    duration: "2 hours",
-    priceAmount: 295,
-    pricingModel: "per_person",
-    unsplashKeyword: "luxury spa massage facial hawaii tropical",
-  },
-  {
-    name: "Sound Bath & Healing Ceremony",
-    serviceType: "villa",
-    invoiceCategory: "Wellness & Restoration",
-    description: "Private sound healing ceremony with crystal bowls and native instruments at the villa.",
-    duration: "90 minutes",
-    priceAmount: 150,
-    pricingModel: "per_person",
-    unsplashKeyword: "sound bath meditation hawaii crystal bowl healing",
-  },
-  {
-    name: "Restorative Yoga",
-    serviceType: "villa",
-    invoiceCategory: "Wellness & Restoration",
-    description: "Private restorative yoga session on the lanai or beach with a Hawaiian-trained instructor.",
-    duration: "90 minutes",
-    priceAmount: 95,
-    pricingModel: "per_person",
-    unsplashKeyword: "sunrise yoga beach hawaii ocean wellness",
-  },
-  {
-    name: "Private Pilates Session",
-    serviceType: "villa",
-    invoiceCategory: "Wellness & Restoration",
-    description: "Private Pilates session with portable equipment at the villa, tailored to your level.",
-    duration: "1 hour",
-    priceAmount: 120,
-    pricingModel: "per_person",
-    unsplashKeyword: "pilates workout luxury villa ocean view hawaii",
-  },
-  {
-    name: "Meditation & Breathwork",
-    serviceType: "villa",
-    invoiceCategory: "Wellness & Restoration",
-    description: "Guided breathwork and meditation practice rooted in Hawaiian mindfulness traditions.",
-    duration: "1 hour",
-    priceAmount: 95,
-    pricingModel: "per_person",
-    unsplashKeyword: "meditation breathwork sunrise hawaii peaceful",
-  },
-  {
-    name: "Reiki & Energy Healing",
-    serviceType: "villa",
-    invoiceCategory: "Wellness & Restoration",
-    description: "Certified Reiki master visits the villa for a private energy healing session.",
-    duration: "75 minutes",
-    priceAmount: 150,
-    pricingModel: "per_person",
-    unsplashKeyword: "reiki energy healing spiritual wellness hawaii",
-  },
-
-  // ── ENTERTAINMENT & CULTURE ───────────────────────────────────────────────
+  // ── PRIVATE CHEFS & LUAUS — ENTERTAINMENT ─────────────────────────────────
   {
     name: "Private Luau & Fire Show",
     serviceType: "villa",
-    invoiceCategory: "Entertainment & Culture",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Full private luau with authentic hula, fire performers, live music, and a traditional feast.",
     duration: "4 hours",
     priceAmount: 350,
@@ -279,7 +203,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Hula Performance & Cultural Ceremony",
     serviceType: "villa",
-    invoiceCategory: "Entertainment & Culture",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Traditional hula dancers and cultural practitioners bring ceremony and storytelling to the villa.",
     duration: "2 hours",
     priceAmount: 750,
@@ -289,7 +213,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Ukulele Lesson & Hawaiian Storytelling",
     serviceType: "villa",
-    invoiceCategory: "Entertainment & Culture",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Master Hawaiian musician weaves ukulele lessons with the oral legends of Kauai.",
     duration: "2 hours",
     priceAmount: 120,
@@ -299,7 +223,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Lei Making & Cultural Workshop",
     serviceType: "villa",
-    invoiceCategory: "Entertainment & Culture",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Native Hawaiian practitioner teaches lei making, weaving, and the sacred customs of the island.",
     duration: "2 hours",
     priceAmount: 110,
@@ -309,7 +233,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Recording Studio Session",
     serviceType: "villa",
-    invoiceCategory: "Entertainment & Culture",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Private recording studio session — create your own Hawaiian song or personal memory.",
     duration: "3 hours",
     priceAmount: 500,
@@ -319,7 +243,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Private Outdoor Movie Night",
     serviceType: "villa",
-    invoiceCategory: "Entertainment & Culture",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Cinema-quality outdoor movie setup with screen, surround sound, and gourmet snacks under the stars.",
     duration: "3 hours",
     priceAmount: 450,
@@ -329,7 +253,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Live Hawaiian Music at the Villa",
     serviceType: "villa",
-    invoiceCategory: "Entertainment & Culture",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Live Hawaiian musicians perform at the villa — slack-key guitar, ukulele, and traditional songs.",
     duration: "2 hours",
     priceAmount: 350,
@@ -339,7 +263,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
   {
     name: "Sunset Bonfire on the Beach",
     serviceType: "villa",
-    invoiceCategory: "Entertainment & Culture",
+    invoiceCategory: "Private Chefs & Luaus",
     description: "Private beach bonfire arranged with seating, s'mores, torches, and a Hawaiian sunset playlist.",
     duration: "2 hours",
     priceAmount: 250,
@@ -347,7 +271,89 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     unsplashKeyword: "beach bonfire sunset hawaii tropical evening fire",
   },
 
-  // ── EXCURSIONS — BY AIR ───────────────────────────────────────────────────
+  // ── SPA & FITNESS SERVICES ────────────────────────────────────────────────
+  {
+    name: "Lomilomi Massage (Traditional Hawaiian)",
+    serviceType: "villa",
+    invoiceCategory: "Spa & Fitness Services",
+    description: "Ancient Hawaiian lomilomi massage delivered at the villa by a master practitioner.",
+    duration: "90 minutes",
+    priceAmount: 250,
+    pricingModel: "per_person",
+    unsplashKeyword: "lomilomi massage hawaii tropical spa wellness",
+  },
+  {
+    name: "Couples Massage",
+    serviceType: "villa",
+    invoiceCategory: "Spa & Fitness Services",
+    description: "Side-by-side massage for two at the villa, deeply restorative and deeply romantic.",
+    duration: "90 minutes",
+    priceAmount: 450,
+    pricingModel: "per_couple",
+    unsplashKeyword: "couples massage luxury spa hawaii romantic",
+  },
+  {
+    name: "Massage & Facial Fusion",
+    serviceType: "villa",
+    invoiceCategory: "Spa & Fitness Services",
+    description: "Full-body lomilomi massage and rejuvenating facial fusion treatment at the villa.",
+    duration: "2 hours",
+    priceAmount: 295,
+    pricingModel: "per_person",
+    unsplashKeyword: "luxury spa massage facial hawaii tropical",
+  },
+  {
+    name: "Sound Bath & Healing Ceremony",
+    serviceType: "villa",
+    invoiceCategory: "Spa & Fitness Services",
+    description: "Private sound healing ceremony with crystal bowls and native instruments at the villa.",
+    duration: "90 minutes",
+    priceAmount: 150,
+    pricingModel: "per_person",
+    unsplashKeyword: "sound bath meditation hawaii crystal bowl healing",
+  },
+  {
+    name: "Restorative Yoga",
+    serviceType: "villa",
+    invoiceCategory: "Spa & Fitness Services",
+    description: "Private restorative yoga session on the lanai or beach with a Hawaiian-trained instructor.",
+    duration: "90 minutes",
+    priceAmount: 95,
+    pricingModel: "per_person",
+    unsplashKeyword: "sunrise yoga beach hawaii ocean wellness",
+  },
+  {
+    name: "Private Pilates Session",
+    serviceType: "villa",
+    invoiceCategory: "Spa & Fitness Services",
+    description: "Private Pilates session with portable equipment at the villa, tailored to your level.",
+    duration: "1 hour",
+    priceAmount: 120,
+    pricingModel: "per_person",
+    unsplashKeyword: "pilates workout luxury villa ocean view hawaii",
+  },
+  {
+    name: "Meditation & Breathwork",
+    serviceType: "villa",
+    invoiceCategory: "Spa & Fitness Services",
+    description: "Guided breathwork and meditation practice rooted in Hawaiian mindfulness traditions.",
+    duration: "1 hour",
+    priceAmount: 95,
+    pricingModel: "per_person",
+    unsplashKeyword: "meditation breathwork sunrise hawaii peaceful",
+  },
+  {
+    name: "Reiki & Energy Healing",
+    serviceType: "villa",
+    invoiceCategory: "Spa & Fitness Services",
+    description: "Certified Reiki master visits the villa for a private energy healing session.",
+    duration: "75 minutes",
+    priceAmount: 150,
+    pricingModel: "per_person",
+    unsplashKeyword: "reiki energy healing spiritual wellness hawaii",
+  },
+
+  // ── PERSONALIZED ACTIVITIES & ADVENTURES — BY AIR ─────────────────────────
   {
     name: "Sightseeing Helicopter Charter",
     serviceType: "excursion",
@@ -369,7 +375,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     unsplashKeyword: "helicopter doors off Kauai aerial Waimea Canyon",
   },
 
-  // ── EXCURSIONS — BY SEA ───────────────────────────────────────────────────
+  // ── PERSONALIZED ACTIVITIES & ADVENTURES — BY SEA ─────────────────────────
   {
     name: "Na Pali Coast Private Boat Charter",
     serviceType: "excursion",
@@ -431,7 +437,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     unsplashKeyword: "kayaking paddleboard Hawaii ocean coast adventure",
   },
 
-  // ── EXCURSIONS — BY LAND ──────────────────────────────────────────────────
+  // ── PERSONALIZED ACTIVITIES & ADVENTURES — BY LAND ────────────────────────
   {
     name: "North Shore Waterfall Hike (private guide)",
     serviceType: "excursion",
@@ -503,7 +509,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     unsplashKeyword: "horseback riding Hawaii Kauai ocean trail tropical",
   },
 
-  // ── EXCURSIONS — FAMILY & KIDS ────────────────────────────────────────────
+  // ── PERSONALIZED ACTIVITIES & ADVENTURES — FAMILY & KIDS ─────────────────
   {
     name: "Family Surf Lesson at Hanalei Bay",
     serviceType: "excursion",
@@ -565,7 +571,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     unsplashKeyword: "kids cooking class chef hawaii tropical fun junior",
   },
 
-  // ── EXCURSIONS — GEAR & EXTRAS ────────────────────────────────────────────
+  // ── PERSONALIZED ACTIVITIES & ADVENTURES — GEAR & EXTRAS ─────────────────
   {
     name: "Gear Rentals (snorkel, paddleboard, bikes)",
     serviceType: "excursion",
