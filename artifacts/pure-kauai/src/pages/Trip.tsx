@@ -445,7 +445,7 @@ export default function Trip() {
   // ── Render ────────────────────────────────────────────────────────────────
   const TABS: { id: Tab; label: string; count?: number }[] = [
     { id: "journey", label: "Your Journey" },
-    { id: "invoice", label: "Services & Pricing", count: itinerary.invoice?.length ?? 0 },
+    { id: "invoice", label: "Services & Invoice", count: itinerary.invoice?.length ?? 0 },
   ];
 
   return (
@@ -749,7 +749,7 @@ export default function Trip() {
             <div className="flex flex-wrap justify-center gap-3">
               {(itinerary.invoice?.length ?? 0) > 0 && (
                 <button onClick={() => setActiveTab("invoice")} className="inline-flex items-center gap-3 text-sm tracking-[0.14em] uppercase text-white px-8 py-4 transition-opacity duration-300 hover:opacity-85" style={{ background: "#053E50", borderRadius: "1px" }}>
-                  Services &amp; Pricing <ChevronRight className="h-4 w-4" />
+                  Services &amp; Invoice <ChevronRight className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -760,7 +760,7 @@ export default function Trip() {
       {/* ══ SERVICES & PRICING TAB ══════════════════════════════════════════ */}
       <div className={activeTab === "invoice" ? "block" : "hidden"}>
         <InvoicePanel
-          title="Services & Pricing"
+          title="Services & Invoice"
           items={itinerary.invoice ?? []}
           guestName={itinerary.guestName}
           checkIn={itinerary.checkIn}
