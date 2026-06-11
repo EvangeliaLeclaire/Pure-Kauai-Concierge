@@ -72,47 +72,84 @@ Pure Kauai's voice principles:
 
 Your job is to arrange the SELECTED services into a beautiful, chronological day-by-day narrative. You do not add or invent services — you arrange what has already been chosen and give each one life through your words.`;
 
-  const userPrompt = `Create a bespoke itinerary for the following guest. Use ONLY the selected services listed below — do not add anything that isn't listed.
+  const userPrompt = `You are creating a bespoke luxury itinerary for the following guest.
 
 ━━━ GUEST PROFILE ━━━
 Name: ${input.guestName}
-Arrival: ${input.checkIn}  |  Departure: ${input.checkOut}
+Arrival: ${input.checkIn} | Departure: ${input.checkOut}
 Duration: ${numDays} day${numDays !== 1 ? "s" : ""}
-Adults: ${input.adults}${input.children > 0 ? `  |  Children: ${input.children}${input.childrenAges ? ` (ages: ${input.childrenAges})` : ""}` : ""}
-${input.hasPets ? "Pets: Yes — please acknowledge this warmly in the welcome letter." : ""}
+Adults: ${input.adults}${input.children > 0 ? ` | Children: ${input.children}${input.childrenAges ? ` (ages: ${input.childrenAges})` : ""}` : ""}
+${input.hasPets ? "Pets: Yes — acknowledge this warmly." : ""}
 Special Occasion: ${input.specialOccasion !== "None" ? input.specialOccasion : "None"}
-${input.specialNotes ? `Guest Notes: ${input.specialNotes}` : ""}
+${input.specialNotes ? `Guest Notes from concierge call: ${input.specialNotes}` : ""}
 
-━━━ SELECTED SERVICES ━━━${listSection("Villa Services Selected", input.villaServices)}${listSection("In-Villa Experiences Selected", input.inVillaExperiences)}${listSection("Excursions Selected", input.excursions)}${input.customRequest ? `\nCustom Request: ${input.customRequest}` : ""}
+━━━ SELECTED SERVICES ━━━
+${listSection("Villa & Arrival Services", input.villaServices)}
+${listSection("In-Villa Experiences", input.inVillaExperiences)}
+${listSection("Excursions & Adventures", input.excursions)}
+${input.customRequest ? `Custom Request: ${input.customRequest}` : ""}
 ${!hasAnything ? "No experiences selected — write a beautiful relaxation-focused itinerary celebrating the villa, the island, and the natural luxury of simply being in Kauai." : ""}
 
-━━━ INSTRUCTIONS ━━━
-1. Write a personal welcome letter addressed to ${input.guestName} by name. Reference the occasion if not "None". Warm, personal, 4-5 sentences.
-2. Spread ALL selected in-villa experiences and excursions across the ${numDays} days. Balance the days — morning excursions, afternoon wellness, evening dining.
-3. Give each day a poetic, evocative title that captures its essence (e.g. "A Hawaiian Welcome", "The Island by Air", "Sea, Sky & Stillness").
-4. Write 2-4 activities per day. Each description: 2-3 evocative, sensory sentences in concierge voice.
-5. Use: "Morning", "Afternoon", or "Evening" for time.
-6. For unsplashKeyword, write a specific, descriptive search phrase (5-8 words) that would find a stunning real photo of that experience.
+━━━ YOUR CURATION INSTRUCTIONS ━━━
+
+1. WELCOME LETTER
+Write a personal letter to ${input.guestName} from their Pure Kauai concierge.
+- Address them by name in the opening line
+- Reference their specific occasion if not None
+- Mention one specific thing from their notes that shows you listened
+- If they have children mention them by implication — "the little ones" or "the whole family"
+- 4-5 sentences. Warm. Personal. Unhurried.
+- Sign it: "With aloha, Your Pure Kauai Concierge"
+
+2. INTELLIGENT DAY SEQUENCING
+You decide how to sequence these ${numDays} day${numDays !== 1 ? "s" : ""}. Follow this intelligence:
+- Day 1 ALWAYS focuses on arrival, villa orientation, settling in
+- Schedule helicopter and boat charters on Days 2-4 when energy is highest
+- Schedule spa and wellness on the middle days as restoration
+- Schedule cultural experiences like ukulele and workshops on quieter afternoons
+- Schedule photoshoot on a day with good natural light activities nearby
+- Never put two major excursions back to back without a recovery moment
+- Final day ALWAYS ends gently — breakfast, farewell, departure
+- If children are present make sure at least one full day centers on them
+- If this is an anniversary or honeymoon build one sunset moment exclusively for the couple
+
+3. DAY TITLES
+Name each day evocatively in Pure Kauai's style:
+Hawaiian Style Arrival / Kauai by Air / A Day to Exhale / Kauai by Sea / Hang Ten / Kauai by Land / Until We Meet Again
+Adapt to what was actually selected. Always poetic. Never generic.
+
+4. ACTIVITY DESCRIPTIONS
+For each activity write 2-3 sentences in Pure Kauai's voice:
+- Present tense — as if the guest is already there
+- Sensory and specific — smells, sounds, light, feeling
+- Reference actual Kauai locations by name
+- Make it feel unrepeatable and exclusively theirs
+- NEVER mention price or duration in the narrative
+
+5. SPECIAL OCCASION TREATMENT
+${input.specialOccasion !== "None" ? `This trip is celebrating a ${input.specialOccasion}. Build one signature moment around this — a surprise setup, a private sunset, a dedicated acknowledgment. Make it the emotional peak of the itinerary.` : "No special occasion — focus on pure immersion and restoration."}
+
+6. CLOSING
+The final line of the welcomeMessage must be Pure Kauai's signature closing:
+"We take pride in crafting unforgettable Kauai vacations, thoughtfully tailored to your unique interests. Your concierge is here every step of the way — from the moment you land to the moment you reluctantly depart. Until we meet again."
 
 ━━━ RESPONSE FORMAT ━━━
-Respond ONLY with valid JSON. No markdown, no explanation.
+Return ONLY valid JSON in this exact structure — no markdown, no explanation:
 
 {
-  "welcomeMessage": "...",
+  "welcomeMessage": "full personal letter including signature closing",
   "days": [
     {
-      "day": 1,
-      "dayTitle": "A Hawaiian Welcome",
-      "date": "${input.checkIn}",
+      "dayNumber": 1,
+      "date": "YYYY-MM-DD",
+      "title": "Hawaiian Style Arrival",
+      "theme": "one evocative sentence describing the day",
       "activities": [
         {
           "time": "Morning",
-          "name": "Exact service name from selected list",
-          "category": "...",
-          "serviceType": "in_villa OR excursion",
-          "description": "2-3 evocative sentences.",
-          "duration": "...",
-          "unsplashKeyword": "descriptive 5-8 word search phrase"
+          "name": "exact service name from selected list",
+          "description": "2-3 sentences in Pure Kauai voice",
+          "unsplashKeyword": "specific keyword for a beautiful Kauai photo"
         }
       ]
     }

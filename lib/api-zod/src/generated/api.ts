@@ -71,16 +71,14 @@ export const GetItineraryResponse = zod.object({
   "hostPhone": zod.string().nullish(),
   "welcomeMessage": zod.string().nullish(),
   "days": zod.array(zod.object({
-  "day": zod.number(),
-  "dayTitle": zod.string(),
+  "dayNumber": zod.number(),
+  "title": zod.string(),
+  "theme": zod.string(),
   "date": zod.string(),
   "activities": zod.array(zod.object({
   "time": zod.string(),
   "name": zod.string(),
-  "category": zod.string(),
   "description": zod.string(),
-  "duration": zod.string(),
-  "serviceType": zod.string(),
   "unsplashKeyword": zod.string(),
   "photoUrl": zod.string().nullish()
 }))
@@ -143,16 +141,14 @@ export const ApproveItineraryResponse = zod.object({
   "hostPhone": zod.string().nullish(),
   "welcomeMessage": zod.string().nullish(),
   "days": zod.array(zod.object({
-  "day": zod.number(),
-  "dayTitle": zod.string(),
+  "dayNumber": zod.number(),
+  "title": zod.string(),
+  "theme": zod.string(),
   "date": zod.string(),
   "activities": zod.array(zod.object({
   "time": zod.string(),
   "name": zod.string(),
-  "category": zod.string(),
   "description": zod.string(),
-  "duration": zod.string(),
-  "serviceType": zod.string(),
   "unsplashKeyword": zod.string(),
   "photoUrl": zod.string().nullish()
 }))

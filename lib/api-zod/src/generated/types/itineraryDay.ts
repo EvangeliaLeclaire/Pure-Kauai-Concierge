@@ -8,8 +8,9 @@
 import type { ItineraryActivity } from './itineraryActivity';
 
 export interface ItineraryDay {
-  day: number;
-  dayTitle: string;
+  dayNumber: number;
+  title: string;
+  theme: string;
   date: string;
   activities: ItineraryActivity[];
 }

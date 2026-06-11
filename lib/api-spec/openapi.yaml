@@ -223,23 +223,14 @@ components:
       required:
         - time
         - name
-        - category
         - description
-        - duration
-        - serviceType
         - unsplashKeyword
       properties:
         time:
           type: string
         name:
           type: string
-        category:
-          type: string
         description:
-          type: string
-        duration:
-          type: string
-        serviceType:
           type: string
         unsplashKeyword:
           type: string
@@ -249,14 +240,17 @@ components:
     ItineraryDay:
       type: object
       required:
-        - day
-        - dayTitle
+        - dayNumber
+        - title
+        - theme
         - date
         - activities
       properties:
-        day:
+        dayNumber:
           type: integer
-        dayTitle:
+        title:
+          type: string
+        theme:
           type: string
         date:
           type: string

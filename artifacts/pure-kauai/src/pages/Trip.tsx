@@ -651,21 +651,26 @@ export default function Trip() {
           <div className="space-y-20 md:space-y-28">
 
             {itinerary.days.map((day, dayIdx) => (
-              <section key={day.day}>
+              <section key={day.dayNumber}>
                 {/* Chapter header */}
                 <div className="mb-10">
                   <p className="text-xs tracking-[0.35em] uppercase mb-2" style={{ color: "#937C66" }}>
-                    Chapter {CHAPTERS[dayIdx] ?? dayIdx + 1}
+                    Day {day.dayNumber}
                   </p>
                   <h2
                     className="font-light leading-tight mb-1"
                     style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "clamp(1.6rem, 4vw, 2.4rem)", color: "#053E50" }}
                   >
-                    {day.dayTitle ?? format(parseISO(day.date), "EEEE, MMMM d")}
+                    {day.title ?? format(parseISO(day.date), "EEEE, MMMM d")}
                   </h2>
-                  <p className="text-sm mb-4" style={{ color: "#8A7F7D" }}>
+                  <p className="text-sm mb-1" style={{ color: "#8A7F7D" }}>
                     {format(parseISO(day.date), "EEEE, MMMM d")}
                   </p>
+                  {day.theme && (
+                    <p className="text-sm italic mb-4" style={{ color: "#937C66", fontFamily: "'Source Serif 4', Georgia, serif" }}>
+                      {day.theme}
+                    </p>
+                  )}
                   <div className="h-[2px] w-12" style={{ background: "#937C66" }} />
                 </div>
 
@@ -703,14 +708,6 @@ export default function Trip() {
                           </span>
                         </div>
 
-                        {/* Category badge */}
-                        {activity.category && (
-                          <div className="absolute top-4 right-4">
-                            <span className="text-xs tracking-[0.14em] uppercase px-3 py-1.5 bg-[#053E50]/70 backdrop-blur-sm" style={{ color: "#EBE2E0", borderRadius: "1px" }}>
-                              {activity.category}
-                            </span>
-                          </div>
-                        )}
                       </div>
 
                       {/* Card content */}
@@ -725,11 +722,7 @@ export default function Trip() {
                           {activity.description}
                         </p>
 
-                        <div className="flex flex-wrap items-center gap-4 pt-5 border-t border-[#F0ECEA]">
-                          <span className="inline-flex items-center gap-1.5 text-xs" style={{ color: "#937C66" }}>
-                            <Clock className="h-3.5 w-3.5" />
-                            {activity.duration}
-                          </span>
+                        <div className="flex items-center pt-5 border-t border-[#F0ECEA]">
                           <button
                             onClick={() => { setRequestModal(activity.name); setRequestMsg(""); }}
                             className="ml-auto inline-flex items-center gap-1.5 text-xs transition-opacity hover:opacity-60"

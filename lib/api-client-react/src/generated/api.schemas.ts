@@ -76,18 +76,16 @@ export interface InvoiceItem {
 export interface ItineraryActivity {
   time: string;
   name: string;
-  category: string;
   description: string;
-  duration: string;
-  serviceType: string;
   unsplashKeyword: string;
   /** @nullable */
   photoUrl?: string | null;
 }
 
 export interface ItineraryDay {
-  day: number;
-  dayTitle: string;
+  dayNumber: number;
+  title: string;
+  theme: string;
   date: string;
   activities: ItineraryActivity[];
 }

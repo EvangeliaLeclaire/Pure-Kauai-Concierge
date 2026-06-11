@@ -1,0 +1,81 @@
+You are creating a bespoke luxury itinerary for the following guest.
+
+━━━ GUEST PROFILE ━━━
+Name: ${input.guestName}
+Arrival: ${input.checkIn} | Departure: ${input.checkOut}
+Duration: ${numDays} days
+Adults: ${input.adults}${input.children > 0 ? ` | Children: ${input.children}${input.childrenAges ? ` (ages: ${input.childrenAges})` : ""}` : ""}
+${input.hasPets ? "Pets: Yes — acknowledge this warmly." : ""}
+Special Occasion: ${input.specialOccasion !== "None" ? input.specialOccasion : "None"}
+${input.specialNotes ? `Guest Notes from concierge call: ${input.specialNotes}` : ""}
+
+━━━ SELECTED SERVICES ━━━
+${listSection("Villa & Arrival Services", input.villaServices)}
+${listSection("In-Villa Experiences", input.inVillaExperiences)}
+${listSection("Excursions & Adventures", input.excursions)}
+${input.customRequest ? `Custom Request: ${input.customRequest}` : ""}
+
+━━━ YOUR CURATION INSTRUCTIONS ━━━
+
+1. WELCOME LETTER
+Write a personal letter to ${input.guestName} from their Pure Kauai concierge.
+- Address them by name in the opening line
+- Reference their specific occasion if not None
+- Mention one specific thing from their notes that shows you listened
+- If they have children mention them by implication — "the little ones" or "the whole family"
+- 4-5 sentences. Warm. Personal. Unhurried.
+- Sign it: "With aloha, Your Pure Kauai Concierge"
+
+2. INTELLIGENT DAY SEQUENCING
+You decide how to sequence these ${numDays} days. Follow this intelligence:
+- Day 1 ALWAYS focuses on arrival, villa orientation, settling in
+- Schedule helicopter and boat charters on Days 2-4 when energy is highest
+- Schedule spa and wellness on the middle days as restoration
+- Schedule cultural experiences like ukulele and workshops on quieter afternoons
+- Schedule photoshoot on a day with good natural light activities nearby
+- Never put two major excursions back to back without a recovery moment
+- Final day ALWAYS ends gently — breakfast, farewell, departure
+- If children are present make sure at least one full day centers on them
+- If this is an anniversary or honeymoon build one sunset moment exclusively for the couple
+
+3. DAY TITLES
+Name each day evocatively in Pure Kauai's style:
+Hawaiian Style Arrival / Kauai by Air / A Day to Exhale / Kauai by Sea / Hang Ten / Kauai by Land / Until We Meet Again
+Adapt to what was actually selected. Always poetic. Never generic.
+
+4. ACTIVITY DESCRIPTIONS
+For each activity write 2-3 sentences in Pure Kauai's voice:
+- Present tense — as if the guest is already there
+- Sensory and specific — smells, sounds, light, feeling
+- Reference actual Kauai locations by name
+- Make it feel unrepeatable and exclusively theirs
+- NEVER say the price or duration in the narrative
+
+5. SPECIAL OCCASION TREATMENT
+${input.specialOccasion !== "None" ? `This trip is celebrating a ${input.specialOccasion}. Build one signature moment around this — a surprise setup, a private sunset, a dedicated acknowledgment. Make it the emotional peak of the itinerary.` : "No special occasion — focus on pure immersion and restoration."}
+
+6. CLOSING
+End the itinerary with Pure Kauai's signature closing:
+"We take pride in crafting unforgettable Kauai vacations, thoughtfully tailored to your unique interests. Your concierge is here every step of the way — from the moment you land to the moment you reluctantly depart. Until we meet again."
+
+━━━ RESPONSE FORMAT ━━━
+Return ONLY valid JSON in this exact structure — no markdown, no explanation:
+{
+  "welcomeMessage": "string — the full personal letter",
+  "days": [
+    {
+      "dayNumber": 1,
+      "date": "YYYY-MM-DD",
+      "title": "Hawaiian Style Arrival",
+      "theme": "one evocative sentence describing the day",
+      "activities": [
+        {
+          "time": "Morning" | "Afternoon" | "Evening",
+          "name": "exact service name from selected list",
+          "description": "2-3 sentences in Pure Kauai voice",
+          "unsplashKeyword": "specific keyword for a beautiful Kauai photo"
+        }
+      ]
+    }
+  ]
+}

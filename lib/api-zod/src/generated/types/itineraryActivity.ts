@@ -9,10 +9,7 @@
 export interface ItineraryActivity {
   time: string;
   name: string;
-  category: string;
   description: string;
-  duration: string;
-  serviceType: string;
   unsplashKeyword: string;
   /** @nullable */
   photoUrl?: string | null;
