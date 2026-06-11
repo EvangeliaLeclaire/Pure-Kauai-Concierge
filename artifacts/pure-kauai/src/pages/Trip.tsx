@@ -1,7 +1,7 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { useParams } from "wouter";
 import { format, parseISO } from "date-fns";
-import { Clock, Users, MapPin, Printer, Check } from "lucide-react";
+import { Clock, Users, MapPin, Printer, Check, Link2 } from "lucide-react";
 import { useGetItinerary, useApproveItinerary, getGetItineraryQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -59,6 +59,14 @@ export default function Trip() {
     );
   };
 
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = async () => {
+    await navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -91,6 +99,13 @@ export default function Trip() {
               {totalGuests} Guests ({itinerary.adults} Adults{itinerary.children > 0 ? `, ${itinerary.children} Children` : ""})
             </div>
           </div>
+          <button
+            onClick={handleCopyLink}
+            className="print-hide mt-6 inline-flex items-center gap-2 text-sm border border-white/30 hover:border-white/60 bg-white/10 hover:bg-white/20 text-white/90 hover:text-white rounded-full px-4 py-2 transition-all duration-200"
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+            {copied ? "Link copied!" : "Copy shareable link"}
+          </button>
         </div>
       </div>
 
