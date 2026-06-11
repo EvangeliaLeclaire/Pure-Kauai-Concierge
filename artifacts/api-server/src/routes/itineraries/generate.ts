@@ -127,7 +127,9 @@ Generate exactly ${numDays} day${numDays !== 1 ? "s" : ""}. Make ${input.guestNa
         activity.category = catalogEntry.category;
       }
 
-      activity.photoUrl = `https://source.unsplash.com/800x500/?${encodeURIComponent(keyword)}`;
+      // Use picsum.photos with the keyword as a deterministic seed — reliable, no API key, beautiful photos
+      const seed = keyword.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40);
+      activity.photoUrl = `https://picsum.photos/seed/${seed}/900/560`;
     }
   }
 

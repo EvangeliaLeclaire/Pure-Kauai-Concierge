@@ -1,3 +1,5 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+  <rect width="180" height="180" rx="36" fill="#053E50"/>
+  <text x="90" y="105" text-anchor="middle" font-family="Georgia, serif" font-weight="300" font-size="52" letter-spacing="4" fill="#EBE2E0">PK</text>
+  <path d="M50 128 C60 124, 70 124, 80 128 C90 132, 100 132, 110 128 C120 124, 130 124, 140 128" stroke="rgba(235,226,224,0.5)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
 </svg>
