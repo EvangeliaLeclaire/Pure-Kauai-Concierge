@@ -31,6 +31,16 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     unsplashKeyword: "luxury villa hawaii welcome tropical",
   },
   {
+    name: "Airport Pickup & Transportation",
+    serviceType: "villa",
+    invoiceCategory: "Villa Setup",
+    description: "Private luxury vehicle pickup from Lihue Airport with meet-and-greet, luggage handling, and seamless transfer to the villa.",
+    duration: "Per transfer",
+    priceAmount: 250,
+    pricingModel: "per_event",
+    unsplashKeyword: "luxury airport pickup private car hawaii limo",
+  },
+  {
     name: "Vehicle Delivery",
     serviceType: "villa",
     invoiceCategory: "Villa Setup",

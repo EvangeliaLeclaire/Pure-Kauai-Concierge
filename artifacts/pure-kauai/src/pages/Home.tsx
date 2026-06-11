@@ -175,6 +175,7 @@ function TileGroup({
 
 const VILLA_SERVICES = [
   "Villa Greeting & Orientation",
+  "Airport Pickup & Transportation",
   "Vehicle Delivery",
   "Private Transportation (daily driver)",
   "Pre-Arrival Grocery Stocking",
