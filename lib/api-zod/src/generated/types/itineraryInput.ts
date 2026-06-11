@@ -21,6 +21,12 @@ export interface ItineraryInput {
   hasPets?: boolean | null;
   specialOccasion: ItineraryInputSpecialOccasion;
   /** @nullable */
+  occasionDetails?: string | null;
+  /** @nullable */
+  occasionDate?: string | null;
+  /** @nullable */
+  occasionAcknowledgement?: string | null;
+  /** @nullable */
   specialNotes?: string | null;
   villaServices?: string[];
   inVillaExperiences?: string[];

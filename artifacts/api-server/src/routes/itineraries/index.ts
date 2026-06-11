@@ -81,8 +81,8 @@ function buildInvoice(
 router.post("/itineraries", async (req, res) => {
   const {
     guestName, checkIn, checkOut, adults, children,
-    childrenAges, hasPets, specialOccasion, specialNotes,
-    villaServices, inVillaExperiences, excursions, customRequest,
+    childrenAges, hasPets, specialOccasion, occasionDetails, occasionDate, occasionAcknowledgement,
+    specialNotes, villaServices, inVillaExperiences, excursions, customRequest,
     hostName, hostEmail, hostPhone,
   } = req.body as {
     guestName: string;
@@ -93,6 +93,9 @@ router.post("/itineraries", async (req, res) => {
     childrenAges?: string | null;
     hasPets?: boolean | null;
     specialOccasion: string;
+    occasionDetails?: string | null;
+    occasionDate?: string | null;
+    occasionAcknowledgement?: string | null;
     specialNotes?: string | null;
     villaServices?: string[];
     inVillaExperiences?: string[];
@@ -146,6 +149,9 @@ router.post("/itineraries", async (req, res) => {
     childrenAges: childrenAges ?? null,
     hasPets: hasPets ?? null,
     specialOccasion,
+    occasionDetails: occasionDetails ?? null,
+    occasionDate: occasionDate ?? null,
+    occasionAcknowledgement: occasionAcknowledgement ?? null,
     specialNotes: specialNotes ?? null,
     villaServices: safeVillaServices,
     inVillaExperiences: safeInVilla,

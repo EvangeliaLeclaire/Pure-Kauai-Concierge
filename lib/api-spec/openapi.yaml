@@ -157,10 +157,24 @@ components:
             - Anniversary
             - Honeymoon
             - Birthday
-            - "Family Reunion"
-            - "Corporate Retreat"
             - "Vow Renewal"
-            - "Milestone Celebration"
+            - Proposal
+            - "Bachelorette or Bachelor Party"
+            - Babymoon
+            - "Family Reunion"
+            - "Friendship Reunion"
+            - "Corporate Retreat"
+            - "Creative Retreat"
+            - "Wellness Retreat"
+            - "Celebration of Life"
+            - "Milestone — Other"
+            - "Just Because"
+        occasionDetails:
+          type: ["string", "null"]
+        occasionDate:
+          type: ["string", "null"]
+        occasionAcknowledgement:
+          type: ["string", "null"]
         specialNotes:
           type: ["string", "null"]
         villaServices:

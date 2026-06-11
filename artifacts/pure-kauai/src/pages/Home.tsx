@@ -345,9 +345,14 @@ const formSchema = z.object({
   childrenAges:   z.string().optional(),
   hasPets:        z.boolean().default(false),
   specialOccasion: z.enum([
-    "None", "Anniversary", "Honeymoon", "Birthday",
-    "Family Reunion", "Corporate Retreat", "Vow Renewal", "Milestone Celebration",
+    "None", "Anniversary", "Honeymoon", "Birthday", "Vow Renewal", "Proposal",
+    "Bachelorette or Bachelor Party", "Babymoon", "Family Reunion", "Friendship Reunion",
+    "Corporate Retreat", "Creative Retreat", "Wellness Retreat", "Celebration of Life",
+    "Milestone — Other", "Just Because",
   ]),
+  occasionDetails:        z.string().optional(),
+  occasionDate:           z.string().optional(),
+  occasionAcknowledgement: z.string().optional(),
   specialNotes:   z.string().optional(),
   groceryNotes:   z.string().optional(),
 
@@ -376,9 +381,10 @@ export default function Home() {
     },
   });
 
-  const isGenerating = createItinerary.isPending;
-  const children    = form.watch("children") ?? 0;
-  const hasPets     = form.watch("hasPets") ?? false;
+  const isGenerating    = createItinerary.isPending;
+  const children        = form.watch("children") ?? 0;
+  const hasPets         = form.watch("hasPets") ?? false;
+  const specialOccasion = form.watch("specialOccasion") ?? "None";
   const villaServs  = form.watch("villaServices") ?? [];
   const inVilla     = form.watch("inVillaExperiences") ?? [];
   const excursions  = form.watch("excursions") ?? [];
@@ -405,8 +411,11 @@ export default function Home() {
           children:  values.children,
           childrenAges:   values.childrenAges   || null,
           hasPets:        values.hasPets,
-          // @ts-ignore – enum values match
+          // @ts-ignore – enum values match extended set
           specialOccasion: values.specialOccasion,
+          occasionDetails:        values.occasionDetails        || null,
+          occasionDate:           values.occasionDate           || null,
+          occasionAcknowledgement: values.occasionAcknowledgement || null,
           specialNotes:    notes,
           villaServices:      values.villaServices,
           inVillaExperiences: values.inVillaExperiences,
@@ -556,7 +565,7 @@ export default function Home() {
 
               {/* Special Occasion */}
               <FormField control={form.control} name="specialOccasion" render={({ field }) => (
-                <FormItem className="mb-5">
+                <FormItem className="mb-3">
                   <FormLabel className="form-label">Special Occasion</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
@@ -565,13 +574,58 @@ export default function Home() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {["None","Anniversary","Honeymoon","Birthday","Family Reunion","Corporate Retreat","Vow Renewal","Milestone Celebration"].map((o) => (
+                      {[
+                        "None", "Anniversary", "Honeymoon", "Birthday", "Vow Renewal", "Proposal",
+                        "Bachelorette or Bachelor Party", "Babymoon", "Family Reunion", "Friendship Reunion",
+                        "Corporate Retreat", "Creative Retreat", "Wellness Retreat", "Celebration of Life",
+                        "Milestone — Other", "Just Because",
+                      ].map((o) => (
                         <SelectItem key={o} value={o}>{o}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </FormItem>
               )} />
+
+              {/* Occasion details — always visible */}
+              <FormField control={form.control} name="occasionDetails" render={({ field }) => (
+                <FormItem className="mb-3">
+                  <FormLabel className="form-label">Tell us more about the occasion <span style={{ color: "#8A7F7D", fontWeight: 400 }}>(optional)</span></FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g. 50th birthday, product launch, retirement, divorce celebration, IPO, girls trip, returning guests"
+                      className="form-input"
+                      {...field}
+                    />
+                  </FormControl>
+                </FormItem>
+              )} />
+
+              {/* Occasion date + acknowledgement — only when occasion is set */}
+              {specialOccasion !== "None" && (
+                <>
+                  <FormField control={form.control} name="occasionDate" render={({ field }) => (
+                    <FormItem className="mb-3">
+                      <FormLabel className="form-label">Date of Occasion</FormLabel>
+                      <FormControl>
+                        <Input type="date" className="form-input" {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="occasionAcknowledgement" render={({ field }) => (
+                    <FormItem className="mb-5">
+                      <FormLabel className="form-label">How would you like us to acknowledge it? <span style={{ color: "#8A7F7D", fontWeight: 400 }}>(optional)</span></FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g. rose petals on arrival, surprise setup, custom cake, private sunset dinner"
+                          className="form-input"
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )} />
+                </>
+              )}
 
               {/* Notes */}
               <FormField control={form.control} name="specialNotes" render={({ field }) => (

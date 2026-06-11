@@ -13,6 +13,9 @@ interface GenerateInput {
   childrenAges: string | null | undefined;
   hasPets: boolean | null | undefined;
   specialOccasion: string;
+  occasionDetails: string | null | undefined;
+  occasionDate: string | null | undefined;
+  occasionAcknowledgement: string | null | undefined;
   specialNotes: string | null | undefined;
   villaServices: string[];
   inVillaExperiences: string[];
@@ -177,66 +180,72 @@ UNIVERSAL RULES FOR ALL STAY LENGTHS:
 - A guest who selected mostly wellness services should never feel rushed. Their itinerary breathes.
 - A guest who selected mostly adventures should have at least one unexpected quiet moment built in.`;
 
-  const userPrompt = `You are creating a bespoke luxury itinerary for the following guest. Use ONLY the selected services listed. Do not invent or add services that were not selected.
+  const userPrompt = `You are creating a bespoke luxury itinerary for the following Pure Kauai guest. Use ONLY the selected services listed below. Do not invent or add any service that was not selected. Every word must honor Pure Kauai's brand voice and this guest's specific needs.
 
 GUEST PROFILE:
 > Name: ${input.guestName}
 > Arrival: ${input.checkIn} | Departure: ${input.checkOut}
 > Duration: ${numDays} day${numDays !== 1 ? "s" : ""}
 > Adults: ${input.adults}${input.children > 0 ? ` | Children: ${input.children}${input.childrenAges ? ` (ages: ${input.childrenAges})` : ""}` : ""}
-${input.hasPets ? "Pets: Yes — acknowledge this warmly in the welcome letter." : ""}
+${input.hasPets ? "Pets: Yes — acknowledge with warmth and delight in the welcome letter." : ""}
 Special Occasion: ${input.specialOccasion !== "None" ? input.specialOccasion : "None"}
-${input.specialNotes ? `Notes from concierge call: ${input.specialNotes}` : ""}
+${input.occasionDetails ? `Additional occasion details: ${input.occasionDetails}` : ""}
+${input.occasionDate ? `Date of Occasion: ${input.occasionDate} — calculate which day of the stay this falls on and make it the emotional peak of the itinerary.` : ""}
+${input.occasionAcknowledgement ? `How the guest wants it acknowledged: ${input.occasionAcknowledgement}` : ""}
+${input.specialNotes ? `Notes from concierge call — read every word and act on every single detail: ${input.specialNotes}` : ""}
 
 SELECTED SERVICES:
-${listSection("Villa & Arrival Services", input.villaServices)}
+${listSection("Villa and Arrival Services", input.villaServices)}
 ${listSection("In-Villa Experiences", input.inVillaExperiences)}
-${listSection("Excursions & Adventures", input.excursions)}
+${listSection("Excursions and Adventures", input.excursions)}
 ${input.customRequest ? `Custom Request: ${input.customRequest}` : ""}
 ${!hasAnything ? "No experiences selected — write a beautiful relaxation-focused itinerary celebrating the villa, the island, and the natural luxury of simply being in Kauai." : ""}
 
 YOUR TASK:
 
-1. WELCOME LETTER
+WELCOME LETTER
 Write a personal letter to ${input.guestName} from their Pure Kauai concierge.
-Open by addressing them by name.
+Open by addressing them by name in the very first line.
 Reference their specific occasion if not None.
-Mention one specific detail from their notes that shows you truly listened.
+Mention one specific detail from their notes that proves you truly listened.
 If children are present acknowledge the whole family warmly.
-If pets are present mention them with delight.
-4-5 sentences. Warm. Personal. Unhurried. Confident.
-Sign off: "With aloha, Your Pure Kauai Concierge"
+If pets are present mention them with genuine delight.
+If returning guests say welcome home and that Pure Kauai remembers them.
+4-5 sentences only. Warm. Personal. Unhurried. Confident. Never gushing.
+Sign off exactly: With aloha, Your Pure Kauai Concierge
 
-2. DAY BY DAY ITINERARY
+DAY BY DAY ITINERARY
 Apply your stay length intelligence to sequence ${numDays} day${numDays !== 1 ? "s" : ""} perfectly.
-Follow Pure Kauai's signature day structure adapted to what was selected.
+Follow Pure Kauai's signature day structure adapted to what was actually selected.
 Name each day evocatively in Pure Kauai's style.
 Write 2-3 activities per day maximum.
-Each activity: 2-3 sentences. Present tense. Sensory. Specific. Personal.
+Each activity: 2-3 sentences. Present tense. Sensory. Specific to Kauai. Personal to this guest.
 Build in at least one unscheduled window per day.
 Engineer at least one memory moment into the full itinerary.
-${input.specialOccasion !== "None" ? `Build one signature moment around the ${input.specialOccasion} — make it the emotional peak of the stay.` : ""}
+${input.specialOccasion !== "None" ? `Build one extraordinary signature moment around the ${input.specialOccasion}. Use the occasionDetails for specificity. Make it the emotional peak of the entire stay. Name that day after the occasion in Pure Kauai's poetic style.` : ""}
+${input.occasionDate ? `The occasion falls on a specific date. Calculate the day number and treat it as the centerpiece of the itinerary. Build the days before and after it intelligently.` : ""}
+Act on every single detail in the guest notes. Health considerations override all activity selections. Dietary restrictions must be flagged at every chef experience. Every interest and passion must be woven into the narrative somewhere.
 
-3. CLOSING
-End the welcomeMessage with Pure Kauai's signature closing:
-"We take pride in crafting unforgettable Kauai vacations, thoughtfully tailored to your unique interests. Your concierge is here every step of the way — from the moment you land to the moment you reluctantly depart. Until we meet again."
+CLOSING
+End with Pure Kauai's signature closing exactly as written:
+We take pride in crafting unforgettable Kauai vacations, thoughtfully tailored to your unique interests. Your concierge is here every step of the way — from the moment you land to the moment you reluctantly depart. Until we meet again.
 
 RESPONSE FORMAT:
-Return ONLY valid JSON. No markdown. No explanation. No code blocks. Just the raw JSON object.
+Return ONLY valid JSON. No markdown. No explanation. No code blocks. No backticks. Just the raw JSON object starting with the opening curly brace.
 
 {
-  "welcomeMessage": "the full personal letter as a single string",
+  "welcomeMessage": "the full personal welcome letter as a single string",
   "days": [
     {
       "dayNumber": 1,
       "date": "YYYY-MM-DD",
       "title": "Hawaiian Style Arrival",
-      "theme": "one evocative sentence describing the feeling of this day",
+      "theme": "one evocative sentence capturing the feeling of this day",
       "activities": [
         {
           "time": "Morning",
-          "name": "exact service name from selected list",
-          "description": "2-3 sentences in Pure Kauai voice",
+          "name": "exact service name from the selected list",
+          "description": "2-3 sentences in Pure Kauai voice. Present tense. Sensory. Personal.",
           "unsplashKeyword": "specific 3-4 word keyword for a beautiful relevant Kauai photo"
         }
       ]

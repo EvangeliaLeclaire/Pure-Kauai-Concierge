@@ -21,10 +21,18 @@ export const ItineraryInputSpecialOccasion = {
   Anniversary: 'Anniversary',
   Honeymoon: 'Honeymoon',
   Birthday: 'Birthday',
-  Family_Reunion: 'Family Reunion',
-  Corporate_Retreat: 'Corporate Retreat',
   Vow_Renewal: 'Vow Renewal',
-  Milestone_Celebration: 'Milestone Celebration',
+  Proposal: 'Proposal',
+  Bachelorette_or_Bachelor_Party: 'Bachelorette or Bachelor Party',
+  Babymoon: 'Babymoon',
+  Family_Reunion: 'Family Reunion',
+  Friendship_Reunion: 'Friendship Reunion',
+  Corporate_Retreat: 'Corporate Retreat',
+  Creative_Retreat: 'Creative Retreat',
+  Wellness_Retreat: 'Wellness Retreat',
+  Celebration_of_Life: 'Celebration of Life',
+  'Milestone_—_Other': 'Milestone — Other',
+  Just_Because: 'Just Because',
 } as const;
 
 export interface ItineraryInput {
@@ -40,6 +48,12 @@ export interface ItineraryInput {
   /** @nullable */
   hasPets?: boolean | null;
   specialOccasion: ItineraryInputSpecialOccasion;
+  /** @nullable */
+  occasionDetails?: string | null;
+  /** @nullable */
+  occasionDate?: string | null;
+  /** @nullable */
+  occasionAcknowledgement?: string | null;
   /** @nullable */
   specialNotes?: string | null;
   villaServices?: string[];
