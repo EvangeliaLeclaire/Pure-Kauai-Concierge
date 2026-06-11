@@ -56,6 +56,7 @@ export const GetItineraryParams = zod.object({
 
 export const GetItineraryResponse = zod.object({
   "id": zod.string(),
+  "slug": zod.string(),
   "guestName": zod.string(),
   "checkIn": zod.string(),
   "checkOut": zod.string(),
@@ -86,20 +87,7 @@ export const GetItineraryResponse = zod.object({
   "photoUrl": zod.string().nullish()
 }))
 })),
-  "inVillaInvoice": zod.array(zod.object({
-  "name": zod.string(),
-  "category": zod.string(),
-  "description": zod.string(),
-  "duration": zod.string().nullish(),
-  "pricePerUnit": zod.number(),
-  "quantity": zod.number(),
-  "unit": zod.string(),
-  "totalPrice": zod.number(),
-  "unsplashKeyword": zod.string().nullish(),
-  "photoUrl": zod.string().nullish(),
-  "notes": zod.string().nullish()
-})),
-  "excursionInvoice": zod.array(zod.object({
+  "invoice": zod.array(zod.object({
   "name": zod.string(),
   "category": zod.string(),
   "description": zod.string(),
@@ -126,6 +114,7 @@ export const ApproveItineraryParams = zod.object({
 
 export const ApproveItineraryResponse = zod.object({
   "id": zod.string(),
+  "slug": zod.string(),
   "guestName": zod.string(),
   "checkIn": zod.string(),
   "checkOut": zod.string(),
@@ -156,20 +145,7 @@ export const ApproveItineraryResponse = zod.object({
   "photoUrl": zod.string().nullish()
 }))
 })),
-  "inVillaInvoice": zod.array(zod.object({
-  "name": zod.string(),
-  "category": zod.string(),
-  "description": zod.string(),
-  "duration": zod.string().nullish(),
-  "pricePerUnit": zod.number(),
-  "quantity": zod.number(),
-  "unit": zod.string(),
-  "totalPrice": zod.number(),
-  "unsplashKeyword": zod.string().nullish(),
-  "photoUrl": zod.string().nullish(),
-  "notes": zod.string().nullish()
-})),
-  "excursionInvoice": zod.array(zod.object({
+  "invoice": zod.array(zod.object({
   "name": zod.string(),
   "category": zod.string(),
   "description": zod.string(),

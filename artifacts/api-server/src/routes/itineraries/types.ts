@@ -30,6 +30,7 @@ export interface ItineraryDay {
 
 export interface Itinerary {
   id: string;
+  slug: string;
   guestName: string;
   checkIn: string;
   checkOut: string;
@@ -48,8 +49,7 @@ export interface Itinerary {
   hostPhone: string | null;
   welcomeMessage: string | null;
   days: ItineraryDay[];
-  inVillaInvoice: InvoiceItem[];
-  excursionInvoice: InvoiceItem[];
+  invoice: InvoiceItem[];
   approved: boolean;
   createdAt: string;
 }

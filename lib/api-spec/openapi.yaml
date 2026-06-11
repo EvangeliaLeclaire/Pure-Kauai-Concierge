@@ -277,6 +277,7 @@ components:
       type: object
       required:
         - id
+        - slug
         - guestName
         - checkIn
         - checkOut
@@ -287,12 +288,13 @@ components:
         - inVillaExperiences
         - excursions
         - days
-        - inVillaInvoice
-        - excursionInvoice
+        - invoice
         - approved
         - createdAt
       properties:
         id:
+          type: string
+        slug:
           type: string
         guestName:
           type: string
@@ -338,11 +340,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ItineraryDay"
-        inVillaInvoice:
-          type: array
-          items:
-            $ref: "#/components/schemas/InvoiceItem"
-        excursionInvoice:
+        invoice:
           type: array
           items:
             $ref: "#/components/schemas/InvoiceItem"

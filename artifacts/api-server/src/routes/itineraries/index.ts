@@ -1,9 +1,33 @@
 import { Router } from "express";
 import { randomUUID } from "crypto";
-import { saveItinerary, getItinerary, updateItinerary } from "./store.js";
+import { saveItinerary, getItinerary, updateItinerary, slugExists } from "./store.js";
 import { generateItinerary, fetchUnsplashPhotos } from "./generate.js";
 import { catalogByName } from "../../data/catalog.js";
 import type { Itinerary, InvoiceItem } from "./types.js";
+
+// ── Slug generation ──────────────────────────────────────────────────────────
+
+const MONTH_ABBR = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
+
+function generateSlug(guestName: string, checkIn: string): string {
+  // Strip leading articles
+  const stripped = guestName.replace(/^(the|a|an)\s+/i, "");
+  // Lowercase, remove non-alphanumeric (keep spaces), collapse spaces, hyphenate
+  const namePart = stripped
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+  // Format date portion: e.g. "2025-06-20" → "jun20"
+  const d = new Date(checkIn + "T00:00:00");
+  const datePart = MONTH_ABBR[d.getMonth()] + d.getDate();
+  const base = `${namePart}-${datePart}`;
+  // Collision detection
+  if (!slugExists(base)) return base;
+  let n = 2;
+  while (slugExists(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
 
 const router = Router();
 
@@ -119,25 +143,18 @@ router.post("/itineraries", async (req, res) => {
   const safeInVilla         = inVillaExperiences  ?? [];
   const safeExcursions      = excursions          ?? [];
 
-  // Build invoices server-side from catalog pricing
-  const inVillaInvoice = buildInvoice(
-    [...safeVillaServices, ...safeInVilla],
-    adults,
-    children ?? 0,
-    numNights
-  );
-  const excursionInvoice = buildInvoice(
-    safeExcursions,
+  // Build single combined invoice from all selected services
+  const invoice = buildInvoice(
+    [...safeVillaServices, ...safeInVilla, ...safeExcursions],
     adults,
     children ?? 0,
     numNights
   );
 
-  // Fetch photos for invoice items in parallel (fire and forget order doesn't matter)
-  const photoFetch = fetchUnsplashPhotos([
-    ...inVillaInvoice.map((item) => ({ item, keyword: item.unsplashKeyword ?? item.name })),
-    ...excursionInvoice.map((item) => ({ item, keyword: item.unsplashKeyword ?? item.name })),
-  ]);
+  // Fetch photos for invoice items in parallel
+  const photoFetch = fetchUnsplashPhotos(
+    invoice.map((item) => ({ item, keyword: item.unsplashKeyword ?? item.name }))
+  );
 
   // Generate narrative from Claude
   const generated = await generateItinerary({
@@ -162,8 +179,11 @@ router.post("/itineraries", async (req, res) => {
   // Wait for invoice photos
   await photoFetch;
 
+  const slug = generateSlug(guestName, checkIn);
+
   const itinerary: Itinerary = {
     id: randomUUID(),
+    slug,
     guestName,
     checkIn,
     checkOut,
@@ -182,8 +202,7 @@ router.post("/itineraries", async (req, res) => {
     hostPhone: hostPhone ?? null,
     welcomeMessage: generated.welcomeMessage,
     days: generated.days,
-    inVillaInvoice,
-    excursionInvoice,
+    invoice,
     approved: false,
     createdAt: new Date().toISOString(),
   };

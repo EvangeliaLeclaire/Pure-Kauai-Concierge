@@ -106,6 +106,7 @@ export interface ItineraryDay {
 
 export interface Itinerary {
   id: string;
+  slug: string;
   guestName: string;
   checkIn: string;
   checkOut: string;
@@ -132,8 +133,7 @@ export interface Itinerary {
   /** @nullable */
   welcomeMessage?: string | null;
   days: ItineraryDay[];
-  inVillaInvoice: InvoiceItem[];
-  excursionInvoice: InvoiceItem[];
+  invoice: InvoiceItem[];
   approved: boolean;
   createdAt: string;
 }

@@ -1,19 +1,26 @@
 import type { Itinerary } from "./types.js";
 
-const store = new Map<string, Itinerary>();
+const byId   = new Map<string, Itinerary>();
+const bySlug = new Map<string, Itinerary>();
 
 export function saveItinerary(itinerary: Itinerary): void {
-  store.set(itinerary.id, itinerary);
+  byId.set(itinerary.id, itinerary);
+  bySlug.set(itinerary.slug, itinerary);
 }
 
-export function getItinerary(id: string): Itinerary | undefined {
-  return store.get(id);
+export function getItinerary(idOrSlug: string): Itinerary | undefined {
+  return byId.get(idOrSlug) ?? bySlug.get(idOrSlug);
 }
 
-export function updateItinerary(id: string, patch: Partial<Itinerary>): Itinerary | undefined {
-  const existing = store.get(id);
+export function updateItinerary(idOrSlug: string, patch: Partial<Itinerary>): Itinerary | undefined {
+  const existing = byId.get(idOrSlug) ?? bySlug.get(idOrSlug);
   if (!existing) return undefined;
   const updated = { ...existing, ...patch };
-  store.set(id, updated);
+  byId.set(updated.id, updated);
+  bySlug.set(updated.slug, updated);
   return updated;
+}
+
+export function slugExists(slug: string): boolean {
+  return bySlug.has(slug);
 }

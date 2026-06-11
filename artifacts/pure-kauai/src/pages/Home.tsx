@@ -426,7 +426,7 @@ export default function Home() {
           hostPhone: values.hostPhone || null,
         },
       },
-      { onSuccess: (data) => setLocation(`/trip/${data.id}`) }
+      { onSuccess: (data) => setLocation(`/trip/${data.slug}`) }
     );
   }
 
