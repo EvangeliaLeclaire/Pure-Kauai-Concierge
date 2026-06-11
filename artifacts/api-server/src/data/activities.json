@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Na Pali Coast Catamaran Sail",
+    "category": "Beach & Water",
+    "description": "Glide along the dramatic Na Pali coastline aboard a private luxury catamaran. Marvel at towering sea cliffs, hidden sea caves, and cascading waterfalls only accessible by sea. Snorkeling stops in pristine coves and champagne service at sunset.",
+    "duration": "4 hours",
+    "pricePerPerson": 450,
+    "bestFor": "Couples, Adventure Seekers",
+    "timeOfDay": "Morning",
+    "unsplashKeyword": "Na Pali coast catamaran Hawaii"
+  },
+  {
+    "name": "Private Helicopter Ridge-to-Reef Tour",
+    "category": "Adventure & Hiking",
+    "description": "Soar above Kauai's most spectacular landscapes in a doors-off private helicopter. Fly through Waimea Canyon, hover above Manawaiopuna Falls, and descend into the uninhabited valleys of Na Pali. Your pilot provides expert narration throughout.",
+    "duration": "2 hours",
+    "pricePerPerson": 950,
+    "bestFor": "All guests, Families",
+    "timeOfDay": "Morning",
+    "unsplashKeyword": "Kauai helicopter aerial waterfall"
+  },
+  {
+    "name": "Limahuli Garden Private Botanical Tour",
+    "category": "Culture & History",
+    "description": "Walk through one of the world's finest botanical gardens with your personal guide. Explore ancient Hawaiian taro terraces, rare native plants, and learn the stories of Kauai's indigenous culture. Ends with a curated picnic overlooking the valley.",
+    "duration": "3 hours",
+    "pricePerPerson": 280,
+    "bestFor": "Couples, Culture Enthusiasts",
+    "timeOfDay": "Morning",
+    "unsplashKeyword": "Limahuli botanical garden Kauai"
+  },
+  {
+    "name": "Anara Spa Ocean Stone Ritual",
+    "category": "Wellness & Spa",
+    "description": "Surrender to pure bliss in Kauai's most celebrated spa. The signature Ocean Stone Ritual begins with a warm lava stone massage, followed by a coconut oil body wrap and a hydrating facial using native Hawaiian botanicals. Pure restoration.",
+    "duration": "3 hours",
+    "pricePerPerson": 420,
+    "bestFor": "Couples, Solo Travelers",
+    "timeOfDay": "Afternoon",
+    "unsplashKeyword": "luxury spa massage tropical"
+  },
+  {
+    "name": "Farm-to-Table Chef's Table Dinner",
+    "category": "Dining & Food",
+    "description": "An intimate 7-course tasting menu prepared by Kauai's most celebrated chef using ingredients harvested that morning. Set in a private pavilion amid torch-lit gardens, each course tells the story of the island's culinary heritage paired with rare local wines.",
+    "duration": "3 hours",
+    "pricePerPerson": 380,
+    "bestFor": "Couples, Food Lovers",
+    "timeOfDay": "Evening",
+    "unsplashKeyword": "luxury chef's table fine dining Hawaii"
+  },
+  {
+    "name": "Waimea Canyon Guided Hiking Experience",
+    "category": "Adventure & Hiking",
+    "description": "Explore the 'Grand Canyon of the Pacific' with an expert naturalist guide. Trek along ridge trails offering panoramic views of the 3,600-foot canyon, spotting rare native birds and geological wonders. Gourmet trail lunch included.",
+    "duration": "5 hours",
+    "pricePerPerson": 320,
+    "bestFor": "Adventure Seekers, Families",
+    "timeOfDay": "Morning",
+    "unsplashKeyword": "Waimea Canyon Kauai hiking"
+  },
+  {
+    "name": "Luau at Kilohana Plantation",
+    "category": "Culture & History",
+    "description": "Experience Hawaii's living culture at a private luau on a historic sugar plantation. Watch master fire dancers, hear ancient chants, and feast on a traditional imu-roasted kalua pig. Cultural storytellers share the deep history of Hawaiian traditions.",
+    "duration": "4 hours",
+    "pricePerPerson": 290,
+    "bestFor": "Families, Groups",
+    "timeOfDay": "Evening",
+    "unsplashKeyword": "Hawaiian luau fire dance cultural"
+  },
+  {
+    "name": "Private Sunrise Yoga on the Beach",
+    "category": "Wellness & Spa",
+    "description": "Greet the day with a private yoga session on a secluded stretch of Kauai's golden coastline. Your certified instructor leads a flowing practice as the sun rises over the Pacific. Ends with a coconut water meditation and fresh tropical fruit.",
+    "duration": "90 minutes",
+    "pricePerPerson": 195,
+    "bestFor": "Wellness Seekers, Couples",
+    "timeOfDay": "Morning",
+    "unsplashKeyword": "beach yoga sunrise tropical ocean"
+  },
+  {
+    "name": "Stand-Up Paddleboard Caves Adventure",
+    "category": "Beach & Water",
+    "description": "Glide into Kauai's secret sea caves aboard premium paddleboards with your expert guide. Explore the stunning blue waters of the North Shore, paddling through hidden arches and past nesting seabirds. Suitable for all skill levels.",
+    "duration": "2.5 hours",
+    "pricePerPerson": 230,
+    "bestFor": "Active Guests, Families",
+    "timeOfDay": "Morning",
+    "unsplashKeyword": "stand up paddleboard sea caves Hawaii"
+  },
+  {
+    "name": "Junior Naturalist Rainforest Discovery",
+    "category": "Family Activities",
+    "description": "Young explorers discover Kauai's magical rainforest with a dedicated naturalist guide. Children learn to identify native birds, insects, and plants while crossing rope bridges and searching for hidden waterfalls. Educational, adventurous, and unforgettable.",
+    "duration": "3 hours",
+    "pricePerPerson": 180,
+    "bestFor": "Families with Children",
+    "timeOfDay": "Morning",
+    "unsplashKeyword": "children rainforest adventure Hawaii nature"
+  }
+]
