@@ -5,7 +5,7 @@ import {
   Clock, Users, Calendar,
   Sun, Sunset, Moon,
   Printer, Check, Link2, Mail, X, ChevronRight,
-  Phone, MessageSquare, Pencil,
+  Phone, MessageSquare, Pencil, Trash2, MoveRight,
 } from "lucide-react";
 import { useGetItinerary, useApproveItinerary, useUpdateItinerary, getGetItineraryQueryKey } from "@workspace/api-client-react";
 import type { InvoiceItem, ItineraryPatch } from "@workspace/api-client-react";
@@ -402,6 +402,7 @@ export default function Trip() {
   const [requestMsg,          setRequestMsg]          = useState("");
   const [editingKey,          setEditingKey]          = useState<string | null>(null);
   const [editDraft,           setEditDraft]           = useState("");
+  const [deletingKey,         setDeletingKey]         = useState<string | null>(null);
 
   // ── Dynamic meta tags (must be before any early returns) ─────────────────
   useEffect(() => {
@@ -522,6 +523,33 @@ export default function Trip() {
   const startEdit = (key: string, initialValue: string) => {
     setEditingKey(key);
     setEditDraft(initialValue);
+  };
+
+  const handleDeleteActivity = (dayIdx: number, actIdx: number) => {
+    const newDays = itinerary!.days.map((d, di) => {
+      if (di !== dayIdx) return d;
+      return { ...d, activities: d.activities.filter((_, ai) => ai !== actIdx) };
+    });
+    patchItinerary.mutate({ id, data: { days: newDays } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetItineraryQueryKey(id) });
+        setDeletingKey(null);
+      },
+    });
+  };
+
+  const handleMoveActivity = (fromDayIdx: number, actIdx: number, toDayIdx: number) => {
+    const activity = itinerary!.days[fromDayIdx].activities[actIdx];
+    const newDays = itinerary!.days.map((d, di) => {
+      if (di === fromDayIdx) return { ...d, activities: d.activities.filter((_, ai) => ai !== actIdx) };
+      if (di === toDayIdx)   return { ...d, activities: [...d.activities, activity] };
+      return d;
+    });
+    patchItinerary.mutate({ id, data: { days: newDays } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetItineraryQueryKey(id) });
+      },
+    });
   };
 
   // Clean guest URL always strips ?host=1 so guests see a pristine page
@@ -988,17 +1016,80 @@ export default function Trip() {
                           </p>
                         )}
 
-                        <div className="flex items-center pt-5 border-t border-[#F0ECEA]">
+                        <div className="flex items-center gap-2 pt-5 border-t border-[#F0ECEA] flex-wrap">
                           {isHostMode ? (
                             editingKey !== `desc-${dayIdx}-${idx}` && (
-                              <button
-                                onClick={() => startEdit(`desc-${dayIdx}-${idx}`, activity.description)}
-                                className="print-hide ml-auto inline-flex items-center gap-1.5 text-xs transition-opacity hover:opacity-70"
-                                style={{ color: "#937C66" }}
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                                Edit Activity
-                              </button>
+                              <>
+                                {/* Move to day */}
+                                {itinerary.days.length > 1 && deletingKey !== `${dayIdx}-${idx}` && (
+                                  <div className="print-hide flex items-center gap-1.5">
+                                    <MoveRight className="h-3 w-3 shrink-0" style={{ color: "#B0A9A6" }} />
+                                    <select
+                                      value=""
+                                      onChange={(e) => {
+                                        const to = parseInt(e.target.value);
+                                        if (!isNaN(to)) handleMoveActivity(dayIdx, idx, to);
+                                      }}
+                                      className="text-xs outline-none cursor-pointer py-1 pl-2 pr-5 border border-[#E8E0DB] hover:border-[#053E50]/30 transition-colors appearance-none bg-transparent"
+                                      style={{ color: "#8A7F7D", borderRadius: "1px" }}
+                                    >
+                                      <option value="" disabled>Move to day…</option>
+                                      {itinerary.days.map((d, di) =>
+                                        di !== dayIdx ? (
+                                          <option key={di} value={di}>
+                                            Day {d.dayNumber}{d.title ? ` — ${d.title.slice(0, 28)}` : ""}
+                                          </option>
+                                        ) : null
+                                      )}
+                                    </select>
+                                  </div>
+                                )}
+
+                                {/* Right-side actions */}
+                                <div className="ml-auto flex items-center gap-3">
+                                  {deletingKey === `${dayIdx}-${idx}` ? (
+                                    /* Confirm delete */
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs" style={{ color: "#8A7F7D" }}>Remove this activity?</span>
+                                      <button
+                                        onClick={() => handleDeleteActivity(dayIdx, idx)}
+                                        disabled={patchItinerary.isPending}
+                                        className="text-xs tracking-[0.08em] uppercase px-3 py-1.5 text-white transition-opacity disabled:opacity-50"
+                                        style={{ background: "#A04040", borderRadius: "1px" }}
+                                      >
+                                        {patchItinerary.isPending ? "…" : "Remove"}
+                                      </button>
+                                      <button
+                                        onClick={() => setDeletingKey(null)}
+                                        className="text-xs tracking-[0.08em] uppercase px-3 py-1.5 border border-[#E8E0DB] hover:border-[#053E50]/30 transition-colors"
+                                        style={{ color: "#8A7F7D", borderRadius: "1px" }}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <button
+                                        onClick={() => setDeletingKey(`${dayIdx}-${idx}`)}
+                                        className="print-hide inline-flex items-center gap-1 text-xs transition-opacity hover:opacity-70"
+                                        style={{ color: "#B0A9A6" }}
+                                        title="Delete activity"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                        Delete
+                                      </button>
+                                      <button
+                                        onClick={() => startEdit(`desc-${dayIdx}-${idx}`, activity.description)}
+                                        className="print-hide inline-flex items-center gap-1.5 text-xs transition-opacity hover:opacity-70"
+                                        style={{ color: "#937C66" }}
+                                      >
+                                        <Pencil className="h-3.5 w-3.5" />
+                                        Edit Activity
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </>
                             )
                           ) : (
                             <button
