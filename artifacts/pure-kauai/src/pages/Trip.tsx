@@ -481,6 +481,17 @@ export default function Trip() {
   return (
     <div className="min-h-screen font-sans" style={{ background: "#FAF8F6" }}>
 
+      <style>{`
+        @keyframes pkFadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes pkFadeUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
       {/* Modals */}
       {showModal && <ApproveModal guestName={itinerary.guestName} onClose={() => setShowModal(false)} />}
       {requestModal && (
@@ -498,7 +509,7 @@ export default function Trip() {
       {/* ══ CINEMATIC HERO ══════════════════════════════════════════════════ */}
       <header
         className="relative h-screen max-h-[700px] min-h-[520px] flex flex-col justify-end overflow-hidden print-hide"
-        style={{ background: "#053E50" }}
+        style={{ background: "#053E50", animation: "pkFadeIn 1s ease-out both" }}
       >
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -554,7 +565,7 @@ export default function Trip() {
 
       {/* ══ PERSONAL LETTER + CONCIERGE ═════════════════════════════════════ */}
       {(itinerary.welcomeMessage || hasHost) && (
-        <section className="print-hide" style={{ background: "linear-gradient(180deg, #EDE5DF 0%, #F5EFE9 40%, #FAF8F6 100%)" }}>
+        <section className="print-hide" style={{ background: "linear-gradient(180deg, #EDE5DF 0%, #F5EFE9 40%, #FAF8F6 100%)", animation: "pkFadeUp 0.9s ease-out 0.6s both" }}>
           <div className="max-w-3xl mx-auto px-6 sm:px-10 md:px-12 py-16 md:py-20">
 
             {/* Concierge byline */}
@@ -678,7 +689,10 @@ export default function Trip() {
           <div className="space-y-20 md:space-y-28">
 
             {itinerary.days.map((day, dayIdx) => (
-              <section key={day.dayNumber}>
+              <section
+                key={day.dayNumber}
+                style={{ animation: `pkFadeUp 0.7s ease-out ${1.0 + dayIdx * 0.2}s both` }}
+              >
                 {/* Chapter header */}
                 <div className="mb-10">
                   <p className="text-xs tracking-[0.35em] uppercase mb-2" style={{ color: "#937C66" }}>
