@@ -384,36 +384,7 @@ export default function Trip() {
   const [requestModal, setRequestModal] = useState<string | null>(null);
   const [requestMsg,   setRequestMsg]   = useState("");
 
-  // ── Loading ───────────────────────────────────────────────────────────────
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#FAF8F6]">
-        <div className="h-[60vh] bg-[#053E50] flex flex-col items-center justify-center gap-6">
-          <PureKauaiLogo variant="light" size="md" className="opacity-60" />
-          <Skeleton className="h-12 w-72 bg-white/10 rounded-none mt-4" />
-          <Skeleton className="h-4 w-48 bg-white/10 rounded-none" />
-        </div>
-        <div className="max-w-3xl mx-auto px-6 py-16 space-y-6">
-          <Skeleton className="h-[200px] w-full rounded-none" />
-          <Skeleton className="h-[300px] w-full rounded-none" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!itinerary) {
-    return (
-      <div className="min-h-screen bg-[#FAF8F6] flex items-center justify-center">
-        <div className="text-center px-6">
-          <PureKauaiLogo variant="dark" size="lg" className="mx-auto mb-8" />
-          <h2 className="text-2xl font-serif font-light text-[#053E50]">Itinerary not found</h2>
-          <p className="text-[#8A7F7D] text-sm mt-2">The journey you're looking for does not exist.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Dynamic meta tags ─────────────────────────────────────────────────────
+  // ── Dynamic meta tags (must be before any early returns) ─────────────────
   useEffect(() => {
     if (!itinerary) return;
     const pageTitle = `Your Pure Kauai Journey — ${itinerary.guestName}`;
@@ -442,6 +413,35 @@ export default function Trip() {
       setMeta('meta[name="twitter:description"]', "content", "Bespoke luxury villa concierge on Kauai's north shore.");
     };
   }, [itinerary?.guestName]);
+
+  // ── Loading ───────────────────────────────────────────────────────────────
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F6]">
+        <div className="h-[60vh] bg-[#053E50] flex flex-col items-center justify-center gap-6">
+          <PureKauaiLogo variant="light" size="md" className="opacity-60" />
+          <Skeleton className="h-12 w-72 bg-white/10 rounded-none mt-4" />
+          <Skeleton className="h-4 w-48 bg-white/10 rounded-none" />
+        </div>
+        <div className="max-w-3xl mx-auto px-6 py-16 space-y-6">
+          <Skeleton className="h-[200px] w-full rounded-none" />
+          <Skeleton className="h-[300px] w-full rounded-none" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!itinerary) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F6] flex items-center justify-center">
+        <div className="text-center px-6">
+          <PureKauaiLogo variant="dark" size="lg" className="mx-auto mb-8" />
+          <h2 className="text-2xl font-serif font-light text-[#053E50]">Itinerary not found</h2>
+          <p className="text-[#8A7F7D] text-sm mt-2">The journey you're looking for does not exist.</p>
+        </div>
+      </div>
+    );
+  }
 
   // ── Derived values ────────────────────────────────────────────────────────
   const totalGuests = itinerary.adults + itinerary.children;
