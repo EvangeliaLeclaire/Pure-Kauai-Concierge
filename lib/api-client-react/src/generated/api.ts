@@ -23,7 +23,8 @@ import type {
   ErrorResponse,
   HealthStatus,
   Itinerary,
-  ItineraryInput
+  ItineraryInput,
+  ItineraryPatch
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -184,6 +185,78 @@ export const useCreateItinerary = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getCreateItineraryMutationOptions(options));
+    }
+
+export const getUpdateItineraryUrl = (id: string,) => {
+
+
+
+
+  return `/api/itineraries/${id}`
+}
+
+/**
+ * @summary Update an itinerary (host edits)
+ */
+export const updateItinerary = async (id: string,
+    itineraryPatch: ItineraryPatch, options?: RequestInit): Promise<Itinerary> => {
+
+  return customFetch<Itinerary>(getUpdateItineraryUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      itineraryPatch,)
+  }
+);}
+
+
+
+
+export const getUpdateItineraryMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItinerary>>, TError,{id: string;data: BodyType<ItineraryPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateItinerary>>, TError,{id: string;data: BodyType<ItineraryPatch>}, TContext> => {
+
+const mutationKey = ['updateItinerary'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateItinerary>>, {id: string;data: BodyType<ItineraryPatch>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateItinerary(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateItineraryMutationResult = NonNullable<Awaited<ReturnType<typeof updateItinerary>>>
+    export type UpdateItineraryMutationBody = BodyType<ItineraryPatch>
+    export type UpdateItineraryMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Update an itinerary (host edits)
+ */
+export const useUpdateItinerary = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItinerary>>, TError,{id: string;data: BodyType<ItineraryPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateItinerary>>,
+        TError,
+        {id: string;data: BodyType<ItineraryPatch>},
+        TContext
+      > => {
+      return useMutation(getUpdateItineraryMutationOptions(options));
     }
 
 export const getGetItineraryUrl = (id: string,) => {

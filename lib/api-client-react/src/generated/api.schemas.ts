@@ -104,6 +104,12 @@ export interface ItineraryDay {
   activities: ItineraryActivity[];
 }
 
+export interface ItineraryPatch {
+  /** @nullable */
+  welcomeMessage?: string | null;
+  days?: ItineraryDay[];
+}
+
 export interface Itinerary {
   id: string;
   slug: string;

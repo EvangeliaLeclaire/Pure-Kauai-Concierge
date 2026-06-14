@@ -5,10 +5,10 @@ import {
   Clock, Users, Calendar,
   Sun, Sunset, Moon,
   Printer, Check, Link2, Mail, X, ChevronRight,
-  Phone, MessageSquare,
+  Phone, MessageSquare, Pencil,
 } from "lucide-react";
-import { useGetItinerary, useApproveItinerary, getGetItineraryQueryKey } from "@workspace/api-client-react";
-import type { InvoiceItem } from "@workspace/api-client-react";
+import { useGetItinerary, useApproveItinerary, useUpdateItinerary, getGetItineraryQueryKey } from "@workspace/api-client-react";
+import type { InvoiceItem, ItineraryPatch } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PureKauaiLogo } from "@/components/PureKauaiLogo";
@@ -393,12 +393,15 @@ export default function Trip() {
   });
 
   const approveItinerary = useApproveItinerary();
-  const [copied,          setCopied]          = useState(false);
+  const patchItinerary   = useUpdateItinerary();
+  const [copied,              setCopied]              = useState(false);
   const [hostBannerDismissed, setHostBannerDismissed] = useState(false);
-  const [showModal,       setShowModal]       = useState(false);
-  const [activeTab,       setActiveTab]       = useState<Tab>("journey");
-  const [requestModal,    setRequestModal]    = useState<string | null>(null);
-  const [requestMsg,      setRequestMsg]      = useState("");
+  const [showModal,           setShowModal]           = useState(false);
+  const [activeTab,           setActiveTab]           = useState<Tab>("journey");
+  const [requestModal,        setRequestModal]        = useState<string | null>(null);
+  const [requestMsg,          setRequestMsg]          = useState("");
+  const [editingKey,          setEditingKey]          = useState<string | null>(null);
+  const [editDraft,           setEditDraft]           = useState("");
 
   // ── Dynamic meta tags (must be before any early returns) ─────────────────
   useEffect(() => {
@@ -481,6 +484,44 @@ export default function Trip() {
         setShowModal(true);
       },
     });
+  };
+
+  // ── Host inline editing ───────────────────────────────────────────────────
+  const handleSaveEdit = (key: string) => {
+    let patch: ItineraryPatch = {};
+    if (key === "welcome") {
+      patch = { welcomeMessage: editDraft };
+    } else if (key.startsWith("title-")) {
+      const dayIdx = parseInt(key.slice(6));
+      patch = {
+        days: itinerary.days.map((d, di) =>
+          di !== dayIdx ? d : { ...d, title: editDraft }
+        ),
+      };
+    } else if (key.startsWith("desc-")) {
+      const [, di, ai] = key.split("-").map(Number);
+      patch = {
+        days: itinerary.days.map((d, dIdx) =>
+          dIdx !== di ? d : {
+            ...d,
+            activities: d.activities.map((a, aIdx) =>
+              aIdx !== ai ? a : { ...a, description: editDraft }
+            ),
+          }
+        ),
+      };
+    }
+    patchItinerary.mutate({ id, data: patch }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetItineraryQueryKey(id) });
+        setEditingKey(null);
+      },
+    });
+  };
+
+  const startEdit = (key: string, initialValue: string) => {
+    setEditingKey(key);
+    setEditDraft(initialValue);
   };
 
   // Clean guest URL always strips ?host=1 so guests see a pristine page
@@ -679,9 +720,48 @@ export default function Trip() {
                 <p className="mb-4 text-xl" style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontStyle: "italic", fontWeight: 300, color: "#053E50" }}>
                   Dear {itinerary.guestName},
                 </p>
-                <p style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontStyle: "italic", fontWeight: 300, fontSize: "1.1rem", lineHeight: 1.9, color: "#2D4A55", marginBottom: "2rem" }}>
-                  {itinerary.welcomeMessage}
-                </p>
+
+                {isHostMode && editingKey === "welcome" ? (
+                  <div className="mb-6">
+                    <textarea
+                      value={editDraft}
+                      onChange={(e) => setEditDraft(e.target.value)}
+                      className="w-full border border-[#C5B9AF] focus:border-[#053E50]/50 outline-none resize-none p-4 transition-colors"
+                      style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontStyle: "italic", fontWeight: 300, fontSize: "1.05rem", lineHeight: 1.9, color: "#2D4A55", background: "#FDFCFB", borderRadius: "1px", minHeight: "200px" }}
+                      autoFocus
+                    />
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => handleSaveEdit("welcome")}
+                        disabled={patchItinerary.isPending}
+                        className="flex items-center gap-1.5 text-white text-xs tracking-[0.12em] uppercase px-4 py-2.5 transition-opacity disabled:opacity-50"
+                        style={{ background: "#053E50", borderRadius: "1px" }}
+                      >
+                        {patchItinerary.isPending ? "Saving…" : "Save Letter"}
+                      </button>
+                      <button onClick={() => setEditingKey(null)} className="text-xs tracking-[0.1em] uppercase px-4 py-2.5 border border-[#E8E0DB] hover:border-[#053E50]/30 transition-colors" style={{ color: "#8A7F7D", borderRadius: "1px" }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative group/letter mb-6">
+                    <p style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontStyle: "italic", fontWeight: 300, fontSize: "1.1rem", lineHeight: 1.9, color: "#2D4A55" }}>
+                      {itinerary.welcomeMessage}
+                    </p>
+                    {isHostMode && (
+                      <button
+                        onClick={() => startEdit("welcome", itinerary.welcomeMessage ?? "")}
+                        className="print-hide absolute top-0 right-0 opacity-0 group-hover/letter:opacity-100 transition-opacity flex items-center gap-1 text-xs px-2 py-1 border border-[#E8E0DB] hover:border-[#053E50]/30"
+                        style={{ color: "#937C66", background: "#FAF8F6", borderRadius: "1px" }}
+                        title="Edit welcome letter"
+                      >
+                        <Pencil className="h-3 w-3" />Edit
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 <div>
                   <p className="text-sm mb-2" style={{ color: "#A5948D" }}>With warm aloha,</p>
                   <p className="text-xl font-light" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
@@ -781,16 +861,47 @@ export default function Trip() {
                 style={{ animation: `pkFadeUp 0.7s ease-out ${1.0 + dayIdx * 0.2}s both` }}
               >
                 {/* Chapter header */}
-                <div className="mb-10">
+                <div className="mb-10 group/dayheader">
                   <p className="text-xs tracking-[0.35em] uppercase mb-2" style={{ color: "#937C66" }}>
                     Day {day.dayNumber}
                   </p>
-                  <h2
-                    className="font-light leading-tight mb-1"
-                    style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "clamp(1.6rem, 4vw, 2.4rem)", color: "#053E50" }}
-                  >
-                    {day.title ?? format(parseISO(day.date), "EEEE, MMMM d")}
-                  </h2>
+
+                  {isHostMode && editingKey === `title-${dayIdx}` ? (
+                    <div className="flex items-start gap-2 mb-1">
+                      <input
+                        value={editDraft}
+                        onChange={(e) => setEditDraft(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(`title-${dayIdx}`); if (e.key === "Escape") setEditingKey(null); }}
+                        className="flex-1 border-b-2 border-[#053E50]/40 focus:border-[#053E50] outline-none bg-transparent pb-1 font-light"
+                        style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "clamp(1.4rem, 3.5vw, 2.2rem)", color: "#053E50" }}
+                        autoFocus
+                      />
+                      <button onClick={() => handleSaveEdit(`title-${dayIdx}`)} disabled={patchItinerary.isPending} className="shrink-0 text-white text-xs px-3 py-2 mt-1 disabled:opacity-50" style={{ background: "#053E50", borderRadius: "1px" }}>
+                        {patchItinerary.isPending ? "…" : "Save"}
+                      </button>
+                      <button onClick={() => setEditingKey(null)} className="shrink-0 text-xs px-3 py-2 mt-1 border border-[#E8E0DB]" style={{ color: "#8A7F7D", borderRadius: "1px" }}>✕</button>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2 mb-1">
+                      <h2
+                        className="font-light leading-tight"
+                        style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "clamp(1.6rem, 4vw, 2.4rem)", color: "#053E50" }}
+                      >
+                        {day.title ?? format(parseISO(day.date), "EEEE, MMMM d")}
+                      </h2>
+                      {isHostMode && (
+                        <button
+                          onClick={() => startEdit(`title-${dayIdx}`, day.title ?? format(parseISO(day.date), "EEEE, MMMM d"))}
+                          className="print-hide shrink-0 mt-2 opacity-0 group-hover/dayheader:opacity-100 transition-opacity p-1.5 border border-[#E8E0DB] hover:border-[#053E50]/30"
+                          style={{ color: "#937C66", borderRadius: "1px" }}
+                          title="Edit day title"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+
                   <p className="text-sm mb-1" style={{ color: "#8A7F7D" }}>
                     {format(parseISO(day.date), "EEEE, MMMM d")}
                   </p>
@@ -817,7 +928,9 @@ export default function Trip() {
                           <img
                             src={activity.photoUrl}
                             alt={activity.name}
-                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                            className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.04]"
+                            style={{ opacity: 0 }}
+                            onLoad={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "1"; }}
                             onError={(e) => {
                               const el = e.currentTarget as HTMLImageElement;
                               const seed = activity.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40);
@@ -846,12 +959,48 @@ export default function Trip() {
                         >
                           {activity.name}
                         </h3>
-                        <p className="leading-relaxed mb-6" style={{ fontSize: "0.925rem", color: "#4A4340", lineHeight: 1.75 }}>
-                          {activity.description}
-                        </p>
+                        {isHostMode && editingKey === `desc-${dayIdx}-${idx}` ? (
+                          <div className="mb-6">
+                            <textarea
+                              value={editDraft}
+                              onChange={(e) => setEditDraft(e.target.value)}
+                              className="w-full border border-[#C5B9AF] focus:border-[#053E50]/50 outline-none resize-none p-4 transition-colors"
+                              style={{ fontSize: "0.925rem", color: "#4A4340", lineHeight: 1.75, background: "#FDFCFB", borderRadius: "1px", minHeight: "120px" }}
+                              autoFocus
+                            />
+                            <div className="flex gap-2 mt-3">
+                              <button
+                                onClick={() => handleSaveEdit(`desc-${dayIdx}-${idx}`)}
+                                disabled={patchItinerary.isPending}
+                                className="flex items-center gap-1.5 text-white text-xs tracking-[0.12em] uppercase px-4 py-2.5 transition-opacity disabled:opacity-50"
+                                style={{ background: "#053E50", borderRadius: "1px" }}
+                              >
+                                {patchItinerary.isPending ? "Saving…" : "Save Changes"}
+                              </button>
+                              <button onClick={() => setEditingKey(null)} className="text-xs tracking-[0.1em] uppercase px-4 py-2.5 border border-[#E8E0DB] hover:border-[#053E50]/30 transition-colors" style={{ color: "#8A7F7D", borderRadius: "1px" }}>
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="leading-relaxed mb-6" style={{ fontSize: "0.925rem", color: "#4A4340", lineHeight: 1.75 }}>
+                            {activity.description}
+                          </p>
+                        )}
 
-                        {!isHostMode && (
-                          <div className="flex items-center pt-5 border-t border-[#F0ECEA]">
+                        <div className="flex items-center pt-5 border-t border-[#F0ECEA]">
+                          {isHostMode ? (
+                            editingKey !== `desc-${dayIdx}-${idx}` && (
+                              <button
+                                onClick={() => startEdit(`desc-${dayIdx}-${idx}`, activity.description)}
+                                className="print-hide ml-auto inline-flex items-center gap-1.5 text-xs transition-opacity hover:opacity-70"
+                                style={{ color: "#937C66" }}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                Edit Activity
+                              </button>
+                            )
+                          ) : (
                             <button
                               onClick={() => { setRequestModal(activity.name); setRequestMsg(""); }}
                               className="ml-auto inline-flex items-center gap-1.5 text-xs transition-opacity hover:opacity-60"
@@ -860,8 +1009,8 @@ export default function Trip() {
                               <MessageSquare className="h-3.5 w-3.5" />
                               Request Change
                             </button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </article>
                   ))}

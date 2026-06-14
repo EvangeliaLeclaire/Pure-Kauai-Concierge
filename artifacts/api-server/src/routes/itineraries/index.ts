@@ -224,6 +224,16 @@ router.get("/itineraries/:id", (req, res) => {
   res.json(itinerary);
 });
 
+router.patch("/itineraries/:id", (req, res) => {
+  const { welcomeMessage, days } = req.body as { welcomeMessage?: string | null; days?: ItineraryDay[] };
+  const patch: Partial<Itinerary> = {};
+  if (welcomeMessage !== undefined) patch.welcomeMessage = welcomeMessage;
+  if (days !== undefined) patch.days = days;
+  const updated = updateItinerary(req.params.id, patch);
+  if (!updated) { res.status(404).json({ error: "Itinerary not found" }); return; }
+  res.json(updated);
+});
+
 router.post("/itineraries/:id/approve", (req, res) => {
   const updated = updateItinerary(req.params.id, { approved: true });
   if (!updated) { res.status(404).json({ error: "Itinerary not found" }); return; }

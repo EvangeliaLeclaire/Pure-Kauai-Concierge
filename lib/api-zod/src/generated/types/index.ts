@@ -14,3 +14,4 @@ export * from './itineraryActivity';
 export * from './itineraryDay';
 export * from './itineraryInput';
 export * from './itineraryInputSpecialOccasion';
+export * from './itineraryPatch';

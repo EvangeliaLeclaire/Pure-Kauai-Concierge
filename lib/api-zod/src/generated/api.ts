@@ -48,6 +48,81 @@ export const CreateItineraryBody = zod.object({
 
 
 /**
+ * @summary Update an itinerary (host edits)
+ */
+export const UpdateItineraryParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateItineraryBody = zod.object({
+  "welcomeMessage": zod.string().nullish(),
+  "days": zod.array(zod.object({
+  "dayNumber": zod.number(),
+  "title": zod.string(),
+  "theme": zod.string(),
+  "date": zod.string(),
+  "activities": zod.array(zod.object({
+  "time": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "unsplashKeyword": zod.string(),
+  "photoUrl": zod.string().nullish()
+}))
+})).optional()
+})
+
+export const UpdateItineraryResponse = zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "guestName": zod.string(),
+  "checkIn": zod.string(),
+  "checkOut": zod.string(),
+  "adults": zod.number(),
+  "children": zod.number(),
+  "childrenAges": zod.string().nullish(),
+  "hasPets": zod.boolean().nullish(),
+  "specialOccasion": zod.string(),
+  "specialNotes": zod.string().nullish(),
+  "villaServices": zod.array(zod.string()),
+  "inVillaExperiences": zod.array(zod.string()),
+  "excursions": zod.array(zod.string()),
+  "customRequest": zod.string().nullish(),
+  "hostName": zod.string().nullish(),
+  "hostEmail": zod.string().nullish(),
+  "hostPhone": zod.string().nullish(),
+  "welcomeMessage": zod.string().nullish(),
+  "days": zod.array(zod.object({
+  "dayNumber": zod.number(),
+  "title": zod.string(),
+  "theme": zod.string(),
+  "date": zod.string(),
+  "activities": zod.array(zod.object({
+  "time": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "unsplashKeyword": zod.string(),
+  "photoUrl": zod.string().nullish()
+}))
+})),
+  "invoice": zod.array(zod.object({
+  "name": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "duration": zod.string().nullish(),
+  "pricePerUnit": zod.number(),
+  "quantity": zod.number(),
+  "unit": zod.string(),
+  "totalPrice": zod.number(),
+  "unsplashKeyword": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "notes": zod.string().nullish()
+})),
+  "approved": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
  * @summary Get an itinerary by ID
  */
 export const GetItineraryParams = zod.object({

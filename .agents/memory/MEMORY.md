@@ -1,0 +1,1 @@
+- [Pure Kauai architecture](pure-kauai-arch.md) — in-memory store, no DB; itineraries lost on server restart; Claude + Unsplash; host mode via ?host=1 param

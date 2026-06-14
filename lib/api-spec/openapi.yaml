@@ -302,6 +302,16 @@ components:
           items:
             $ref: "#/components/schemas/ItineraryActivity"
 
+    ItineraryPatch:
+      type: object
+      properties:
+        welcomeMessage:
+          type: ["string", "null"]
+        days:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItineraryDay"
+
     Itinerary:
       type: object
       required:
