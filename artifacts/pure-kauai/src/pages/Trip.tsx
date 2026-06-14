@@ -496,7 +496,8 @@ type Tab = "journey" | "invoice";
 export default function Trip() {
   const { id } = useParams<{ id: string }>();
   const search = useSearch();
-  const isHostMode = new URLSearchParams(search).get("host") === "1";
+  const isHostMode   = new URLSearchParams(search).get("host")    === "1";
+  const journeyOnly  = new URLSearchParams(search).get("journey") === "1";
   const queryClient = useQueryClient();
   const { data: itinerary, isLoading } = useGetItinerary(id, {
     query: { enabled: !!id, queryKey: getGetItineraryQueryKey(id) },
@@ -505,6 +506,7 @@ export default function Trip() {
   const approveItinerary = useApproveItinerary();
   const patchItinerary   = useUpdateItinerary();
   const [copied,              setCopied]              = useState(false);
+  const [copiedJourney,       setCopiedJourney]       = useState(false);
   const [hostBannerDismissed, setHostBannerDismissed] = useState(false);
   const [showModal,           setShowModal]           = useState(false);
   const [activeTab,           setActiveTab]           = useState<Tab>("journey");
@@ -663,10 +665,19 @@ export default function Trip() {
     });
   };
 
-  // Clean guest URL always strips ?host=1 so guests see a pristine page
+  // Clean guest URL strips ?host=1 so guests see both tabs
   const guestUrl = (() => {
     const url = new URL(window.location.href);
     url.searchParams.delete("host");
+    url.searchParams.delete("journey");
+    return url.toString();
+  })();
+
+  // Journey-only URL: strips ?host=1, adds ?journey=1
+  const journeyUrl = (() => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("host");
+    url.searchParams.set("journey", "1");
     return url.toString();
   })();
 
@@ -695,7 +706,7 @@ export default function Trip() {
   // ── Render ────────────────────────────────────────────────────────────────
   const TABS: { id: Tab; label: string; count?: number }[] = [
     { id: "journey", label: "Your Journey" },
-    { id: "invoice", label: "Services & Quote", count: itinerary.invoice?.length ?? 0 },
+    ...(!journeyOnly ? [{ id: "invoice" as Tab, label: "Services & Quote", count: itinerary.invoice?.length ?? 0 }] : []),
   ];
 
   return (
@@ -752,6 +763,23 @@ export default function Trip() {
               >
                 {copied ? <Check className="h-3 w-3" /> : <Link2 className="h-3 w-3" />}
                 {copied ? "Copied!" : "Copy Guest Link"}
+              </button>
+              <button
+                onClick={async () => {
+                  try { await navigator.clipboard.writeText(journeyUrl); }
+                  catch {
+                    const ta = document.createElement("textarea"); ta.value = journeyUrl;
+                    ta.style.cssText = "position:fixed;opacity:0;top:0;left:0";
+                    document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+                  }
+                  setCopiedJourney(true); setTimeout(() => setCopiedJourney(false), 2500);
+                }}
+                className="hidden sm:flex items-center gap-1.5 text-xs tracking-[0.1em] uppercase py-1.5 px-3 transition-all"
+                style={{ color: copiedJourney ? "#4ade80" : "rgba(235,226,224,0.65)", border: "1px solid rgba(235,226,224,0.15)", borderRadius: "2px" }}
+                title="Share itinerary without pricing"
+              >
+                {copiedJourney ? <Check className="h-3 w-3" /> : <Link2 className="h-3 w-3" />}
+                {copiedJourney ? "Copied!" : "Journey Only"}
               </button>
               <button
                 onClick={handleEmailGuest}
@@ -1231,16 +1259,20 @@ export default function Trip() {
             <p className="text-sm mb-2" style={{ color: "#A5948D" }}>
               {itinerary.days.length} days · {itinerary.days.reduce((a, d) => a + d.activities.length, 0)} curated experiences
             </p>
-            <p className="text-lg font-light mb-8" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
-              Ready to review the details?
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {(itinerary.invoice?.length ?? 0) > 0 && (
-                <button onClick={() => setActiveTab("invoice")} className="inline-flex items-center gap-3 text-sm tracking-[0.14em] uppercase text-white px-8 py-4 transition-opacity duration-300 hover:opacity-85" style={{ background: "#053E50", borderRadius: "1px" }}>
-                  Services &amp; Quote <ChevronRight className="h-4 w-4" />
-                </button>
-              )}
-            </div>
+            {!journeyOnly && (
+              <>
+                <p className="text-lg font-light mb-8" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
+                  Ready to review the details?
+                </p>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {(itinerary.invoice?.length ?? 0) > 0 && (
+                    <button onClick={() => setActiveTab("invoice")} className="inline-flex items-center gap-3 text-sm tracking-[0.14em] uppercase text-white px-8 py-4 transition-opacity duration-300 hover:opacity-85" style={{ background: "#053E50", borderRadius: "1px" }}>
+                      Services &amp; Quote <ChevronRight className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </main>
@@ -1267,6 +1299,7 @@ export default function Trip() {
       </div>
 
       {/* ══ STICKY ACTION BAR ════════════════════════════════════════════════ */}
+      {!journeyOnly && (
       <div
         className="print-hide fixed bottom-0 left-0 right-0 z-30 border-t border-[#E8E0DB]"
         style={{ background: "rgba(250,248,246,0.97)", backdropFilter: "blur(12px)" }}
@@ -1356,6 +1389,7 @@ export default function Trip() {
           )}
         </div>
       </div>
+      )}
 
     </div>
   );
