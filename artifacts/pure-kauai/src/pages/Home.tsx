@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -364,6 +364,85 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+// ─── Generating Screen ────────────────────────────────────────────────────────
+
+const MESSAGES = [
+  "Crafting your Kauai journey…",
+  "Curating your private experiences…",
+  "Personalizing every moment…",
+  "Your island story is taking shape…",
+  "Almost ready…",
+];
+
+function GeneratingScreen() {
+  const [msgIndex, setMsgIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setMsgIndex((i) => (i + 1) % MESSAGES.length);
+        setVisible(true);
+      }, 500);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div
+      className="fixed inset-0 flex flex-col items-center justify-center"
+      style={{ background: "#053E50" }}
+    >
+      {/* Logo */}
+      <PureKauaiLogo variant="light" size="xl" className="mb-14" />
+
+      {/* Rotating ring animation */}
+      <div className="relative mb-14" style={{ width: 64, height: 64 }}>
+        {/* Outer slow ring */}
+        <div
+          className="absolute inset-0 rounded-full border opacity-20"
+          style={{ borderColor: "#EBE2E0" }}
+        />
+        {/* Spinning arc */}
+        <div
+          className="absolute inset-0 rounded-full border-t border-r animate-spin"
+          style={{
+            borderColor: "transparent",
+            borderTopColor: "#EBE2E0",
+            borderRightColor: "#EBE2E0",
+            opacity: 0.7,
+            animationDuration: "2.4s",
+            animationTimingFunction: "linear",
+          }}
+        />
+        {/* Inner pulse dot */}
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <div
+            className="w-1.5 h-1.5 rounded-full animate-pulse"
+            style={{ background: "#EBE2E0", opacity: 0.6 }}
+          />
+        </div>
+      </div>
+
+      {/* Rotating message */}
+      <p
+        className="text-center text-lg font-light tracking-wide transition-opacity duration-500"
+        style={{
+          fontFamily: "'Source Serif 4', Georgia, serif",
+          color: "#EBE2E0",
+          opacity: visible ? 1 : 0,
+          minHeight: "2rem",
+        }}
+      >
+        {MESSAGES[msgIndex]}
+      </p>
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -433,16 +512,7 @@ export default function Home() {
   // ── Generating overlay ─────────────────────────────────────────────────────
   if (isGenerating) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#FAF8F6" }}>
-        <div className="text-center px-6">
-          <PureKauaiLogo variant="dark" size="lg" className="mx-auto mb-10" />
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-5" style={{ color: "#937C66" }} />
-          <p className="text-xl font-light" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
-            Crafting your bespoke Kauai journey…
-          </p>
-          <p className="text-sm mt-3" style={{ color: "#8A7F7D" }}>This takes about 30 seconds</p>
-        </div>
-      </div>
+      <GeneratingScreen />
     );
   }
 
