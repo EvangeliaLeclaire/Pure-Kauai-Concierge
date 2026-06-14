@@ -10,7 +10,6 @@ import {
   Minus, Plus, Users, Car, ShoppingBag, Home as HomeIcon,
   Flower2, ChefHat, Compass, ClipboardList, LayoutDashboard,
 } from "lucide-react";
-import { useCreateItinerary } from "@workspace/api-client-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -466,7 +465,8 @@ function GeneratingScreen() {
 
 export default function Home() {
   const [, setLocation] = useLocation();
-  const createItinerary = useCreateItinerary();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -479,7 +479,6 @@ export default function Home() {
     },
   });
 
-  const isGenerating    = createItinerary.isPending;
   const children        = form.watch("children") ?? 0;
   const hasPets         = form.watch("hasPets") ?? false;
   const specialOccasion = form.watch("specialOccasion") ?? "None";
@@ -495,13 +494,18 @@ export default function Home() {
     form.setValue(field, current.includes(name) ? current.filter((s) => s !== name) : [...current, name]);
   }
 
-  function onSubmit(values: FormValues) {
+  async function onSubmit(values: FormValues) {
     const notes = [values.specialNotes, values.groceryNotes ? `Grocery notes: ${values.groceryNotes}` : null]
       .filter(Boolean).join("\n") || null;
 
-    createItinerary.mutate(
-      {
-        data: {
+    setIsGenerating(true);
+    setGenerationError(null);
+
+    try {
+      const response = await fetch("/api/itineraries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           guestName: values.guestName,
           checkIn:   format(values.checkIn,  "yyyy-MM-dd"),
           checkOut:  format(values.checkOut, "yyyy-MM-dd"),
@@ -509,7 +513,6 @@ export default function Home() {
           children:  values.children,
           childrenAges:   values.childrenAges   || null,
           hasPets:        values.hasPets,
-          // @ts-ignore – enum values match extended set
           specialOccasion: values.specialOccasion,
           occasionDetails:        values.occasionDetails        || null,
           occasionDate:           values.occasionDate           || null,
@@ -522,10 +525,50 @@ export default function Home() {
           hostName:  values.hostName  || null,
           hostEmail: values.hostEmail || null,
           hostPhone: values.hostPhone || null,
-        },
-      },
-      { onSuccess: (data) => setLocation(`/trip/${data.slug}?host=1`) }
-    );
+        }),
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error("Server error — please try again.");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop() ?? "";
+
+        for (const part of parts) {
+          const lines = part.split("\n");
+          let eventType = "";
+          let eventData = "";
+          for (const line of lines) {
+            if (line.startsWith("event: ")) eventType = line.slice(7).trim();
+            if (line.startsWith("data: "))  eventData = line.slice(6);
+          }
+
+          if (eventType === "complete" && eventData) {
+            const itinerary = JSON.parse(eventData) as { slug: string };
+            setIsGenerating(false);
+            setLocation(`/trip/${itinerary.slug}?host=1`);
+            return;
+          } else if (eventType === "error" && eventData) {
+            const { error } = JSON.parse(eventData) as { error: string };
+            throw new Error(error || "Generation failed.");
+          }
+        }
+      }
+      throw new Error("Connection closed unexpectedly — please try again.");
+    } catch (err) {
+      setIsGenerating(false);
+      setGenerationError(err instanceof Error ? err.message : "Generation failed. Please try again.");
+    }
   }
 
   // ── Generating overlay ─────────────────────────────────────────────────────
@@ -975,9 +1018,9 @@ export default function Home() {
             <Sparkles className="mr-2.5 h-4 w-4" />
             Generate Itinerary
           </Button>
-          {createItinerary.isError && (
+          {generationError && (
             <p className="text-xs whitespace-nowrap" style={{ color: "#B45309" }}>
-              Generation failed — please try again.
+              {generationError}
             </p>
           )}
         </div>

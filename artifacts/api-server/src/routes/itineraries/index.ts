@@ -136,6 +136,17 @@ router.post("/itineraries", async (req, res) => {
     return;
   }
 
+  // Stream SSE to keep the proxy connection alive during Claude generation (~30–120s)
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders();
+
+  const keepAlive = setInterval(() => {
+    res.write("event: ping\ndata: {}\n\n");
+  }, 15000);
+
   const numNights = Math.max(1, Math.round(
     (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24)
   ));
@@ -178,8 +189,10 @@ router.post("/itineraries", async (req, res) => {
       customRequest: customRequest ?? null,
     });
   } catch (err) {
+    clearInterval(keepAlive);
     req.log.error({ err }, "Claude generation failed");
-    res.status(500).json({ error: "Unable to generate itinerary. Please try again in a moment." });
+    res.write(`event: error\ndata: ${JSON.stringify({ error: "Unable to generate itinerary. Please try again in a moment." })}\n\n`);
+    res.end();
     return;
   }
 
@@ -219,7 +232,9 @@ router.post("/itineraries", async (req, res) => {
     try { await updateItinerary(itinerary.id, { invoice: withPhotos.invoice }); } catch { /* best-effort */ }
   });
 
-  res.status(201).json(itinerary);
+  clearInterval(keepAlive);
+  res.write(`event: complete\ndata: ${JSON.stringify(itinerary)}\n\n`);
+  res.end();
 });
 
 router.get("/itineraries/:id", async (req, res) => {
