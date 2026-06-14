@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { format } from "date-fns";
-import { Copy, Check, Plus, RefreshCw } from "lucide-react";
+import { Copy, Check, Plus, RefreshCw, ExternalLink } from "lucide-react";
 import { PureKauaiLogo } from "@/components/PureKauaiLogo";
 import { useListItineraries } from "@workspace/api-client-react";
 import PasswordGate from "@/components/PasswordGate";
@@ -86,6 +86,40 @@ function OccasionTag({ occasion }: { occasion: string }) {
   );
 }
 
+function CopyDemoLinkButton() {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    const stored = sessionStorage.getItem("pk_authed");
+    if (!stored) return;
+    const password = prompt("Enter the portal password to generate a demo link:");
+    if (!password) return;
+    const encoded = btoa(password);
+    const url = `${window.location.origin}/access?p=${encoded}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="inline-flex items-center gap-1.5 text-xs tracking-[0.12em] uppercase px-4 py-2 border transition-colors"
+      style={{
+        borderColor: copied ? "#16a34a" : "#E8E0DB",
+        color: copied ? "#16a34a" : "#6B7280",
+        borderRadius: "2px",
+        background: copied ? "#f0fdf4" : "#FDFCFB",
+      }}
+      title="Generate a one-click demo link"
+    >
+      {copied ? <Check className="h-3.5 w-3.5" /> : <ExternalLink className="h-3.5 w-3.5" />}
+      {copied ? "Copied!" : "Demo Link"}
+    </button>
+  );
+}
+
 export default function Dashboard() {
   const { data: itineraries, isLoading, refetch, isFetching } = useListItineraries();
 
@@ -120,6 +154,7 @@ export default function Dashboard() {
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />
               </button>
+              <CopyDemoLinkButton />
               <Link
                 href="/"
                 className="inline-flex items-center gap-1.5 text-xs tracking-[0.12em] uppercase px-4 py-2 border transition-colors"
