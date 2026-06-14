@@ -266,7 +266,12 @@ Return ONLY valid JSON. No markdown. No explanation. No code blocks. No backtick
   const jsonMatch = content.text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("Could not parse JSON from Claude");
 
-  const parsed = JSON.parse(jsonMatch[0]) as GeneratedNarrative;
+  let parsed: GeneratedNarrative;
+  try {
+    parsed = JSON.parse(jsonMatch[0]) as GeneratedNarrative;
+  } catch {
+    throw new Error(`Claude returned invalid JSON. Raw: ${content.text.slice(0, 200)}`);
+  }
 
   // Collect all activities for photo fetching
   const activities: Array<{ activity: ItineraryActivity; keyword: string }> = [];

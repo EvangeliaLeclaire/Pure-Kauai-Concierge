@@ -140,7 +140,7 @@ function ApproveModal({ guestName, onClose }: { guestName: string; onClose: () =
 function InvoicePanel({
   title, items, guestName, checkIn, checkOut, adults, children,
   hostName, hostEmail, hostPhone, itineraryId, approved,
-  onApprove, isPending,
+  onApprove, isPending, isHostMode,
 }: {
   title: string;
   items: InvoiceItem[];
@@ -156,6 +156,7 @@ function InvoicePanel({
   approved: boolean;
   onApprove: () => void;
   isPending: boolean;
+  isHostMode?: boolean;
 }) {
   const totalGuests = adults + children;
   const subtotal = items.reduce((s, i) => s + i.totalPrice, 0);
@@ -336,7 +337,16 @@ function InvoicePanel({
 
         {/* Invoice actions */}
         <div className="print-hide mt-10 flex flex-col sm:flex-row gap-3">
-          {!approved ? (
+          {isHostMode ? (
+            /* Host: print only — approval is the guest's action */
+            <button
+              onClick={() => window.print()}
+              className="flex-1 flex items-center justify-center gap-2 border border-[#E8E0DB] hover:border-[#053E50]/30 text-sm tracking-[0.1em] uppercase py-4 transition-colors duration-200"
+              style={{ color: "#5C5350", borderRadius: "1px" }}
+            >
+              <Printer className="h-4 w-4" />Print Quote
+            </button>
+          ) : !approved ? (
             <button
               onClick={onApprove}
               disabled={isPending}
@@ -354,13 +364,15 @@ function InvoicePanel({
               <Check className="h-4 w-4" />Approved & Confirmed
             </div>
           )}
-          <button
-            onClick={() => window.print()}
-            className="flex items-center justify-center gap-2 border border-[#E8E0DB] hover:border-[#053E50]/30 text-sm tracking-[0.1em] uppercase py-4 px-6 transition-colors duration-200"
-            style={{ color: "#5C5350", borderRadius: "1px" }}
-          >
-            <Printer className="h-4 w-4" />Print
-          </button>
+          {!isHostMode && (
+            <button
+              onClick={() => window.print()}
+              className="flex items-center justify-center gap-2 border border-[#E8E0DB] hover:border-[#053E50]/30 text-sm tracking-[0.1em] uppercase py-4 px-6 transition-colors duration-200"
+              style={{ color: "#5C5350", borderRadius: "1px" }}
+            >
+              <Printer className="h-4 w-4" />Print
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -374,7 +386,7 @@ type Tab = "journey" | "invoice";
 export default function Trip() {
   const { id } = useParams<{ id: string }>();
   const search = useSearch();
-  const isHostMode = search.includes("host=1");
+  const isHostMode = new URLSearchParams(search).get("host") === "1";
   const queryClient = useQueryClient();
   const { data: itinerary, isLoading } = useGetItinerary(id, {
     query: { enabled: !!id, queryKey: getGetItineraryQueryKey(id) },
@@ -438,10 +450,19 @@ export default function Trip() {
   if (!itinerary) {
     return (
       <div className="min-h-screen bg-[#FAF8F6] flex items-center justify-center">
-        <div className="text-center px-6">
+        <div className="text-center px-6 max-w-sm">
           <PureKauaiLogo variant="dark" size="lg" className="mx-auto mb-8" />
-          <h2 className="text-2xl font-serif font-light text-[#053E50]">Itinerary not found</h2>
-          <p className="text-[#8A7F7D] text-sm mt-2">The journey you're looking for does not exist.</p>
+          <h2 className="text-2xl font-serif font-light text-[#053E50] mb-3">Journey Not Found</h2>
+          <p className="text-[#8A7F7D] text-sm leading-relaxed mb-6">
+            This itinerary link may have expired. Itineraries are stored temporarily — if the server restarted since it was generated, you'll need to regenerate it.
+          </p>
+          <a
+            href="/"
+            className="inline-flex items-center gap-2 text-sm tracking-[0.12em] uppercase text-white px-8 py-4 transition-opacity hover:opacity-80"
+            style={{ background: "#053E50", borderRadius: "1px" }}
+          >
+            Generate New Itinerary
+          </a>
         </div>
       </div>
     );
@@ -470,9 +491,20 @@ export default function Trip() {
   })();
 
   const handleCopyLink = async () => {
-    await navigator.clipboard.writeText(guestUrl);
+    try {
+      await navigator.clipboard.writeText(guestUrl);
+    } catch {
+      // Clipboard API blocked — fall back to execCommand
+      const ta = document.createElement("textarea");
+      ta.value = guestUrl;
+      ta.style.cssText = "position:fixed;opacity:0;top:0;left:0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   const handleEmailGuest = () => {
@@ -818,16 +850,18 @@ export default function Trip() {
                           {activity.description}
                         </p>
 
-                        <div className="flex items-center pt-5 border-t border-[#F0ECEA]">
-                          <button
-                            onClick={() => { setRequestModal(activity.name); setRequestMsg(""); }}
-                            className="ml-auto inline-flex items-center gap-1.5 text-xs transition-opacity hover:opacity-60"
-                            style={{ color: "#B0A9A6" }}
-                          >
-                            <MessageSquare className="h-3.5 w-3.5" />
-                            Request Change
-                          </button>
-                        </div>
+                        {!isHostMode && (
+                          <div className="flex items-center pt-5 border-t border-[#F0ECEA]">
+                            <button
+                              onClick={() => { setRequestModal(activity.name); setRequestMsg(""); }}
+                              className="ml-auto inline-flex items-center gap-1.5 text-xs transition-opacity hover:opacity-60"
+                              style={{ color: "#B0A9A6" }}
+                            >
+                              <MessageSquare className="h-3.5 w-3.5" />
+                              Request Change
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </article>
                   ))}
@@ -873,6 +907,7 @@ export default function Trip() {
           approved={itinerary.approved}
           onApprove={handleApprove}
           isPending={approveItinerary.isPending}
+          isHostMode={isHostMode}
         />
       </div>
 

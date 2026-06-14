@@ -157,24 +157,31 @@ router.post("/itineraries", async (req, res) => {
   );
 
   // Generate narrative from Claude
-  const generated = await generateItinerary({
-    guestName,
-    checkIn,
-    checkOut,
-    adults,
-    children: children ?? 0,
-    childrenAges: childrenAges ?? null,
-    hasPets: hasPets ?? null,
-    specialOccasion,
-    occasionDetails: occasionDetails ?? null,
-    occasionDate: occasionDate ?? null,
-    occasionAcknowledgement: occasionAcknowledgement ?? null,
-    specialNotes: specialNotes ?? null,
-    villaServices: safeVillaServices,
-    inVillaExperiences: safeInVilla,
-    excursions: safeExcursions,
-    customRequest: customRequest ?? null,
-  });
+  let generated;
+  try {
+    generated = await generateItinerary({
+      guestName,
+      checkIn,
+      checkOut,
+      adults,
+      children: children ?? 0,
+      childrenAges: childrenAges ?? null,
+      hasPets: hasPets ?? null,
+      specialOccasion,
+      occasionDetails: occasionDetails ?? null,
+      occasionDate: occasionDate ?? null,
+      occasionAcknowledgement: occasionAcknowledgement ?? null,
+      specialNotes: specialNotes ?? null,
+      villaServices: safeVillaServices,
+      inVillaExperiences: safeInVilla,
+      excursions: safeExcursions,
+      customRequest: customRequest ?? null,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Claude generation failed");
+    res.status(500).json({ error: "Unable to generate itinerary. Please try again in a moment." });
+    return;
+  }
 
   // Wait for invoice photos
   await photoFetch;

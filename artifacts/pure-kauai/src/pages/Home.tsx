@@ -340,6 +340,7 @@ const formSchema = z.object({
   guestName:      z.string().min(2, "Guest name is required"),
   checkIn:        z.date({ required_error: "Check-in date is required" }),
   checkOut:       z.date({ required_error: "Check-out date is required" }),
+
   adults:         z.coerce.number().min(1, "At least 1 adult required"),
   children:       z.coerce.number().min(0),
   childrenAges:   z.string().optional(),
@@ -360,6 +361,9 @@ const formSchema = z.object({
   inVillaExperiences: z.array(z.string()).default([]),
   excursions:         z.array(z.string()).default([]),
   customRequest:      z.string().optional(),
+}).refine((d) => !d.checkIn || !d.checkOut || d.checkOut > d.checkIn, {
+  message: "Check-out must be after check-in",
+  path: ["checkOut"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -962,7 +966,9 @@ export default function Home() {
             Generate Itinerary
           </Button>
           {createItinerary.isError && (
-            <p className="text-xs text-red-600 whitespace-nowrap">Something went wrong.</p>
+            <p className="text-xs whitespace-nowrap" style={{ color: "#B45309" }}>
+              Generation failed — please try again.
+            </p>
           )}
         </div>
       </div>
