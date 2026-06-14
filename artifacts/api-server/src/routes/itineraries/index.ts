@@ -183,9 +183,6 @@ router.post("/itineraries", async (req, res) => {
     return;
   }
 
-  // Wait for invoice photos
-  await photoFetch;
-
   const slug = generateSlug(guestName, checkIn);
 
   const itinerary: Itinerary = {
