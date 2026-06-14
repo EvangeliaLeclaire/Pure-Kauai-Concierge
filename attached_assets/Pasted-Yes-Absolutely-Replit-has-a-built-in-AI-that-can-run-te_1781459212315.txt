@@ -1,0 +1,110 @@
+Yes. Absolutely.
+Replit has a built in AI that can run tests for you.
+
+Do This Right Now
+Go to Replit chat and paste this exactly:
+
+
+I need you to act as a senior QA engineer and UX auditor. Run a complete audit of this application and fix every issue you find. Here is exactly what to test and fix:
+FUNCTIONAL TESTS:
+
+Test 1: Submit the concierge form with complete data and verify Claude returns valid JSON and the itinerary page renders correctly
+
+Test 2: Submit the form with missing required fields and verify appropriate error messages appear
+
+Test 3: Submit the form with special characters in guest name like O'Brien and verify it handles correctly
+
+Test 4: Generate an itinerary and verify the shareable URL loads correctly in isolation without any session data
+
+Test 5: Verify the in-villa services invoice calculates correctly — price per unit multiplied by quantity equals line total
+
+Test 6: Verify the excursions invoice calculates correctly
+
+Test 7: Verify the 50% deposit calculation is exactly half the subtotal
+
+Test 8: Verify the balance due is exactly half the subtotal
+
+Test 9: Verify the Print Invoice button triggers window.print()
+
+Test 10: Verify the PDF download generates a file named PureKauai-[GuestName]-Invoice.pdf
+
+Test 11: Verify the Approve button sends confirmation and updates the itinerary approved status
+
+Test 12: Verify the Copy Link button copies the correct URL to clipboard
+
+Test 13: Verify the Email to Guest button opens a mailto with correct pre-filled content
+
+Test 14: Test with 1 night stay and verify itinerary generates correctly
+
+Test 15: Test with 21 night stay and verify itinerary generates correctly
+
+Test 16: Test with no excursions selected and verify app handles gracefully
+
+Test 17: Test with no in-villa services selected and verify app handles gracefully
+
+Test 18: Test with 0 children and verify children fields hide correctly
+
+Test 19: Test with special occasion None and verify occasion fields hide correctly
+
+Test 20: Test with special occasion Anniversary and verify occasion date and acknowledgement fields appear
+EDGE CASE TESTS:
+
+Test 21: What happens if Claude API call fails — does the user see a helpful error message or does the app crash silently
+
+Test 22: What happens if Unsplash API fails — do images fall back gracefully
+
+Test 23: What happens if someone navigates directly to a non-existent trip ID — do they see a helpful 404 message
+
+Test 24: What happens if the form is submitted twice quickly — does it generate two itineraries or handle gracefully
+
+Test 25: What happens with a very long guest notes field over 500 words
+SECURITY TESTS:
+
+Test 26: Verify the Anthropic API key is not visible in browser source code or network requests
+
+Test 27: Verify the Unsplash access key is not visible in browser source code
+
+Test 28: Verify the concierge form is password protected and cannot be accessed without the password
+
+Test 29: Verify the password is not visible in the browser source code
+MOBILE TESTS:
+
+Test 30: Simulate iPhone 14 screen size and verify the form is fully usable
+
+Test 31: Simulate iPhone 14 screen size and verify the guest itinerary page is fully readable
+
+Test 32: Verify all buttons are minimum 44px height for touch targets
+
+Test 33: Verify the invoice table scrolls horizontally on small screens without breaking layout
+
+Test 34: Verify the tile selection cards are large enough to tap accurately on mobile
+PERFORMANCE TESTS:
+
+Test 35: Verify the loading state appears within 100 milliseconds of hitting Generate
+
+Test 36: Verify images have loading states so the page does not jump when they load
+
+Test 37: Verify the page does not have any console errors on load
+
+Test 38: Verify the page does not have any console errors after generating an itinerary
+UX QUALITY TESTS:
+
+Test 39: Verify no exclamation points appear anywhere in Claude generated content
+
+Test 40: Verify the words amenities, package, tourists, hotel, check-in, check-out do not appear in Claude generated content
+
+Test 41: Verify the welcome letter appears in Source Serif 4 italic font
+
+Test 42: Verify the day titles appear in Source Serif 4 font
+
+Test 43: Verify body text appears in Inter font
+
+Test 44: Verify brand colors are used consistently — #053E50 dark teal, #37729A blue, #EBE2E0 sand, #937C66 warm brown
+
+Test 45: Verify the print preview hides all navigation, buttons, and interactive elements
+For every test that fails fix it immediately and tell me what was broken and what you fixed.
+
+For every test that passes confirm it with a checkmark.
+
+Give me a complete report of all 45 tests with pass, fail, or fixed status.
+
