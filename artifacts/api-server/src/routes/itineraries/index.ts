@@ -9,23 +9,19 @@ import type { Itinerary, InvoiceItem } from "./types.js";
 
 const MONTH_ABBR = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
 
-function generateSlug(guestName: string, checkIn: string): string {
-  // Strip leading articles
+async function generateSlug(guestName: string, checkIn: string): Promise<string> {
   const stripped = guestName.replace(/^(the|a|an)\s+/i, "");
-  // Lowercase, remove non-alphanumeric (keep spaces), collapse spaces, hyphenate
   const namePart = stripped
     .toLowerCase()
     .replace(/[^a-z0-9 ]/g, "")
     .trim()
     .replace(/\s+/g, "-");
-  // Format date portion: e.g. "2025-06-20" → "jun20"
   const d = new Date(checkIn + "T00:00:00");
   const datePart = MONTH_ABBR[d.getMonth()] + d.getDate();
   const base = `${namePart}-${datePart}`;
-  // Collision detection
-  if (!slugExists(base)) return base;
+  if (!(await slugExists(base))) return base;
   let n = 2;
-  while (slugExists(`${base}-${n}`)) n++;
+  while (await slugExists(`${base}-${n}`)) n++;
   return `${base}-${n}`;
 }
 
@@ -143,7 +139,6 @@ router.post("/itineraries", async (req, res) => {
   const safeInVilla         = inVillaExperiences  ?? [];
   const safeExcursions      = excursions          ?? [];
 
-  // Build single combined invoice from all selected services
   const invoice = buildInvoice(
     [...safeVillaServices, ...safeInVilla, ...safeExcursions],
     adults,
@@ -151,7 +146,7 @@ router.post("/itineraries", async (req, res) => {
     numNights
   );
 
-  // Fetch photos for invoice items in parallel
+  // Fetch photos for invoice items in background (don't block the response)
   const photoFetch = fetchUnsplashPhotos(
     invoice.map((item) => ({ item, keyword: item.unsplashKeyword ?? item.name }))
   );
@@ -183,7 +178,7 @@ router.post("/itineraries", async (req, res) => {
     return;
   }
 
-  const slug = generateSlug(guestName, checkIn);
+  const slug = await generateSlug(guestName, checkIn);
 
   const itinerary: Itinerary = {
     id: randomUUID(),
@@ -211,28 +206,35 @@ router.post("/itineraries", async (req, res) => {
     createdAt: new Date().toISOString(),
   };
 
-  saveItinerary(itinerary);
+  await saveItinerary(itinerary);
+
+  // Resolve photos after saving — update activity photoUrls in background
+  photoFetch.then(async () => {
+    const withPhotos = { ...itinerary, invoice: invoice.map(i => ({ ...i })) };
+    try { await updateItinerary(itinerary.id, { invoice: withPhotos.invoice }); } catch { /* best-effort */ }
+  });
+
   res.status(201).json(itinerary);
 });
 
-router.get("/itineraries/:id", (req, res) => {
-  const itinerary = getItinerary(req.params.id);
+router.get("/itineraries/:id", async (req, res) => {
+  const itinerary = await getItinerary(req.params.id);
   if (!itinerary) { res.status(404).json({ error: "Itinerary not found" }); return; }
   res.json(itinerary);
 });
 
-router.patch("/itineraries/:id", (req, res) => {
-  const { welcomeMessage, days } = req.body as { welcomeMessage?: string | null; days?: ItineraryDay[] };
+router.patch("/itineraries/:id", async (req, res) => {
+  const { welcomeMessage, days } = req.body as { welcomeMessage?: string | null; days?: Itinerary["days"] };
   const patch: Partial<Itinerary> = {};
   if (welcomeMessage !== undefined) patch.welcomeMessage = welcomeMessage;
   if (days !== undefined) patch.days = days;
-  const updated = updateItinerary(req.params.id, patch);
+  const updated = await updateItinerary(req.params.id, patch);
   if (!updated) { res.status(404).json({ error: "Itinerary not found" }); return; }
   res.json(updated);
 });
 
-router.post("/itineraries/:id/approve", (req, res) => {
-  const updated = updateItinerary(req.params.id, { approved: true });
+router.post("/itineraries/:id/approve", async (req, res) => {
+  const updated = await updateItinerary(req.params.id, { approved: true });
   if (!updated) { res.status(404).json({ error: "Itinerary not found" }); return; }
   res.json(updated);
 });

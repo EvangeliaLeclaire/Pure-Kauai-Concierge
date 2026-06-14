@@ -5,7 +5,7 @@ import {
   Clock, Users, Calendar,
   Sun, Sunset, Moon,
   Printer, Check, Link2, Mail, X, ChevronRight,
-  Phone, MessageSquare, Pencil, Trash2, MoveRight,
+  Phone, MessageSquare, Pencil, Trash2, MoveRight, Copy,
 } from "lucide-react";
 import { useGetItinerary, useApproveItinerary, useUpdateItinerary, getGetItineraryQueryKey } from "@workspace/api-client-react";
 import type { InvoiceItem, ItineraryPatch } from "@workspace/api-client-react";
@@ -96,6 +96,116 @@ function RequestChangeModal({
               Send Request
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Email Guest Modal ────────────────────────────────────────────────────────
+
+function EmailGuestModal({
+  subject, body, onClose,
+}: {
+  subject: string;
+  body: string;
+  onClose: () => void;
+}) {
+  const [copiedSubject, setCopiedSubject] = useState(false);
+  const [copiedBody,    setCopiedBody]    = useState(false);
+
+  const copy = async (text: string, which: "subject" | "body") => {
+    try { await navigator.clipboard.writeText(text); }
+    catch {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.cssText = "position:fixed;opacity:0;top:0;left:0";
+      document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+    }
+    if (which === "subject") { setCopiedSubject(true); setTimeout(() => setCopiedSubject(false), 2000); }
+    else                     { setCopiedBody(true);    setTimeout(() => setCopiedBody(false),    2000); }
+  };
+
+  const tryMailto = () => {
+    window.open(
+      `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+      "_blank"
+    );
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white w-full max-w-lg mx-auto shadow-2xl relative animate-in fade-in zoom-in-95 duration-300" style={{ borderRadius: "2px" }}>
+        <button onClick={onClose} className="absolute top-5 right-5 text-[#A5948D] hover:text-[#053E50] transition-colors" aria-label="Close">
+          <X className="h-5 w-5" />
+        </button>
+        <div className="px-8 py-10">
+          <p className="text-xs tracking-[0.18em] uppercase mb-1.5" style={{ color: "#937C66" }}>Email Guest</p>
+          <h2 className="text-xl font-light mb-6 pr-8" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
+            Composed & ready to send
+          </h2>
+
+          {/* Subject */}
+          <div className="mb-4">
+            <p className="text-xs tracking-[0.14em] uppercase mb-1.5" style={{ color: "#8A7F7D" }}>Subject</p>
+            <div className="flex items-center gap-2 border border-[#E8E0DB] px-3 py-2.5" style={{ borderRadius: "1px" }}>
+              <p className="flex-1 text-sm truncate" style={{ color: "#1A2E35" }}>{subject}</p>
+              <button
+                onClick={() => copy(subject, "subject")}
+                className="shrink-0 flex items-center gap-1 text-xs transition-colors"
+                style={{ color: copiedSubject ? "#37729A" : "#B0A9A6" }}
+              >
+                {copiedSubject ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                {copiedSubject ? "Copied" : "Copy"}
+              </button>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-xs tracking-[0.14em] uppercase" style={{ color: "#8A7F7D" }}>Message</p>
+              <button
+                onClick={() => copy(body, "body")}
+                className="flex items-center gap-1 text-xs transition-colors"
+                style={{ color: copiedBody ? "#37729A" : "#B0A9A6" }}
+              >
+                {copiedBody ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                {copiedBody ? "Copied" : "Copy"}
+              </button>
+            </div>
+            <div
+              className="border border-[#E8E0DB] px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap select-all"
+              style={{ color: "#4A4340", background: "#FAF8F6", borderRadius: "1px", maxHeight: "220px", overflowY: "auto" }}
+            >
+              {body}
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={tryMailto}
+              className="flex-1 flex items-center justify-center gap-2 text-white text-sm tracking-[0.10em] uppercase py-3.5 transition-opacity hover:opacity-90"
+              style={{ background: "#053E50", borderRadius: "1px" }}
+            >
+              <Mail className="h-4 w-4" />
+              Open Email Client
+            </button>
+            <button
+              onClick={onClose}
+              className="flex items-center justify-center gap-2 border border-[#E8E0DB] hover:border-[#053E50]/30 text-sm tracking-[0.10em] uppercase py-3.5 px-6 transition-colors"
+              style={{ color: "#8A7F7D", borderRadius: "1px" }}
+            >
+              Done
+            </button>
+          </div>
+
+          <p className="mt-4 text-xs text-center" style={{ color: "#B0A9A6" }}>
+            Copy the message and paste into Gmail, Outlook, or any email app.
+          </p>
         </div>
       </div>
     </div>
@@ -403,6 +513,7 @@ export default function Trip() {
   const [editingKey,          setEditingKey]          = useState<string | null>(null);
   const [editDraft,           setEditDraft]           = useState("");
   const [deletingKey,         setDeletingKey]         = useState<string | null>(null);
+  const [showEmailModal,      setShowEmailModal]      = useState(false);
 
   // ── Dynamic meta tags (must be before any early returns) ─────────────────
   useEffect(() => {
@@ -576,13 +687,10 @@ export default function Trip() {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleEmailGuest = () => {
-    const subject = encodeURIComponent(`Your Pure Kauai Itinerary — ${itinerary.guestName}`);
-    const body = encodeURIComponent(
-      `Dear ${itinerary.guestName},\n\nYour bespoke Kauai itinerary is ready. Please find your personalized journey at the link below:\n\n${guestUrl}\n\nWarm aloha,\n${itinerary.hostName ?? "Pure Kauai Concierge"}`
-    );
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
-  };
+  const emailSubject = `Your Pure Kauai Itinerary — ${itinerary.guestName}`;
+  const emailBody    = `Dear ${itinerary.guestName},\n\nYour bespoke Kauai itinerary is ready. Please find your personalized journey at the link below:\n\n${guestUrl}\n\nWarm aloha,\n${itinerary.hostName ?? "Pure Kauai Concierge"}`;
+
+  const handleEmailGuest = () => setShowEmailModal(true);
 
   // ── Render ────────────────────────────────────────────────────────────────
   const TABS: { id: Tab; label: string; count?: number }[] = [
@@ -606,6 +714,13 @@ export default function Trip() {
 
       {/* Modals */}
       {showModal && <ApproveModal guestName={itinerary.guestName} onClose={() => setShowModal(false)} />}
+      {showEmailModal && (
+        <EmailGuestModal
+          subject={emailSubject}
+          body={emailBody}
+          onClose={() => setShowEmailModal(false)}
+        />
+      )}
       {requestModal && (
         <RequestChangeModal
           activityName={requestModal}
