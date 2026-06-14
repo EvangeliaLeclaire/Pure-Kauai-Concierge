@@ -110,6 +110,25 @@ export interface ItineraryPatch {
   days?: ItineraryDay[];
 }
 
+export interface ItineraryListItem {
+  id: string;
+  slug: string;
+  guestName: string;
+  checkIn: string;
+  checkOut: string;
+  specialOccasion: string;
+  approved: boolean;
+  createdAt: string;
+}
+
+export interface VerifyPasswordInput {
+  password: string;
+}
+
+export interface AuthResult {
+  ok: boolean;
+}
+
 export interface Itinerary {
   id: string;
   slug: string;

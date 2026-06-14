@@ -17,6 +17,22 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary List all itineraries (dashboard)
+ */
+export const ListItinerariesResponseItem = zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "guestName": zod.string(),
+  "checkIn": zod.string(),
+  "checkOut": zod.string(),
+  "specialOccasion": zod.string(),
+  "approved": zod.boolean(),
+  "createdAt": zod.string()
+})
+export const ListItinerariesResponse = zod.array(ListItinerariesResponseItem)
+
+
+/**
  * @summary Generate a new itinerary using AI
  */
 
@@ -235,6 +251,18 @@ export const ApproveItineraryResponse = zod.object({
 })),
   "approved": zod.boolean(),
   "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Verify concierge password
+ */
+export const VerifyPasswordBody = zod.object({
+  "password": zod.string()
+})
+
+export const VerifyPasswordResponse = zod.object({
+  "ok": zod.boolean()
 })
 
 

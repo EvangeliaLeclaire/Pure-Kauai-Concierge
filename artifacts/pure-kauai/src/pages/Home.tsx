@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
+import PasswordGate from "@/components/PasswordGate";
 import { format } from "date-fns";
 import {
   CalendarIcon, Loader2, Sparkles, Check,
   Minus, Plus, Users, Car, ShoppingBag, Home as HomeIcon,
-  Flower2, ChefHat, Compass, ClipboardList,
+  Flower2, ChefHat, Compass, ClipboardList, LayoutDashboard,
 } from "lucide-react";
 import { useCreateItinerary } from "@workspace/api-client-react";
 
@@ -536,6 +537,7 @@ export default function Home() {
 
   // ── Main form ─────────────────────────────────────────────────────────────
   return (
+    <PasswordGate>
     <div className="min-h-screen pb-28 px-4 sm:px-6 lg:px-8 pt-10" style={{ background: "#FAF8F6" }}>
       <div className="max-w-3xl mx-auto">
 
@@ -551,6 +553,14 @@ export default function Home() {
           <p className="text-sm max-w-sm mx-auto" style={{ color: "#8A7F7D", lineHeight: 1.6 }}>
             Complete this form to craft a personalized itinerary for your arriving guests.
           </p>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-1.5 mt-4 text-xs tracking-[0.10em] uppercase transition-opacity hover:opacity-70"
+            style={{ color: "#37729A" }}
+          >
+            <LayoutDashboard className="h-3 w-3" />
+            View Dashboard
+          </Link>
         </div>
 
         <Form {...form}>
@@ -981,5 +991,6 @@ export default function Home() {
         .concierge-input { font-size: 0.875rem; background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(235,226,224,0.2) !important; color: #EBE2E0 !important; border-radius: 2px; }
       `}</style>
     </div>
+    </PasswordGate>
   );
 }

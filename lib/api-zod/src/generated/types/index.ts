@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.2.0
  */
 
+export * from './authResult';
 export * from './errorResponse';
 export * from './healthStatus';
 export * from './invoiceItem';
@@ -14,4 +15,6 @@ export * from './itineraryActivity';
 export * from './itineraryDay';
 export * from './itineraryInput';
 export * from './itineraryInputSpecialOccasion';
+export * from './itineraryListItem';
 export * from './itineraryPatch';
+export * from './verifyPasswordInput';

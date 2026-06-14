@@ -28,6 +28,17 @@ export interface ItineraryDay {
   activities: ItineraryActivity[];
 }
 
+export interface ItineraryListItem {
+  id: string;
+  slug: string;
+  guestName: string;
+  checkIn: string;
+  checkOut: string;
+  specialOccasion: string;
+  approved: boolean;
+  createdAt: string;
+}
+
 export interface Itinerary {
   id: string;
   slug: string;

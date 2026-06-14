@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { randomUUID } from "crypto";
-import { saveItinerary, getItinerary, updateItinerary, slugExists } from "./store.js";
+import { saveItinerary, getItinerary, updateItinerary, slugExists, listItineraries } from "./store.js";
 import { generateItinerary, fetchUnsplashPhotos } from "./generate.js";
 import { catalogByName } from "../../data/catalog.js";
 import type { Itinerary, InvoiceItem } from "./types.js";
@@ -97,6 +97,11 @@ function buildInvoice(
 }
 
 // ── Routes ───────────────────────────────────────────────────────────────────
+
+router.get("/itineraries", async (_req, res) => {
+  const items = await listItineraries();
+  res.json(items);
+});
 
 router.post("/itineraries", async (req, res) => {
   const {
