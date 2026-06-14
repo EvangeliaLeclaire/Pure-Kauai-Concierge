@@ -1,5 +1,5 @@
 import { Fragment, useState, useEffect } from "react";
-import { useParams } from "wouter";
+import { useParams, useSearch } from "wouter";
 import { format, parseISO } from "date-fns";
 import {
   Clock, Users, Calendar,
@@ -161,10 +161,11 @@ function InvoicePanel({
   const subtotal = items.reduce((s, i) => s + i.totalPrice, 0);
   const deposit  = subtotal * 0.5;
 
-  // Group by category
+  // Group by category (fall back to "Services" if category is missing)
   const grouped = items.reduce<Record<string, InvoiceItem[]>>((acc, item) => {
-    acc[item.category] = acc[item.category] ?? [];
-    acc[item.category].push(item);
+    const cat = item.category || "Services";
+    acc[cat] = acc[cat] ?? [];
+    acc[cat].push(item);
     return acc;
   }, {});
   const categories = Object.keys(grouped);
@@ -372,17 +373,20 @@ type Tab = "journey" | "invoice";
 
 export default function Trip() {
   const { id } = useParams<{ id: string }>();
+  const search = useSearch();
+  const isHostMode = search.includes("host=1");
   const queryClient = useQueryClient();
   const { data: itinerary, isLoading } = useGetItinerary(id, {
     query: { enabled: !!id, queryKey: getGetItineraryQueryKey(id) },
   });
 
   const approveItinerary = useApproveItinerary();
-  const [copied,       setCopied]       = useState(false);
-  const [showModal,    setShowModal]    = useState(false);
-  const [activeTab,    setActiveTab]    = useState<Tab>("journey");
-  const [requestModal, setRequestModal] = useState<string | null>(null);
-  const [requestMsg,   setRequestMsg]   = useState("");
+  const [copied,          setCopied]          = useState(false);
+  const [hostBannerDismissed, setHostBannerDismissed] = useState(false);
+  const [showModal,       setShowModal]       = useState(false);
+  const [activeTab,       setActiveTab]       = useState<Tab>("journey");
+  const [requestModal,    setRequestModal]    = useState<string | null>(null);
+  const [requestMsg,      setRequestMsg]      = useState("");
 
   // ── Dynamic meta tags (must be before any early returns) ─────────────────
   useEffect(() => {
@@ -458,8 +462,15 @@ export default function Trip() {
     });
   };
 
+  // Clean guest URL always strips ?host=1 so guests see a pristine page
+  const guestUrl = (() => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("host");
+    return url.toString();
+  })();
+
   const handleCopyLink = async () => {
-    await navigator.clipboard.writeText(window.location.href);
+    await navigator.clipboard.writeText(guestUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -467,7 +478,7 @@ export default function Trip() {
   const handleEmailGuest = () => {
     const subject = encodeURIComponent(`Your Pure Kauai Itinerary — ${itinerary.guestName}`);
     const body = encodeURIComponent(
-      `Dear ${itinerary.guestName},\n\nYour bespoke Kauai itinerary is ready. Please find your personalized journey at the link below:\n\n${window.location.href}\n\nWarm aloha,\n${itinerary.hostName ?? "Pure Kauai Concierge"}`
+      `Dear ${itinerary.guestName},\n\nYour bespoke Kauai itinerary is ready. Please find your personalized journey at the link below:\n\n${guestUrl}\n\nWarm aloha,\n${itinerary.hostName ?? "Pure Kauai Concierge"}`
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
@@ -505,6 +516,50 @@ export default function Trip() {
           onClose={() => setRequestModal(null)}
         />
       )}
+
+      {/* ══ HOST PREVIEW BANNER ═════════════════════════════════════════════ */}
+      {isHostMode && !hostBannerDismissed && (
+        <div className="print-hide fixed top-0 left-0 right-0 z-50" style={{ background: "#022430", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-3">
+            <span className="text-xs tracking-[0.22em] uppercase font-medium shrink-0" style={{ color: "#937C66" }}>
+              ✦ Host Preview
+            </span>
+            <span className="text-xs hidden sm:block" style={{ color: "rgba(235,226,224,0.5)" }}>·</span>
+            <span className="text-xs hidden sm:block truncate" style={{ color: "rgba(235,226,224,0.55)" }}>
+              Review this itinerary before sharing with {itinerary?.guestName ?? "your guest"}
+            </span>
+            <div className="flex items-center gap-2 ml-auto shrink-0">
+              <button
+                onClick={handleCopyLink}
+                className="flex items-center gap-1.5 text-xs tracking-[0.1em] uppercase py-1.5 px-3 transition-all"
+                style={{ color: copied ? "#4ade80" : "#EBE2E0", border: "1px solid rgba(235,226,224,0.2)", borderRadius: "2px" }}
+              >
+                {copied ? <Check className="h-3 w-3" /> : <Link2 className="h-3 w-3" />}
+                {copied ? "Copied!" : "Copy Guest Link"}
+              </button>
+              <button
+                onClick={handleEmailGuest}
+                className="flex items-center gap-1.5 text-xs tracking-[0.1em] uppercase py-1.5 px-3 transition-all"
+                style={{ color: "#EBE2E0", border: "1px solid rgba(235,226,224,0.2)", borderRadius: "2px" }}
+              >
+                <Mail className="h-3 w-3" />
+                Email Guest
+              </button>
+              <button
+                onClick={() => setHostBannerDismissed(true)}
+                className="ml-1 p-1 opacity-40 hover:opacity-100 transition-opacity"
+                style={{ color: "#EBE2E0" }}
+                aria-label="Dismiss host banner"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Offset for banner height in host mode */}
+      {isHostMode && !hostBannerDismissed && <div className="print-hide h-10" />}
 
       {/* ══ CINEMATIC HERO ══════════════════════════════════════════════════ */}
       <header
@@ -827,52 +882,87 @@ export default function Trip() {
         style={{ background: "rgba(250,248,246,0.97)", backdropFilter: "blur(12px)" }}
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-2 sm:gap-3">
-          <button
-            onClick={handleCopyLink}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase border py-3.5 sm:px-6 transition-all duration-200 hover:border-[#053E50]/40"
-            style={{ borderColor: "#E8E0DB", color: copied ? "#37729A" : "#5C5350", borderRadius: "1px" }}
-          >
-            {copied ? <Check className="h-4 w-4 shrink-0" /> : <Link2 className="h-4 w-4 shrink-0" />}
-            <span className="hidden xs:inline sm:inline">{copied ? "Copied!" : "Copy Link"}</span>
-          </button>
 
-          <button
-            onClick={handleEmailGuest}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase border py-3.5 sm:px-6 transition-all duration-200 hover:border-[#053E50]/40"
-            style={{ borderColor: "#E8E0DB", color: "#5C5350", borderRadius: "1px" }}
-          >
-            <Mail className="h-4 w-4 shrink-0" />
-            <span className="hidden xs:inline sm:inline">Email Guest</span>
-          </button>
+          {isHostMode ? (
+            /* ── HOST BAR: sharing tools ─────────────────────────────── */
+            <>
+              <button
+                onClick={handleCopyLink}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase border py-3.5 sm:px-6 transition-all duration-200 hover:border-[#053E50]/40"
+                style={{ borderColor: "#E8E0DB", color: copied ? "#37729A" : "#5C5350", borderRadius: "1px" }}
+              >
+                {copied ? <Check className="h-4 w-4 shrink-0" /> : <Link2 className="h-4 w-4 shrink-0" />}
+                <span>{copied ? "Copied!" : "Copy Guest Link"}</span>
+              </button>
 
-          {grandTotal > 0 && (
-            <div className="hidden sm:flex flex-col items-end mx-3">
-              <span className="text-xs" style={{ color: "#A5948D" }}>Total estimate</span>
-              <span className="text-sm font-medium" style={{ color: "#053E50" }}>{fmt(grandTotal)}</span>
-            </div>
-          )}
+              <button
+                onClick={handleEmailGuest}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase border py-3.5 sm:px-6 transition-all duration-200 hover:border-[#053E50]/40"
+                style={{ borderColor: "#E8E0DB", color: "#5C5350", borderRadius: "1px" }}
+              >
+                <Mail className="h-4 w-4 shrink-0" />
+                <span>Email Guest</span>
+              </button>
 
-          <div className="flex-1" />
+              <div className="flex-1" />
 
-          {itinerary.approved ? (
-            <div className="flex items-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase py-3.5 px-5 sm:px-8 bg-emerald-50 border border-emerald-200 text-emerald-700" style={{ borderRadius: "1px" }}>
-              <Check className="h-4 w-4 shrink-0" />
-              <span>Confirmed</span>
-            </div>
-          ) : (
-            <button
-              onClick={handleApprove}
-              disabled={approveItinerary.isPending}
-              className="flex items-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase text-white py-3.5 px-5 sm:px-8 transition-opacity duration-200 disabled:opacity-60"
-              style={{ background: "#053E50", borderRadius: "1px" }}
-            >
-              {approveItinerary.isPending ? (
-                <span className="h-4 w-4 border border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Check className="h-4 w-4 shrink-0" />
+              {grandTotal > 0 && (
+                <div className="hidden sm:flex flex-col items-end mr-3">
+                  <span className="text-xs" style={{ color: "#A5948D" }}>Total estimate</span>
+                  <span className="text-sm font-medium" style={{ color: "#053E50" }}>{fmt(grandTotal)}</span>
+                </div>
               )}
-              <span>Approve</span>
-            </button>
+
+              <div
+                className="flex items-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase py-3.5 px-5 sm:px-8 border"
+                style={{ borderColor: "#E8E0DB", color: "#8A7F7D", borderRadius: "1px" }}
+              >
+                <span className="hidden sm:inline">Awaiting guest approval</span>
+                <span className="sm:hidden">Host Preview</span>
+              </div>
+            </>
+          ) : (
+            /* ── GUEST BAR: approve + print ──────────────────────────── */
+            <>
+              <button
+                onClick={() => window.print()}
+                className="flex items-center justify-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase border py-3.5 px-4 sm:px-6 transition-all duration-200 hover:border-[#053E50]/40"
+                style={{ borderColor: "#E8E0DB", color: "#5C5350", borderRadius: "1px" }}
+              >
+                <Printer className="h-4 w-4 shrink-0" />
+                <span className="hidden sm:inline">Print</span>
+              </button>
+
+              <div className="flex-1" />
+
+              {grandTotal > 0 && (
+                <div className="hidden sm:flex flex-col items-end mr-3">
+                  <span className="text-xs" style={{ color: "#A5948D" }}>Journey total</span>
+                  <span className="text-sm font-medium" style={{ color: "#053E50" }}>{fmt(grandTotal)}</span>
+                </div>
+              )}
+
+              {itinerary.approved ? (
+                <div className="flex items-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase py-3.5 px-5 sm:px-8 bg-emerald-50 border border-emerald-200 text-emerald-700" style={{ borderRadius: "1px" }}>
+                  <Check className="h-4 w-4 shrink-0" />
+                  <span>Confirmed</span>
+                </div>
+              ) : (
+                <button
+                  onClick={handleApprove}
+                  disabled={approveItinerary.isPending}
+                  className="flex items-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase text-white py-3.5 px-5 sm:px-8 transition-opacity duration-200 disabled:opacity-60"
+                  style={{ background: "#053E50", borderRadius: "1px" }}
+                >
+                  {approveItinerary.isPending ? (
+                    <span className="h-4 w-4 border border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Check className="h-4 w-4 shrink-0" />
+                  )}
+                  <span>Approve &amp; Confirm</span>
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

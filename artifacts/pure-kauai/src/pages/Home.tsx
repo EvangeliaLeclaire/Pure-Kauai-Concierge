@@ -367,11 +367,11 @@ type FormValues = z.infer<typeof formSchema>;
 // ─── Generating Screen ────────────────────────────────────────────────────────
 
 const MESSAGES = [
-  "Crafting your Kauai journey…",
-  "Curating your private experiences…",
+  "Crafting their Kauai journey…",
+  "Curating their private experiences…",
   "Personalizing every moment…",
-  "Your island story is taking shape…",
-  "Almost ready…",
+  "Their island story is taking shape…",
+  "Almost ready to preview…",
 ];
 
 function GeneratingScreen() {
@@ -519,7 +519,7 @@ export default function Home() {
           hostPhone: values.hostPhone || null,
         },
       },
-      { onSuccess: (data) => setLocation(`/trip/${data.slug}`) }
+      { onSuccess: (data) => setLocation(`/trip/${data.slug}?host=1`) }
     );
   }
 
@@ -537,9 +537,15 @@ export default function Home() {
 
         {/* Header */}
         <div className="text-center mb-10">
+          <p className="text-xs tracking-[0.30em] uppercase mb-5 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border" style={{ color: "#937C66", borderColor: "#E0D8D4", background: "#FBF7F5" }}>
+            ✦ Host Portal
+          </p>
           <PureKauaiLogo variant="dark" size="xl" className="mx-auto mb-4" />
-          <p className="text-sm tracking-[0.22em] uppercase" style={{ color: "#937C66" }}>
-            Concierge Services
+          <p className="text-sm tracking-[0.22em] uppercase mb-3" style={{ color: "#937C66" }}>
+            Guest Journey Builder
+          </p>
+          <p className="text-sm max-w-sm mx-auto" style={{ color: "#8A7F7D", lineHeight: 1.6 }}>
+            Complete this form to craft a personalized itinerary for your arriving guests.
           </p>
         </div>
 
