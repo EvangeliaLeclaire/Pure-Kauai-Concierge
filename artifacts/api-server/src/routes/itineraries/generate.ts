@@ -254,7 +254,7 @@ Return ONLY valid JSON. No markdown. No explanation. No code blocks. No backtick
 }`;
 
   const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-5",
+    model: "claude-sonnet-4-6",
     max_tokens: 8192,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],

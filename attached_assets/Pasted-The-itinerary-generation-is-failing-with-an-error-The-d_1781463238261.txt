@@ -1,0 +1,35 @@
+The itinerary generation is failing with an error. The database is confirmed working and empty. The problem is in the Claude API call. Fix this completely by doing the following steps in exact order and tell me the result of each step:
+Step 1: Print the current value of process.env.ANTHROPIC_API_KEY to the server console. Do not print the full key — just print the first 10 characters followed by asterisks so I can confirm it is set without exposing it. Tell me what you see.
+Step 2: Make a direct minimal test call to the Anthropic API right now using this exact configuration and tell me if it succeeds or fails and what the response or error is:
+
+const test = await anthropic.messages.create({
+
+model: "claude-sonnet-4-20250514",
+
+max_tokens: 100,
+
+messages: [{ role: "user", content: "Say hello in one sentence." }]
+
+})
+Step 3: Open generate.ts and show me the exact model name string currently being used in the anthropic.messages.create call. It must be exactly "claude-sonnet-4-20250514" — if it says anything else like "claude-sonnet-4-5" or "claude-3-5-sonnet" or anything different fix it to "claude-sonnet-4-20250514" immediately.
+Step 4: Add a try-catch block around the entire Claude API call in generate.ts that logs the full error message and stack trace to the console if anything fails. Then trigger a test generation and paste the exact error from the console here.
+Step 5: Add a console.log that prints the first 500 characters of the raw Claude response string before any JSON parsing happens. This will show us if Claude is returning valid JSON or something unexpected.
+Step 6: Fix every error you find. Then submit the form with this exact test data and confirm it works:
+
+Guest Name: Test Guest
+
+Check-in: 2025-06-20
+
+Check-out: 2025-06-27
+
+Adults: 2
+
+Children: 0
+
+Special Occasion: Anniversary
+
+Select these services: Private Chef Dinner, Restorative Yoga, Sightseeing Helicopter Charter
+
+Special Notes: Celebrating 10th anniversary. Wife loves yoga. Husband wants the helicopter.
+Tell me the exact error at each step and what you fixed. Do not stop until the itinerary generates successfully and saves to the database.
+
