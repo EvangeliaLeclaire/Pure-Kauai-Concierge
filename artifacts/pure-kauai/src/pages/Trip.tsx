@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { format, parseISO } from "date-fns";
 import {
@@ -412,6 +412,36 @@ export default function Trip() {
       </div>
     );
   }
+
+  // ── Dynamic meta tags ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!itinerary) return;
+    const pageTitle = `Your Pure Kauai Journey — ${itinerary.guestName}`;
+    const pageDesc  = "Your personalized Kauai experience, crafted exclusively for you by Pure Kauai's concierge team.";
+
+    document.title = pageTitle;
+
+    const setMeta = (sel: string, attr: string, val: string) => {
+      let el = document.querySelector(sel) as HTMLMetaElement | null;
+      if (!el) { el = document.createElement("meta"); document.head.appendChild(el); }
+      el.setAttribute(attr, val);
+    };
+
+    setMeta('meta[name="description"]',         "content", pageDesc);
+    setMeta('meta[property="og:title"]',        "content", pageTitle);
+    setMeta('meta[property="og:description"]',  "content", pageDesc);
+    setMeta('meta[name="twitter:title"]',       "content", pageTitle);
+    setMeta('meta[name="twitter:description"]', "content", pageDesc);
+
+    return () => {
+      document.title = "Pure Kauai";
+      setMeta('meta[name="description"]',         "content", "Bespoke luxury villa concierge on Kauai's north shore.");
+      setMeta('meta[property="og:title"]',        "content", "Pure Kauai");
+      setMeta('meta[property="og:description"]',  "content", "Bespoke luxury villa concierge on Kauai's north shore.");
+      setMeta('meta[name="twitter:title"]',       "content", "Pure Kauai");
+      setMeta('meta[name="twitter:description"]', "content", "Bespoke luxury villa concierge on Kauai's north shore.");
+    };
+  }, [itinerary?.guestName]);
 
   // ── Derived values ────────────────────────────────────────────────────────
   const totalGuests = itinerary.adults + itinerary.children;
