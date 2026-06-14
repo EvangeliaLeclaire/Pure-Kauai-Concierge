@@ -377,6 +377,7 @@ const MESSAGES = [
 function GeneratingScreen() {
   const [msgIndex, setMsgIndex] = useState(0);
   const [visible, setVisible] = useState(true);
+  const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -387,6 +388,11 @@ function GeneratingScreen() {
       }, 500);
     }, 4000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => clearInterval(timer);
   }, []);
 
   return (
@@ -438,6 +444,14 @@ function GeneratingScreen() {
         }}
       >
         {MESSAGES[msgIndex]}
+      </p>
+
+      {/* Seconds counter */}
+      <p
+        className="mt-6 text-xs tracking-[0.25em] uppercase tabular-nums"
+        style={{ color: "rgba(235,226,224,0.35)" }}
+      >
+        {seconds}s
       </p>
     </div>
   );
