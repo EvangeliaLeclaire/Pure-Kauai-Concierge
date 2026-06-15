@@ -51,7 +51,7 @@ function StatusBadge({ approved }: { approved: boolean }) {
         borderRadius: "2px",
       }}
     >
-      Approved
+      Confirmed
     </span>
   ) : (
     <span
@@ -187,7 +187,7 @@ export default function Dashboard() {
                 <p className="text-xs tracking-[0.08em]" style={{ color: "#8A7F7D" }}>
                   {itineraries.length} {itineraries.length === 1 ? "itinerary" : "itineraries"} total
                   {" · "}
-                  {itineraries.filter(i => i.approved).length} approved
+                  {itineraries.filter(i => i.approved).length} confirmed
                   {" · "}
                   {itineraries.filter(i => !i.approved).length} pending
                 </p>

@@ -136,28 +136,31 @@ function drawLineItems(doc: any, itinerary: Itinerary, y: number): number {
     for (const item of items) {
       if (y > 680) { doc.addPage(); y = 50; }
 
-      const price = item.pricePerUnit === 0 ? "Complimentary" : fmtMoney(item.totalPrice);
-      doc.font("Helvetica-Bold").fontSize(9.5).fillColor(DARK).text(item.name, 50, y, { width: 340 });
-      doc.font("Helvetica-Bold").fontSize(9.5).fillColor(DARK).text(price, 395, y, { align: "right", width: 150 });
-      y += 15;
-
-      if (item.description) {
-        const descLines = doc.heightOfString(item.description, { width: 340, fontSize: 8 });
-        doc.font("Helvetica").fontSize(8).fillColor(GRAY).text(item.description, 50, y, { width: 340 });
-        y += Math.min(descLines, 28);
-      }
-
+      const itemY = y;
       let unitText = "";
       if (item.pricePerUnit > 0 && item.unit === "flat rate") {
         unitText = "Flat rate";
       } else if (item.pricePerUnit > 0) {
         unitText = `${fmtMoney(item.pricePerUnit)} × ${item.quantity} ${item.unit}`;
       }
-      if (unitText) {
-        doc.font("Helvetica").fontSize(8).fillColor(LIGHT_GRAY).text(unitText, 395, y - Math.min(doc.heightOfString(item.description ?? "", { width: 340, fontSize: 8 }), 28), { align: "right", width: 150 });
+
+      // Left column: name then description
+      doc.font("Helvetica-Bold").fontSize(9.5).fillColor(DARK).text(item.name, 50, itemY, { width: 340 });
+      let leftY = itemY + 15;
+      if (item.description) {
+        const descH = Math.min(doc.heightOfString(item.description, { width: 340, fontSize: 8 }), 30);
+        doc.font("Helvetica").fontSize(8).fillColor(GRAY).text(item.description, 50, leftY, { width: 340, height: 30 });
+        leftY += descH;
       }
 
-      y += 10;
+      // Right column: price aligned to name row, unit info one line below
+      const price = item.pricePerUnit === 0 ? "Complimentary" : fmtMoney(item.totalPrice);
+      doc.font("Helvetica-Bold").fontSize(9.5).fillColor(DARK).text(price, 395, itemY, { align: "right", width: 150 });
+      if (unitText) {
+        doc.font("Helvetica").fontSize(8).fillColor(LIGHT_GRAY).text(unitText, 395, itemY + 15, { align: "right", width: 150 });
+      }
+
+      y = Math.max(leftY, itemY + (unitText ? 30 : 15)) + 8;
       doc.moveTo(50, y).lineTo(545, y).strokeColor(FAINT_LINE).lineWidth(0.5).stroke();
       y += 10;
     }
