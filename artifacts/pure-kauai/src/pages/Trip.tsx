@@ -1507,7 +1507,7 @@ export default function Trip() {
               )}
             </>
           ) : (
-            /* ── GUEST BAR: approve + print ──────────────────────────── */
+            /* ── GUEST BAR: print + share ────────────────────────────── */
             <>
               <button
                 onClick={() => window.print()}
@@ -1518,14 +1518,16 @@ export default function Trip() {
                 <span className="hidden sm:inline">Print</span>
               </button>
 
-              <div className="flex-1" />
+              <button
+                onClick={handleCopyLink}
+                className="flex items-center justify-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase border py-3.5 px-4 sm:px-6 transition-all duration-200 hover:border-[#053E50]/40"
+                style={{ borderColor: "#E8E0DB", color: copied ? "#37729A" : "#5C5350", borderRadius: "1px" }}
+              >
+                {copied ? <Check className="h-4 w-4 shrink-0" /> : <Link2 className="h-4 w-4 shrink-0" />}
+                <span className="hidden sm:inline">{copied ? "Copied!" : "Share"}</span>
+              </button>
 
-              {grandTotal > 0 && (
-                <div className="hidden sm:flex flex-col items-end mr-3">
-                  <span className="text-xs" style={{ color: "#A5948D" }}>Journey total</span>
-                  <span className="text-sm font-medium" style={{ color: "#053E50" }}>{fmt(grandTotal)}</span>
-                </div>
-              )}
+              <div className="flex-1" />
 
               {itinerary.approved ? (
                 <div className="flex items-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase py-3.5 px-5 sm:px-8 bg-emerald-50 border border-emerald-200 text-emerald-700" style={{ borderRadius: "1px" }}>
