@@ -2,7 +2,7 @@
 
 **A luxury itinerary platform for Pure Kauai villa hosts.** The concierge fills out a short guest form, Claude AI generates a bespoke day-by-day itinerary with Kauai photography, and a shareable link lets guests read their journey, review the services & quote, and formally approve it.
 
-🌐 **[Live App](https://pure-kauai.replit.app)**
+🌐 **[Live App](https://kauai-concierge.replit.app)**
 
 ---
 
