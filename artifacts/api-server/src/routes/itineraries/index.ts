@@ -137,6 +137,13 @@ router.post("/itineraries", async (req, res) => {
     return;
   }
 
+  // Reject past check-in dates (compare against Hawaii Standard Time, UTC-10, no DST)
+  const hawaiiToday = new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString().split("T")[0];
+  if (checkIn < hawaiiToday) {
+    res.status(400).json({ error: "Check-in date cannot be in the past" });
+    return;
+  }
+
   // Stream SSE to keep the proxy connection alive during Claude generation (~30–120s)
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");

@@ -364,6 +364,14 @@ const formSchema = z.object({
 }).refine((d) => !d.checkIn || !d.checkOut || d.checkOut > d.checkIn, {
   message: "Check-out must be after check-in",
   path: ["checkOut"],
+}).refine((d) => {
+  if (!d.checkIn) return true;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return d.checkIn >= today;
+}, {
+  message: "Check-in date cannot be in the past",
+  path: ["checkIn"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -467,6 +475,9 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -639,7 +650,7 @@ export default function Home() {
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus disabled={{ before: today }} />
                       </PopoverContent>
                     </Popover>
                     <FormMessage />
@@ -658,7 +669,7 @@ export default function Home() {
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus disabled={{ before: form.watch("checkIn") ?? today }} />
                       </PopoverContent>
                     </Popover>
                     <FormMessage />
