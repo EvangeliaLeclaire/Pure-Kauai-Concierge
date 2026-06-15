@@ -268,13 +268,17 @@ function AddServiceModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const [catalog, setCatalog] = useState<CatalogEntry[]>([]);
-  const [search,  setSearch]  = useState("");
-  const [adding,  setAdding]  = useState<string | null>(null);
-  const [error,   setError]   = useState<string | null>(null);
+  const [catalog,      setCatalog]      = useState<CatalogEntry[]>([]);
+  const [catalogError, setCatalogError] = useState(false);
+  const [search,       setSearch]       = useState("");
+  const [adding,       setAdding]       = useState<string | null>(null);
+  const [error,        setError]        = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/catalog").then(r => r.json()).then(setCatalog).catch(() => {});
+    fetch("/api/catalog")
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(setCatalog)
+      .catch(() => setCatalogError(true));
   }, []);
 
   const nights      = Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86_400_000);
@@ -349,7 +353,11 @@ function AddServiceModal({
         </div>
 
         <div className="overflow-y-auto flex-1">
-          {catalog.length === 0 ? (
+          {catalogError ? (
+            <div className="p-8 text-center text-sm" style={{ color: "#B45309" }}>
+              Could not load services. Please close and try again.
+            </div>
+          ) : catalog.length === 0 ? (
             <div className="flex items-center justify-center h-32">
               <div className="h-5 w-5 border-2 border-[#053E50]/20 border-t-[#053E50] rounded-full animate-spin" />
             </div>
@@ -788,8 +796,8 @@ export default function Trip() {
   const isHostMode   = new URLSearchParams(search).get("host")    === "1";
   const journeyOnly  = new URLSearchParams(search).get("journey") === "1";
   const queryClient = useQueryClient();
-  const { data: itinerary, isLoading } = useGetItinerary(id, {
-    query: { enabled: !!id, queryKey: getGetItineraryQueryKey(id) },
+  const { data: itinerary, isLoading, isError } = useGetItinerary(id, {
+    query: { enabled: !!id, queryKey: getGetItineraryQueryKey(id), retry: false },
   });
 
   const approveItinerary = useApproveItinerary();
@@ -847,7 +855,7 @@ export default function Trip() {
   }, [id]);
 
   // ── Loading ───────────────────────────────────────────────────────────────
-  if (isLoading) {
+  if (isLoading && !isError) {
     return (
       <div className="min-h-screen bg-[#FAF8F6]">
         <div className="h-[60vh] bg-[#053E50] flex flex-col items-center justify-center gap-6">
@@ -870,14 +878,14 @@ export default function Trip() {
           <PureKauaiLogo variant="dark" size="lg" className="mx-auto mb-8" />
           <h2 className="text-2xl font-serif font-light text-[#053E50] mb-3">Journey Not Found</h2>
           <p className="text-[#8A7F7D] text-sm leading-relaxed mb-6">
-            This itinerary link may have expired. Itineraries are stored temporarily — if the server restarted since it was generated, you'll need to regenerate it.
+            This link doesn't match any itinerary we have on record. Please double-check the URL or ask your concierge to resend it.
           </p>
           <a
             href="/"
             className="inline-flex items-center gap-2 text-sm tracking-[0.12em] uppercase text-white px-8 py-4 transition-opacity hover:opacity-80"
             style={{ background: "#053E50", borderRadius: "1px" }}
           >
-            Generate New Itinerary
+            Return to Concierge Portal
           </a>
         </div>
       </div>
