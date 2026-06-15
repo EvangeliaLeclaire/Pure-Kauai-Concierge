@@ -10,6 +10,14 @@ export interface InvoiceItem {
   unsplashKeyword: string | null;
   photoUrl: string | null;
   notes: string | null;
+  /** Number of children charged (when different from adult pricing) */
+  childQty?: number;
+  /** Per-child price (when different from adult price) */
+  childPricePerUnit?: number;
+  /** Children's total (childQty × childPricePerUnit, already included in totalPrice) */
+  childTotal?: number;
+  /** Short note about age/child policy (e.g. "Ages 16+ only", "Children: complimentary") */
+  childNote?: string;
 }
 
 export interface ItineraryActivity {

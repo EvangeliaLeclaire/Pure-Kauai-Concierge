@@ -22,4 +22,9 @@ export interface InvoiceItem {
   photoUrl?: string | null;
   /** @nullable */
   notes?: string | null;
+  childQty?: number;
+  childPricePerUnit?: number;
+  childTotal?: number;
+  /** @nullable */
+  childNote?: string | null;
 }

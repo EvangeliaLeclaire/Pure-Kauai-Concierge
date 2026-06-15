@@ -306,6 +306,14 @@ components:
           type: ["string", "null"]
         notes:
           type: ["string", "null"]
+        childQty:
+          type: integer
+        childPricePerUnit:
+          type: number
+        childTotal:
+          type: number
+        childNote:
+          type: ["string", "null"]
 
     ItineraryActivity:
       type: object

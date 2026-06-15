@@ -111,6 +111,8 @@ function EmailGuestModal({
   body: string;
   onClose: () => void;
 }) {
+  const [editSubject, setEditSubject] = useState(subject);
+  const [editBody,    setEditBody]    = useState(body);
   const [copiedSubject, setCopiedSubject] = useState(false);
   const [copiedBody,    setCopiedBody]    = useState(false);
 
@@ -128,7 +130,7 @@ function EmailGuestModal({
 
   const tryMailto = () => {
     window.open(
-      `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+      `mailto:?subject=${encodeURIComponent(editSubject)}&body=${encodeURIComponent(editBody)}`,
       "_blank"
     );
   };
@@ -152,9 +154,15 @@ function EmailGuestModal({
           <div className="mb-4">
             <p className="text-xs tracking-[0.14em] uppercase mb-1.5" style={{ color: "#8A7F7D" }}>Subject</p>
             <div className="flex items-center gap-2 border border-[#E8E0DB] px-3 py-2.5" style={{ borderRadius: "1px" }}>
-              <p className="flex-1 text-sm truncate" style={{ color: "#1A2E35" }}>{subject}</p>
+              <input
+                type="text"
+                value={editSubject}
+                onChange={(e) => setEditSubject(e.target.value)}
+                className="flex-1 text-sm bg-transparent outline-none min-w-0"
+                style={{ color: "#1A2E35" }}
+              />
               <button
-                onClick={() => copy(subject, "subject")}
+                onClick={() => copy(editSubject, "subject")}
                 className="shrink-0 flex items-center gap-1 text-xs transition-colors"
                 style={{ color: copiedSubject ? "#37729A" : "#B0A9A6" }}
               >
@@ -169,7 +177,7 @@ function EmailGuestModal({
             <div className="flex items-center justify-between mb-1.5">
               <p className="text-xs tracking-[0.14em] uppercase" style={{ color: "#8A7F7D" }}>Message</p>
               <button
-                onClick={() => copy(body, "body")}
+                onClick={() => copy(editBody, "body")}
                 className="flex items-center gap-1 text-xs transition-colors"
                 style={{ color: copiedBody ? "#37729A" : "#B0A9A6" }}
               >
@@ -177,12 +185,12 @@ function EmailGuestModal({
                 {copiedBody ? "Copied" : "Copy"}
               </button>
             </div>
-            <div
-              className="border border-[#E8E0DB] px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap select-all"
-              style={{ color: "#4A4340", background: "#FAF8F6", borderRadius: "1px", maxHeight: "220px", overflowY: "auto" }}
-            >
-              {body}
-            </div>
+            <textarea
+              value={editBody}
+              onChange={(e) => setEditBody(e.target.value)}
+              className="w-full border border-[#E8E0DB] px-4 py-3 text-sm leading-relaxed resize-none outline-none focus:border-[#053E50]/30 transition-colors"
+              style={{ color: "#4A4340", background: "#FAF8F6", borderRadius: "1px", height: "220px" }}
+            />
           </div>
 
           <div className="flex gap-3">
@@ -604,6 +612,14 @@ function InvoicePanel({
                            item.quantity}
                         </p>
                       )}
+                      {/* Child pricing breakdown */}
+                      {item.childQty && item.childPricePerUnit && item.childTotal ? (
+                        <p className="text-xs mt-0.5" style={{ color: "#A5948D" }}>
+                          {fmt(item.childPricePerUnit)} × {item.childQty} {item.childQty !== 1 ? "children" : "child"}
+                        </p>
+                      ) : item.childNote ? (
+                        <p className="text-xs mt-1 italic" style={{ color: "#B0A9A6" }}>{item.childNote}</p>
+                      ) : null}
                       {/* Host qty stepper */}
                       {isHostMode && item.pricePerUnit > 0 && item.unit !== "flat rate" && onQtyChange && (
                         <div className="print-hide flex items-center gap-1 mt-2 justify-end">

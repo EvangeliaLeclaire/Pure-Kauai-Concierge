@@ -16,6 +16,10 @@ export interface ServiceEntry {
   priceAmount: number;
   pricingModel: PricingModel;
   unsplashKeyword: string;
+  /** Separate per-child price for per_adult activities where children participate at a reduced rate */
+  childPriceAmount?: number;
+  /** Display note for age restrictions or special child policy (adults-only, minimum age, etc.) */
+  childNote?: string;
 }
 
 export const SERVICE_CATALOG: ServiceEntry[] = [
@@ -157,6 +161,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 325,
     pricingModel: "per_adult",
     unsplashKeyword: "omakase sushi private chef luxury dinner hawaii",
+    childNote: "Adults only (18+) — children's menu available separately on request",
   },
   {
     name: "Private Bartender & Mixologist",
@@ -281,6 +286,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 250,
     pricingModel: "per_adult",
     unsplashKeyword: "lomilomi massage hawaii tropical spa wellness",
+    childNote: "Ages 18+ (adults only)",
   },
   {
     name: "Couples Massage",
@@ -301,6 +307,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 295,
     pricingModel: "per_adult",
     unsplashKeyword: "luxury spa massage facial hawaii tropical",
+    childNote: "Ages 18+ (adults only)",
   },
   {
     name: "Sound Bath & Healing Ceremony",
@@ -331,6 +338,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 120,
     pricingModel: "per_adult",
     unsplashKeyword: "pilates workout luxury villa ocean view hawaii",
+    childNote: "Ages 16+ (adults only)",
   },
   {
     name: "Meditation & Breathwork",
@@ -351,6 +359,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 150,
     pricingModel: "per_adult",
     unsplashKeyword: "reiki energy healing spiritual wellness hawaii",
+    childNote: "Ages 16+ (please enquire for younger guests)",
   },
 
   // ── PERSONALIZED ACTIVITIES & ADVENTURES — BY AIR ─────────────────────────
@@ -363,6 +372,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 395,
     pricingModel: "per_adult",
     unsplashKeyword: "Na Pali Coast aerial Kauai helicopter scenic",
+    childPriceAmount: 250,
   },
   {
     name: "Doors-Off Helicopter — Na Pali & Waimea Canyon",
@@ -373,6 +383,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 450,
     pricingModel: "per_adult",
     unsplashKeyword: "helicopter doors off Kauai aerial Waimea Canyon",
+    childNote: "Ages 12+ only (safety requirement)",
   },
 
   // ── PERSONALIZED ACTIVITIES & ADVENTURES — BY SEA ─────────────────────────
@@ -405,6 +416,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 350,
     pricingModel: "per_adult",
     unsplashKeyword: "deep sea fishing charter hawaii ocean tuna",
+    childNote: "Ages 12+ (offshore sea conditions vary)",
   },
   {
     name: "Whale Watching Charter",
@@ -435,6 +447,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 95,
     pricingModel: "per_adult",
     unsplashKeyword: "kayaking paddleboard Hawaii ocean coast adventure",
+    childPriceAmount: 65,
   },
 
   // ── PERSONALIZED ACTIVITIES & ADVENTURES — BY LAND ────────────────────────
@@ -477,6 +490,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 195,
     pricingModel: "per_adult",
     unsplashKeyword: "ATV adventure tour Hawaii jungle off-road Kauai",
+    childNote: "Ages 16+ only (safety requirement)",
   },
   {
     name: "Ziplining — North Shore",
@@ -487,6 +501,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 175,
     pricingModel: "per_adult",
     unsplashKeyword: "ziplining adventure Hawaii tropical canopy north shore",
+    childPriceAmount: 130,
   },
   {
     name: "Mountain Tubing",
@@ -497,6 +512,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 145,
     pricingModel: "per_adult",
     unsplashKeyword: "mountain tubing Hawaii irrigation tunnel Kauai adventure",
+    childPriceAmount: 110,
   },
   {
     name: "Horseback Riding",
@@ -507,6 +523,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 175,
     pricingModel: "per_adult",
     unsplashKeyword: "horseback riding Hawaii Kauai ocean trail tropical",
+    childPriceAmount: 125,
   },
 
   // ── PERSONALIZED ACTIVITIES & ADVENTURES — FAMILY & KIDS ─────────────────
@@ -591,6 +608,7 @@ export const SERVICE_CATALOG: ServiceEntry[] = [
     priceAmount: 395,
     pricingModel: "per_adult",
     unsplashKeyword: "golf course Princeville Makai Kauai ocean view luxury",
+    childNote: "Adults only (18+)",
   },
   {
     name: "Stargazing Experience with Astronomer",

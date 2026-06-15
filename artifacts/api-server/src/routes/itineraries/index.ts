@@ -81,6 +81,21 @@ function buildInvoice(
 
     if (quantity === 0) return [];
 
+    // Child pricing for per_adult services
+    let childQty: number | undefined;
+    let childPricePerUnit: number | undefined;
+    let childTotal: number | undefined;
+    let childNote: string | undefined;
+    if (entry.pricingModel === "per_adult" && children > 0) {
+      if (entry.childPriceAmount !== undefined && entry.childPriceAmount > 0) {
+        childQty = children;
+        childPricePerUnit = entry.childPriceAmount;
+        childTotal = children * entry.childPriceAmount;
+      } else if (entry.childNote) {
+        childNote = entry.childNote;
+      }
+    }
+
     return [{
       name: entry.name,
       category: entry.invoiceCategory,
@@ -89,10 +104,14 @@ function buildInvoice(
       pricePerUnit: entry.priceAmount,
       quantity,
       unit,
-      totalPrice: entry.priceAmount * quantity,
+      totalPrice: entry.priceAmount * quantity + (childTotal ?? 0),
       unsplashKeyword: entry.unsplashKeyword,
       photoUrl: null,
       notes: null,
+      childQty,
+      childPricePerUnit,
+      childTotal,
+      childNote,
     }];
   });
 }
@@ -332,6 +351,21 @@ router.post("/itineraries/:id/add-service", async (req, res) => {
     case "complimentary":  quantity = 1;           unit = `complimentary`;  break;
   }
 
+  // Child pricing for per_adult services
+  let childQty: number | undefined;
+  let childPricePerUnit: number | undefined;
+  let childTotal: number | undefined;
+  let childNote: string | undefined;
+  if (entry.pricingModel === "per_adult" && children > 0) {
+    if (entry.childPriceAmount !== undefined && entry.childPriceAmount > 0) {
+      childQty = children;
+      childPricePerUnit = entry.childPriceAmount;
+      childTotal = children * entry.childPriceAmount;
+    } else if (entry.childNote) {
+      childNote = entry.childNote;
+    }
+  }
+
   const newItem: InvoiceItem = {
     name:          entry.name,
     category:      entry.invoiceCategory,
@@ -340,10 +374,14 @@ router.post("/itineraries/:id/add-service", async (req, res) => {
     pricePerUnit:  entry.priceAmount,
     quantity,
     unit,
-    totalPrice:    entry.priceAmount * quantity,
+    totalPrice:    entry.priceAmount * quantity + (childTotal ?? 0),
     unsplashKeyword: entry.unsplashKeyword,
     photoUrl:      null,
     notes:         null,
+    childQty,
+    childPricePerUnit,
+    childTotal,
+    childNote,
   };
 
   const updated = await updateItinerary(req.params.id, {
