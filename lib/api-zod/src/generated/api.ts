@@ -84,6 +84,19 @@ export const UpdateItineraryBody = zod.object({
   "unsplashKeyword": zod.string(),
   "photoUrl": zod.string().nullish()
 }))
+})).optional(),
+  "invoice": zod.array(zod.object({
+  "name": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "duration": zod.string().nullish(),
+  "pricePerUnit": zod.number(),
+  "quantity": zod.number(),
+  "unit": zod.string(),
+  "totalPrice": zod.number(),
+  "unsplashKeyword": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "notes": zod.string().nullish()
 })).optional()
 })
 
@@ -134,6 +147,8 @@ export const UpdateItineraryResponse = zod.object({
   "notes": zod.string().nullish()
 })),
   "approved": zod.boolean(),
+  "invoiceNumber": zod.string().nullish(),
+  "approvedAt": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
@@ -192,6 +207,8 @@ export const GetItineraryResponse = zod.object({
   "notes": zod.string().nullish()
 })),
   "approved": zod.boolean(),
+  "invoiceNumber": zod.string().nullish(),
+  "approvedAt": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
@@ -250,6 +267,8 @@ export const ApproveItineraryResponse = zod.object({
   "notes": zod.string().nullish()
 })),
   "approved": zod.boolean(),
+  "invoiceNumber": zod.string().nullish(),
+  "approvedAt": zod.string().nullish(),
   "createdAt": zod.string()
 })
 

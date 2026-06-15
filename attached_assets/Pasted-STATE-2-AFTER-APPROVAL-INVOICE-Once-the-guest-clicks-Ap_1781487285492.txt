@@ -1,0 +1,70 @@
+STATE 2 — AFTER APPROVAL — INVOICE:
+
+Once the guest clicks Approve and the approved status is true in the database everything changes
+
+The tab label changes to Your Invoice
+
+The document title shows: Pure Kauai Experience Invoice
+
+Generate a sequential invoice number formatted as PK-2025-[4 digit number] based on the order itineraries were approved
+
+Below the title show: Invoice Number: PK-2025-0001
+
+Below that show: Invoice Date: [approval date]
+
+Below that show: Prepared for: [Guest Name]
+
+Below that show: Status: Confirmed in green color with a checkmark
+
+Below that show: Deposit Due: [approval date plus 7 days]
+
+Below that show: Balance Due: [check-in date minus 30 days]
+
+Remove the Approve button entirely — replace with a green Confirmed badge
+
+Show this text instead: Your journey has been confirmed. Your concierge will be in touch within 24 hours to process your deposit and confirm all reservations.
+
+The download button says: Download Invoice PDF
+
+The print button says: Print Invoice
+
+The totals section shows: Invoice Total
+
+The deposit line shows the actual amount due with the due date
+
+ADD a signature line at the bottom of the invoice PDF only:
+
+Guest Signature: _________________________ Date: _____________
+
+Authorized by: _________________________ Date: _____________
+UPDATE THE PDF ROUTES:
+
+Before approval: GET /api/itineraries/:slug/quote-pdf downloads a Quote PDF
+
+After approval: GET /api/itineraries/:slug/invoice-pdf downloads an Invoice PDF
+
+Both use the same pdfkit formatting but with different titles, status, and content
+
+The invoice PDF includes the invoice number, approval date, payment due dates, and signature lines
+
+The quote PDF does not include invoice number or signature lines
+UPDATE THE JOURNEY PDF:
+
+The journey PDF is always available regardless of approval status
+
+It never mentions pricing or payment
+
+It is purely the experiential itinerary document
+UPDATE THE EMAIL TO GUEST BUTTON:
+
+Before approval the pre-written email says:
+
+Subject: Your Pure Kauai Journey Awaits — [Guest Name]
+
+Body: Dear [Guest Name], your personalized Kauai experience quote is ready for your review. Please follow the link below to explore your journey, review your quote, and approve your booking. We cannot wait to welcome you to the island. With aloha, [Host Name]
+After approval the pre-written email says:
+
+Subject: Your Pure Kauai Journey is Confirmed — [Guest Name]
+
+Body: Dear [Guest Name], your Kauai journey has been confirmed. Please find your invoice attached. Your concierge will be in touch within 24 hours to process your deposit and confirm all reservations. With aloha, [Host Name]
+

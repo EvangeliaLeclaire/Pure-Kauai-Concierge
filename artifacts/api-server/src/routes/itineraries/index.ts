@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { randomUUID } from "crypto";
-import { saveItinerary, getItinerary, updateItinerary, slugExists, listItineraries } from "./store.js";
+import { saveItinerary, getItinerary, updateItinerary, slugExists, listItineraries, countApprovedItineraries } from "./store.js";
 import { generateItinerary, fetchUnsplashPhotos } from "./generate.js";
 import { catalogByName } from "../../data/catalog.js";
+import { streamQuotePDF, streamInvoicePDF } from "./pdf.js";
 import type { Itinerary, InvoiceItem } from "./types.js";
 
 // ── Slug generation ──────────────────────────────────────────────────────────
@@ -244,19 +245,57 @@ router.get("/itineraries/:id", async (req, res) => {
 });
 
 router.patch("/itineraries/:id", async (req, res) => {
-  const { welcomeMessage, days } = req.body as { welcomeMessage?: string | null; days?: Itinerary["days"] };
+  const { welcomeMessage, days, invoice } = req.body as {
+    welcomeMessage?: string | null;
+    days?: Itinerary["days"];
+    invoice?: Itinerary["invoice"];
+  };
   const patch: Partial<Itinerary> = {};
   if (welcomeMessage !== undefined) patch.welcomeMessage = welcomeMessage;
   if (days !== undefined) patch.days = days;
+  if (invoice !== undefined) patch.invoice = invoice;
   const updated = await updateItinerary(req.params.id, patch);
   if (!updated) { res.status(404).json({ error: "Itinerary not found" }); return; }
   res.json(updated);
 });
 
 router.post("/itineraries/:id/approve", async (req, res) => {
-  const updated = await updateItinerary(req.params.id, { approved: true });
+  const existing = await getItinerary(req.params.id);
+  if (!existing) { res.status(404).json({ error: "Itinerary not found" }); return; }
+  if (existing.approved) {
+    res.json(existing);
+    return;
+  }
+  const count = await countApprovedItineraries();
+  const year = new Date().getFullYear();
+  const invoiceNumber = `PK-${year}-${String(count + 1).padStart(4, "0")}`;
+  const approvedAt = new Date().toISOString().split("T")[0];
+  const updated = await updateItinerary(req.params.id, { approved: true, invoiceNumber, approvedAt });
   if (!updated) { res.status(404).json({ error: "Itinerary not found" }); return; }
   res.json(updated);
+});
+
+router.get("/itineraries/:id/quote-pdf", async (req, res) => {
+  const itinerary = await getItinerary(req.params.id);
+  if (!itinerary) { res.status(404).json({ error: "Itinerary not found" }); return; }
+  try {
+    streamQuotePDF(itinerary, res);
+  } catch (err) {
+    req.log.error({ err }, "quote-pdf generation failed");
+    if (!res.headersSent) res.status(500).json({ error: "PDF generation failed" });
+  }
+});
+
+router.get("/itineraries/:id/invoice-pdf", async (req, res) => {
+  const itinerary = await getItinerary(req.params.id);
+  if (!itinerary) { res.status(404).json({ error: "Itinerary not found" }); return; }
+  if (!itinerary.approved) { res.status(400).json({ error: "Itinerary not yet approved" }); return; }
+  try {
+    streamInvoicePDF(itinerary, res);
+  } catch (err) {
+    req.log.error({ err }, "invoice-pdf generation failed");
+    if (!res.headersSent) res.status(500).json({ error: "PDF generation failed" });
+  }
 });
 
 export default router;

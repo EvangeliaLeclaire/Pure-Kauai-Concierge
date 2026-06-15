@@ -357,6 +357,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ItineraryDay"
+        invoice:
+          type: array
+          items:
+            $ref: "#/components/schemas/InvoiceItem"
 
     ItineraryListItem:
       type: object
@@ -476,5 +480,9 @@ components:
             $ref: "#/components/schemas/InvoiceItem"
         approved:
           type: boolean
+        invoiceNumber:
+          type: ["string", "null"]
+        approvedAt:
+          type: ["string", "null"]
         createdAt:
           type: string

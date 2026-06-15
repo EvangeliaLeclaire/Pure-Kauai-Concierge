@@ -2,6 +2,14 @@ import { db, itinerariesTable } from "@workspace/db";
 import { eq, or, desc } from "drizzle-orm";
 import type { Itinerary, ItineraryListItem } from "./types.js";
 
+export async function countApprovedItineraries(): Promise<number> {
+  const rows = await db
+    .select({ id: itinerariesTable.id })
+    .from(itinerariesTable)
+    .where(eq(itinerariesTable.approved, true));
+  return rows.length;
+}
+
 export async function saveItinerary(itinerary: Itinerary): Promise<void> {
   await db.insert(itinerariesTable).values({
     id:       itinerary.id,

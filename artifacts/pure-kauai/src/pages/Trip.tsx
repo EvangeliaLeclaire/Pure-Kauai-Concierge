@@ -1,11 +1,11 @@
 import { Fragment, useState, useEffect } from "react";
 import { useParams, useSearch } from "wouter";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, addDays, subDays } from "date-fns";
 import {
   Clock, Users, Calendar,
   Sun, Sunset, Moon,
-  Printer, Check, Link2, Mail, X, ChevronRight,
-  Phone, MessageSquare, Pencil, Trash2, MoveRight, Copy,
+  Printer, Download, Check, Link2, Mail, X, ChevronRight,
+  Phone, MessageSquare, Pencil, Trash2, MoveRight, Copy, Minus, Plus,
 } from "lucide-react";
 import { useGetItinerary, useApproveItinerary, useUpdateItinerary, getGetItineraryQueryKey } from "@workspace/api-client-react";
 import type { InvoiceItem, ItineraryPatch } from "@workspace/api-client-react";
@@ -248,11 +248,12 @@ function ApproveModal({ guestName, onClose }: { guestName: string; onClose: () =
 // ─── Invoice Panel ────────────────────────────────────────────────────────────
 
 function InvoicePanel({
-  title, items, guestName, checkIn, checkOut, adults, children,
-  hostName, hostEmail, hostPhone, itineraryId, approved,
+  items, guestName, checkIn, checkOut, adults, children,
+  hostName, hostEmail, hostPhone, itineraryId, slug, approved,
+  invoiceNumber, approvedAt,
   onApprove, isPending, isHostMode,
+  onQtyChange, isQtyPending,
 }: {
-  title: string;
   items: InvoiceItem[];
   guestName: string;
   checkIn: string;
@@ -263,23 +264,32 @@ function InvoicePanel({
   hostEmail: string | null | undefined;
   hostPhone: string | null | undefined;
   itineraryId: string;
+  slug: string;
   approved: boolean;
+  invoiceNumber: string | null | undefined;
+  approvedAt: string | null | undefined;
   onApprove: () => void;
   isPending: boolean;
   isHostMode?: boolean;
+  onQtyChange?: (idx: number, delta: number) => void;
+  isQtyPending?: boolean;
 }) {
   const totalGuests = adults + children;
   const subtotal = items.reduce((s, i) => s + i.totalPrice, 0);
   const deposit  = subtotal * 0.5;
+  const depositDue = approvedAt ? addDays(parseISO(approvedAt), 7) : null;
+  const balanceDue = subDays(parseISO(checkIn), 30);
 
-  // Group by category (fall back to "Services" if category is missing)
-  const grouped = items.reduce<Record<string, InvoiceItem[]>>((acc, item) => {
+  const grouped = items.reduce<Record<string, Array<{ item: InvoiceItem; globalIdx: number }>>>((acc, item, idx) => {
     const cat = item.category || "Services";
     acc[cat] = acc[cat] ?? [];
-    acc[cat].push(item);
+    acc[cat].push({ item, globalIdx: idx });
     return acc;
   }, {});
   const categories = Object.keys(grouped);
+
+  const docTitle = approved ? "Pure Kauai Experience Invoice" : "Services & Quote";
+  const pdfHref  = `/api/itineraries/${slug}/${approved ? "invoice-pdf" : "quote-pdf"}`;
 
   return (
     <div className="pb-40">
@@ -299,20 +309,61 @@ function InvoicePanel({
           </div>
           <div className="text-right">
             <h2 className="text-2xl font-light" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
-              {title}
+              {docTitle}
             </h2>
-            {approved && (
-              <div className="inline-flex items-center gap-1.5 mt-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs tracking-[0.12em] uppercase px-3 py-1.5">
-                <Check className="h-3 w-3" />
-                Approved
+            {approved ? (
+              <>
+                {invoiceNumber && (
+                  <p className="text-xs mt-2" style={{ color: "#8A7F7D" }}>
+                    Invoice No: <span className="font-semibold" style={{ color: "#053E50" }}>{invoiceNumber}</span>
+                  </p>
+                )}
+                {approvedAt && (
+                  <p className="text-xs mt-0.5" style={{ color: "#B0A9A6" }}>
+                    Invoice Date: {format(parseISO(approvedAt), "MMMM d, yyyy")}
+                  </p>
+                )}
+                <div className="inline-flex items-center gap-1.5 mt-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs tracking-[0.12em] uppercase px-3 py-1.5">
+                  <Check className="h-3 w-3" />
+                  Confirmed
+                </div>
+              </>
+            ) : (
+              <div className="mt-3 space-y-0.5">
+                <p className="text-xs" style={{ color: "#B0A9A6" }}>Ref: {itineraryId.slice(0, 8).toUpperCase()}</p>
+                <p className="text-xs" style={{ color: "#B0A9A6" }}>{format(new Date(), "MMMM d, yyyy")}</p>
               </div>
             )}
-            <div className="mt-3 space-y-0.5">
-              <p className="text-xs" style={{ color: "#B0A9A6" }}>Ref: {itineraryId.slice(0, 8).toUpperCase()}</p>
-              <p className="text-xs" style={{ color: "#B0A9A6" }}>{format(new Date(), "MMMM d, yyyy")}</p>
-            </div>
           </div>
         </div>
+
+        {/* Invoice meta bar (only when approved) */}
+        {approved && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10 px-5 py-4 border border-emerald-100" style={{ background: "rgba(236,253,245,0.6)", borderRadius: "2px" }}>
+            {invoiceNumber && (
+              <div>
+                <p className="text-xs tracking-[0.16em] uppercase mb-1" style={{ color: "#8A7F7D" }}>Invoice #</p>
+                <p className="text-sm font-medium" style={{ color: "#053E50" }}>{invoiceNumber}</p>
+              </div>
+            )}
+            {approvedAt && (
+              <div>
+                <p className="text-xs tracking-[0.16em] uppercase mb-1" style={{ color: "#8A7F7D" }}>Invoice Date</p>
+                <p className="text-sm" style={{ color: "#053E50" }}>{format(parseISO(approvedAt), "MMMM d, yyyy")}</p>
+              </div>
+            )}
+            {depositDue && (
+              <div>
+                <p className="text-xs tracking-[0.16em] uppercase mb-1" style={{ color: "#8A7F7D" }}>Deposit Due</p>
+                <p className="text-sm font-medium" style={{ color: "#053E50" }}>{format(depositDue, "MMMM d, yyyy")}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-xs tracking-[0.16em] uppercase mb-1" style={{ color: "#8A7F7D" }}>Balance Due</p>
+              <p className="text-sm" style={{ color: "#053E50" }}>{format(balanceDue, "MMMM d, yyyy")}</p>
+            </div>
+          </div>
+        )}
 
         {/* Guest block */}
         <div className="grid grid-cols-2 gap-8 mb-10 pb-8 border-b border-[#E8E0DB]">
@@ -345,9 +396,9 @@ function InvoicePanel({
             <p className="text-xs tracking-[0.22em] uppercase mb-4 font-medium pb-2 border-b border-[#F0ECEA]" style={{ color: "#37729A" }}>
               {cat}
             </p>
-            {grouped[cat].map((item, i) => (
+            {grouped[cat].map(({ item, globalIdx }) => (
               <div
-                key={i}
+                key={globalIdx}
                 className="flex gap-4 py-5 border-b border-[#F7F3F1] items-start"
               >
                 {/* Photo */}
@@ -400,6 +451,32 @@ function InvoicePanel({
                            item.quantity}
                         </p>
                       )}
+                      {/* Host qty stepper */}
+                      {isHostMode && item.pricePerUnit > 0 && item.unit !== "flat rate" && onQtyChange && (
+                        <div className="print-hide flex items-center gap-1 mt-2 justify-end">
+                          <button
+                            onClick={() => onQtyChange(globalIdx, -1)}
+                            disabled={item.quantity <= 1 || isQtyPending}
+                            className="flex h-6 w-6 items-center justify-center border border-[#E8E0DB] hover:border-[#053E50]/40 disabled:opacity-30 transition-colors"
+                            style={{ borderRadius: "1px", color: "#8A7F7D" }}
+                            title="Decrease quantity"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </button>
+                          <span className="text-xs font-medium text-center" style={{ color: "#053E50", minWidth: "1.25rem" }}>
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => onQtyChange(globalIdx, +1)}
+                            disabled={isQtyPending}
+                            className="flex h-6 w-6 items-center justify-center border border-[#E8E0DB] hover:border-[#053E50]/40 disabled:opacity-30 transition-colors"
+                            style={{ borderRadius: "1px", color: "#8A7F7D" }}
+                            title="Increase quantity"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -413,13 +490,21 @@ function InvoicePanel({
           <div className="mt-6 flex justify-end">
             <div className="w-full max-w-xs space-y-3">
               <div className="flex justify-between text-sm pb-4 border-b border-[#E8E0DB]">
-                <span style={{ color: "#8A7F7D" }}>Subtotal</span>
+                <span style={{ color: "#8A7F7D" }}>{approved ? "Invoice Total" : "Subtotal"}</span>
                 <span className="font-medium" style={{ color: "#1A2E35" }}>{fmt(subtotal)}</span>
               </div>
               <div className="flex justify-between items-baseline pt-1">
                 <div>
-                  <div className="text-sm font-medium" style={{ color: "#053E50" }}>Deposit Due Now</div>
-                  <div className="text-xs mt-0.5" style={{ color: "#8A7F7D" }}>50% to confirm reservation</div>
+                  <div className="text-sm font-medium" style={{ color: "#053E50" }}>
+                    {approved ? "Deposit Due" : "Deposit Due Now"}
+                  </div>
+                  {approved && depositDue ? (
+                    <div className="text-xs mt-0.5" style={{ color: "#8A7F7D" }}>
+                      Due {format(depositDue, "MMMM d, yyyy")}
+                    </div>
+                  ) : (
+                    <div className="text-xs mt-0.5" style={{ color: "#8A7F7D" }}>50% to confirm reservation</div>
+                  )}
                 </div>
                 <span className="text-2xl font-light" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#053E50" }}>
                   {fmt(deposit)}
@@ -428,7 +513,13 @@ function InvoicePanel({
               <div className="flex justify-between items-baseline pt-2">
                 <div>
                   <div className="text-sm" style={{ color: "#8A7F7D" }}>Balance Due</div>
-                  <div className="text-xs mt-0.5" style={{ color: "#B0A9A6" }}>30 days prior to arrival</div>
+                  {approved ? (
+                    <div className="text-xs mt-0.5" style={{ color: "#B0A9A6" }}>
+                      Due {format(balanceDue, "MMMM d, yyyy")}
+                    </div>
+                  ) : (
+                    <div className="text-xs mt-0.5" style={{ color: "#B0A9A6" }}>30 days prior to arrival</div>
+                  )}
                 </div>
                 <span className="text-sm font-medium" style={{ color: "#5C5350" }}>{fmt(deposit)}</span>
               </div>
@@ -439,49 +530,92 @@ function InvoicePanel({
         {/* Fine print */}
         <div className="mt-10 pt-8 border-t border-[#E8E0DB]">
           <p className="text-xs leading-relaxed" style={{ color: "#B0A9A6" }}>
-            This proposal is prepared exclusively for {guestName} and is valid for 14 days from the date above.
-            All experiences are subject to availability and confirmed upon receipt of deposit.
-            Rates are quoted in USD. Taxes, gratuities, and transportation not included unless stated.
+            {approved
+              ? `This invoice is issued to ${guestName} upon confirmation of their Pure Kauai experience. Payment of the deposit confirms acceptance of all terms. All experiences are subject to availability. Rates are quoted in USD. Taxes, gratuities, and transportation not included unless stated.`
+              : `This proposal is prepared exclusively for ${guestName} and is valid for 14 days from the date above. All experiences are subject to availability and confirmed upon receipt of deposit. Rates are quoted in USD. Taxes, gratuities, and transportation not included unless stated.`
+            }
           </p>
         </div>
 
-        {/* Invoice actions */}
-        <div className="print-hide mt-10 flex flex-col sm:flex-row gap-3">
-          {isHostMode ? (
-            /* Host: print only — approval is the guest's action */
-            <button
-              onClick={() => window.print()}
-              className="flex-1 flex items-center justify-center gap-2 border border-[#E8E0DB] hover:border-[#053E50]/30 text-sm tracking-[0.1em] uppercase py-4 transition-colors duration-200"
-              style={{ color: "#5C5350", borderRadius: "1px" }}
-            >
-              <Printer className="h-4 w-4" />Print Quote
-            </button>
-          ) : !approved ? (
-            <button
-              onClick={onApprove}
-              disabled={isPending}
-              className="flex-1 flex items-center justify-center gap-2.5 text-white text-sm tracking-[0.12em] uppercase py-4 transition-opacity duration-200 disabled:opacity-60"
-              style={{ background: "#053E50", borderRadius: "1px" }}
-            >
-              {isPending ? (
-                <><span className="h-4 w-4 border border-white/40 border-t-white rounded-full animate-spin" />Confirming…</>
-              ) : (
-                <><Check className="h-4 w-4" />Approve & Confirm Itinerary</>
-              )}
-            </button>
-          ) : (
-            <div className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm tracking-[0.1em] uppercase py-4" style={{ borderRadius: "1px" }}>
-              <Check className="h-4 w-4" />Approved & Confirmed
+        {/* Confirmed message (guest mode, post-approval) */}
+        {!isHostMode && approved && (
+          <div className="mt-8 p-6 border border-emerald-200" style={{ background: "rgba(236,253,245,0.8)", borderRadius: "1px" }}>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100">
+                <Check className="h-3.5 w-3.5 text-emerald-600" />
+              </div>
+              <span className="text-sm font-medium tracking-[0.08em] uppercase text-emerald-800">Confirmed</span>
             </div>
-          )}
-          {!isHostMode && (
-            <button
-              onClick={() => window.print()}
-              className="flex items-center justify-center gap-2 border border-[#E8E0DB] hover:border-[#053E50]/30 text-sm tracking-[0.1em] uppercase py-4 px-6 transition-colors duration-200"
-              style={{ color: "#5C5350", borderRadius: "1px" }}
-            >
-              <Printer className="h-4 w-4" />Print
-            </button>
+            <p className="text-sm text-emerald-700 leading-relaxed">
+              Your journey has been confirmed. Your concierge will be in touch within 24 hours to process your deposit and confirm all reservations.
+            </p>
+          </div>
+        )}
+
+        {/* Invoice actions */}
+        <div className="print-hide mt-8 flex flex-col sm:flex-row gap-3">
+          {isHostMode ? (
+            <>
+              <a
+                href={pdfHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 border border-[#E8E0DB] hover:border-[#053E50]/30 text-sm tracking-[0.1em] uppercase py-4 transition-colors duration-200"
+                style={{ color: "#5C5350", borderRadius: "1px" }}
+              >
+                <Download className="h-4 w-4" />
+                {approved ? "Download Invoice PDF" : "Download Quote PDF"}
+              </a>
+              <button
+                onClick={() => window.print()}
+                className="flex items-center justify-center gap-2 border border-[#E8E0DB] hover:border-[#053E50]/30 text-sm tracking-[0.1em] uppercase py-4 px-6 transition-colors duration-200"
+                style={{ color: "#5C5350", borderRadius: "1px" }}
+              >
+                <Printer className="h-4 w-4" />
+                {approved ? "Print Invoice" : "Print Quote"}
+              </button>
+            </>
+          ) : approved ? (
+            <>
+              <a
+                href={pdfHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 text-white text-sm tracking-[0.12em] uppercase py-4 transition-opacity duration-200 hover:opacity-90"
+                style={{ background: "#053E50", borderRadius: "1px" }}
+              >
+                <Download className="h-4 w-4" />Download Invoice PDF
+              </a>
+              <button
+                onClick={() => window.print()}
+                className="flex items-center justify-center gap-2 border border-[#E8E0DB] hover:border-[#053E50]/30 text-sm tracking-[0.1em] uppercase py-4 px-6 transition-colors duration-200"
+                style={{ color: "#5C5350", borderRadius: "1px" }}
+              >
+                <Printer className="h-4 w-4" />Print Invoice
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={onApprove}
+                disabled={isPending}
+                className="flex-1 flex items-center justify-center gap-2.5 text-white text-sm tracking-[0.12em] uppercase py-4 transition-opacity duration-200 disabled:opacity-60"
+                style={{ background: "#053E50", borderRadius: "1px" }}
+              >
+                {isPending ? (
+                  <><span className="h-4 w-4 border border-white/40 border-t-white rounded-full animate-spin" />Confirming…</>
+                ) : (
+                  <><Check className="h-4 w-4" />Approve & Confirm Itinerary</>
+                )}
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="flex items-center justify-center gap-2 border border-[#E8E0DB] hover:border-[#053E50]/30 text-sm tracking-[0.1em] uppercase py-4 px-6 transition-colors duration-200"
+                style={{ color: "#5C5350", borderRadius: "1px" }}
+              >
+                <Printer className="h-4 w-4" />Print Quote
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -520,7 +654,9 @@ export default function Trip() {
   // ── Dynamic meta tags (must be before any early returns) ─────────────────
   useEffect(() => {
     if (!itinerary) return;
-    const pageTitle = `Your Pure Kauai Journey — ${itinerary.guestName}`;
+    const pageTitle = itinerary.approved
+      ? `Pure Kauai Experience Invoice — ${itinerary.guestName}`
+      : `Your Pure Kauai Journey — ${itinerary.guestName}`;
     const pageDesc  = "Your personalized Kauai experience, crafted exclusively for you by Pure Kauai's concierge team.";
 
     document.title = pageTitle;
@@ -651,6 +787,17 @@ export default function Trip() {
     });
   };
 
+  const handleInvoiceQtyChange = (idx: number, delta: number) => {
+    const newInvoice = (itinerary.invoice ?? []).map((item, i) => {
+      if (i !== idx) return item;
+      const newQty = Math.max(1, item.quantity + delta);
+      return { ...item, quantity: newQty, totalPrice: item.pricePerUnit * newQty };
+    });
+    patchItinerary.mutate({ id, data: { invoice: newInvoice } }, {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetItineraryQueryKey(id) }),
+    });
+  };
+
   const handleMoveActivity = (fromDayIdx: number, actIdx: number, toDayIdx: number) => {
     const activity = itinerary!.days[fromDayIdx].activities[actIdx];
     const newDays = itinerary!.days.map((d, di) => {
@@ -698,15 +845,19 @@ export default function Trip() {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const emailSubject = `Your Pure Kauai Itinerary — ${itinerary.guestName}`;
-  const emailBody    = `Dear ${itinerary.guestName},\n\nYour bespoke Kauai itinerary is ready. Please find your personalized journey at the link below:\n\n${guestUrl}\n\nWarm aloha,\n${itinerary.hostName ?? "Pure Kauai Concierge"}`;
+  const emailSubject = itinerary.approved
+    ? `Your Pure Kauai Journey is Confirmed — ${itinerary.guestName}`
+    : `Your Pure Kauai Journey Awaits — ${itinerary.guestName}`;
+  const emailBody    = itinerary.approved
+    ? `Dear ${itinerary.guestName},\n\nYour Kauai journey has been confirmed. Please find your invoice attached. Your concierge will be in touch within 24 hours to process your deposit and confirm all reservations.\n\nWith aloha,\n${itinerary.hostName ?? "Pure Kauai Concierge"}`
+    : `Dear ${itinerary.guestName},\n\nYour personalized Kauai experience quote is ready for your review. Please follow the link below to explore your journey, review your quote, and approve your booking. We cannot wait to welcome you to the island.\n\n${guestUrl}\n\nWith aloha,\n${itinerary.hostName ?? "Pure Kauai Concierge"}`;
 
   const handleEmailGuest = () => setShowEmailModal(true);
 
   // ── Render ────────────────────────────────────────────────────────────────
   const TABS: { id: Tab; label: string; count?: number }[] = [
     { id: "journey", label: "Your Journey" },
-    ...(!journeyOnly ? [{ id: "invoice" as Tab, label: "Services & Quote", count: itinerary.invoice?.length ?? 0 }] : []),
+    ...(!journeyOnly ? [{ id: "invoice" as Tab, label: itinerary.approved ? "Your Invoice" : "Services & Quote", count: itinerary.invoice?.length ?? 0 }] : []),
   ];
 
   return (
@@ -1267,7 +1418,7 @@ export default function Trip() {
                 <div className="flex flex-wrap justify-center gap-3">
                   {(itinerary.invoice?.length ?? 0) > 0 && (
                     <button onClick={() => setActiveTab("invoice")} className="inline-flex items-center gap-3 text-sm tracking-[0.14em] uppercase text-white px-8 py-4 transition-opacity duration-300 hover:opacity-85" style={{ background: "#053E50", borderRadius: "1px" }}>
-                      Services &amp; Quote <ChevronRight className="h-4 w-4" />
+                      {itinerary.approved ? "Your Invoice" : "Services & Quote"} <ChevronRight className="h-4 w-4" />
                     </button>
                   )}
                 </div>
@@ -1280,7 +1431,6 @@ export default function Trip() {
       {/* ══ SERVICES & PRICING TAB ══════════════════════════════════════════ */}
       <div className={activeTab === "invoice" ? "block" : "hidden"}>
         <InvoicePanel
-          title="Services & Quote"
           items={itinerary.invoice ?? []}
           guestName={itinerary.guestName}
           checkIn={itinerary.checkIn}
@@ -1291,10 +1441,15 @@ export default function Trip() {
           hostEmail={itinerary.hostEmail}
           hostPhone={itinerary.hostPhone}
           itineraryId={id}
+          slug={itinerary.slug}
           approved={itinerary.approved}
+          invoiceNumber={itinerary.invoiceNumber}
+          approvedAt={itinerary.approvedAt}
           onApprove={handleApprove}
           isPending={approveItinerary.isPending}
           isHostMode={isHostMode}
+          onQtyChange={isHostMode ? handleInvoiceQtyChange : undefined}
+          isQtyPending={patchItinerary.isPending}
         />
       </div>
 
@@ -1336,13 +1491,20 @@ export default function Trip() {
                 </div>
               )}
 
-              <div
-                className="flex items-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase py-3.5 px-5 sm:px-8 border"
-                style={{ borderColor: "#E8E0DB", color: "#8A7F7D", borderRadius: "1px" }}
-              >
-                <span className="hidden sm:inline">Awaiting guest approval</span>
-                <span className="sm:hidden">Host Preview</span>
-              </div>
+              {itinerary.approved ? (
+                <div className="flex items-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase py-3.5 px-5 sm:px-8 bg-emerald-50 border border-emerald-200 text-emerald-700" style={{ borderRadius: "1px" }}>
+                  <Check className="h-4 w-4 shrink-0" />
+                  <span>Guest Confirmed</span>
+                </div>
+              ) : (
+                <div
+                  className="flex items-center gap-2 text-xs sm:text-sm tracking-[0.08em] uppercase py-3.5 px-5 sm:px-8 border"
+                  style={{ borderColor: "#E8E0DB", color: "#8A7F7D", borderRadius: "1px" }}
+                >
+                  <span className="hidden sm:inline">Awaiting guest approval</span>
+                  <span className="sm:hidden">Host Preview</span>
+                </div>
+              )}
             </>
           ) : (
             /* ── GUEST BAR: approve + print ──────────────────────────── */

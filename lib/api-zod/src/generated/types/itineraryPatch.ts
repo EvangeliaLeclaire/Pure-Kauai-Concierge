@@ -5,10 +5,12 @@
  * Pure Kauai Luxury Travel Concierge API
  * OpenAPI spec version: 0.2.0
  */
+import type { InvoiceItem } from './invoiceItem';
 import type { ItineraryDay } from './itineraryDay';
 
 export interface ItineraryPatch {
   /** @nullable */
   welcomeMessage?: string | null;
   days?: ItineraryDay[];
+  invoice?: InvoiceItem[];
 }

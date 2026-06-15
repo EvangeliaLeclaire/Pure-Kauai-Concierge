@@ -62,5 +62,7 @@ export interface Itinerary {
   days: ItineraryDay[];
   invoice: InvoiceItem[];
   approved: boolean;
+  invoiceNumber: string | null;
+  approvedAt: string | null;
   createdAt: string;
 }

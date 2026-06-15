@@ -108,6 +108,7 @@ export interface ItineraryPatch {
   /** @nullable */
   welcomeMessage?: string | null;
   days?: ItineraryDay[];
+  invoice?: InvoiceItem[];
 }
 
 export interface ItineraryListItem {
@@ -160,6 +161,10 @@ export interface Itinerary {
   days: ItineraryDay[];
   invoice: InvoiceItem[];
   approved: boolean;
+  /** @nullable */
+  invoiceNumber?: string | null;
+  /** @nullable */
+  approvedAt?: string | null;
   createdAt: string;
 }
 
