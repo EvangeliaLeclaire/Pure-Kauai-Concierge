@@ -2,7 +2,7 @@ import { Router } from "express";
 import { randomUUID } from "crypto";
 import { saveItinerary, getItinerary, updateItinerary, slugExists, listItineraries, countApprovedItineraries } from "./store.js";
 import { generateItinerary, fetchUnsplashPhotos } from "./generate.js";
-import { catalogByName } from "../../data/catalog.js";
+import { catalogByName, SERVICE_CATALOG } from "../../data/catalog.js";
 import { streamQuotePDF, streamInvoicePDF } from "./pdf.js";
 import type { Itinerary, InvoiceItem } from "./types.js";
 
@@ -282,6 +282,86 @@ router.post("/itineraries/:id/approve", async (req, res) => {
   const updated = await updateItinerary(req.params.id, { approved: true, invoiceNumber, approvedAt });
   if (!updated) { res.status(404).json({ error: "Itinerary not found" }); return; }
   res.json(updated);
+});
+
+// ── Catalog endpoint ──────────────────────────────────────────────────────────
+
+router.get("/catalog", (_req, res) => {
+  res.json(SERVICE_CATALOG.map(s => ({
+    name:         s.name,
+    category:     s.invoiceCategory,
+    description:  s.description,
+    duration:     s.duration,
+    pricingModel: s.pricingModel,
+    priceAmount:  s.priceAmount,
+  })));
+});
+
+// ── Add a service post-generation ─────────────────────────────────────────────
+
+router.post("/itineraries/:id/add-service", async (req, res) => {
+  const { serviceName } = req.body as { serviceName?: string };
+  if (!serviceName) { res.status(400).json({ error: "serviceName required" }); return; }
+
+  const itinerary = await getItinerary(req.params.id);
+  if (!itinerary) { res.status(404).json({ error: "Itinerary not found" }); return; }
+
+  const entry = catalogByName.get(serviceName.toLowerCase());
+  if (!entry) { res.status(404).json({ error: "Service not found in catalog" }); return; }
+
+  if ((itinerary.invoice ?? []).some(i => i.name === entry.name)) {
+    res.status(400).json({ error: "Service already in invoice" }); return;
+  }
+
+  const nights = Math.round(
+    (new Date(itinerary.checkOut).getTime() - new Date(itinerary.checkIn).getTime()) / 86_400_000
+  );
+  const { adults, children } = itinerary;
+  const totalGuests = adults + children;
+  const couples = Math.ceil(adults / 2);
+
+  let quantity = 1;
+  let unit = "flat rate";
+  switch (entry.pricingModel) {
+    case "per_person":     quantity = totalGuests; unit = `per person`;     break;
+    case "per_adult":      quantity = adults;      unit = `per adult`;      break;
+    case "per_child":      quantity = Math.max(children, 1); unit = `per child`; break;
+    case "per_night":      quantity = nights;      unit = `per night`;      break;
+    case "per_couple":     quantity = couples;     unit = `per couple`;     break;
+    case "per_event":      quantity = 1;           unit = `flat rate`;      break;
+    case "complimentary":  quantity = 1;           unit = `complimentary`;  break;
+  }
+
+  const newItem: InvoiceItem = {
+    name:          entry.name,
+    category:      entry.invoiceCategory,
+    description:   entry.description,
+    duration:      entry.duration,
+    pricePerUnit:  entry.priceAmount,
+    quantity,
+    unit,
+    totalPrice:    entry.priceAmount * quantity,
+    unsplashKeyword: entry.unsplashKeyword,
+    photoUrl:      null,
+    notes:         null,
+  };
+
+  const updated = await updateItinerary(req.params.id, {
+    invoice: [...(itinerary.invoice ?? []), newItem],
+  });
+  if (!updated) { res.status(404).json({ error: "Itinerary not found" }); return; }
+  res.json(updated);
+});
+
+// ── Track guest link views ────────────────────────────────────────────────────
+
+router.post("/itineraries/:id/view", async (req, res) => {
+  const itinerary = await getItinerary(req.params.id);
+  if (!itinerary) { res.status(404).json({ error: "Not found" }); return; }
+  const viewCount = (itinerary.viewCount ?? 0) + 1;
+  const lastViewedAt = new Date().toISOString();
+  await updateItinerary(req.params.id, { viewCount, lastViewedAt });
+  res.json({ viewCount, lastViewedAt });
 });
 
 router.get("/itineraries/:id/quote-pdf", async (req, res) => {

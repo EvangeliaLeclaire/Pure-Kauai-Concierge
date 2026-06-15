@@ -484,5 +484,9 @@ components:
           type: ["string", "null"]
         approvedAt:
           type: ["string", "null"]
+        viewCount:
+          type: integer
+        lastViewedAt:
+          type: ["string", "null"]
         createdAt:
           type: string

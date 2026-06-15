@@ -5,7 +5,7 @@ import {
   Clock, Users, Calendar,
   Sun, Sunset, Moon,
   Printer, Download, Check, Link2, Mail, X, ChevronRight,
-  Phone, MessageSquare, Pencil, Trash2, MoveRight, Copy, Minus, Plus,
+  Phone, MessageSquare, Pencil, Trash2, MoveRight, Copy, Minus, Plus, Search,
 } from "lucide-react";
 import { useGetItinerary, useApproveItinerary, useUpdateItinerary, getGetItineraryQueryKey } from "@workspace/api-client-react";
 import type { InvoiceItem, ItineraryPatch } from "@workspace/api-client-react";
@@ -245,6 +245,150 @@ function ApproveModal({ guestName, onClose }: { guestName: string; onClose: () =
   );
 }
 
+// ─── Add Service Modal ────────────────────────────────────────────────────────
+
+interface CatalogEntry {
+  name: string;
+  category: string;
+  description: string;
+  duration: string;
+  pricingModel: string;
+  priceAmount: number;
+}
+
+function AddServiceModal({
+  itineraryId, existingNames, adults, children, checkIn, checkOut, onClose, onSuccess,
+}: {
+  itineraryId: string;
+  existingNames: Set<string>;
+  adults: number;
+  children: number;
+  checkIn: string;
+  checkOut: string;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [catalog, setCatalog] = useState<CatalogEntry[]>([]);
+  const [search,  setSearch]  = useState("");
+  const [adding,  setAdding]  = useState<string | null>(null);
+  const [error,   setError]   = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/catalog").then(r => r.json()).then(setCatalog).catch(() => {});
+  }, []);
+
+  const nights      = Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86_400_000);
+  const totalGuests = adults + children;
+
+  const priceLabel = (e: CatalogEntry) => {
+    if (e.pricingModel === "complimentary" || e.priceAmount === 0) return "Complimentary";
+    const f = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    switch (e.pricingModel) {
+      case "per_person":  return `${f(e.priceAmount * totalGuests)} (${f(e.priceAmount)} × ${totalGuests} guests)`;
+      case "per_adult":   return `${f(e.priceAmount * adults)} (${f(e.priceAmount)} × ${adults} adults)`;
+      case "per_child":   return `${f(e.priceAmount * Math.max(children,1))} (${f(e.priceAmount)} × ${Math.max(children,1)} children)`;
+      case "per_night":   return `${f(e.priceAmount * nights)} (${f(e.priceAmount)} × ${nights} nights)`;
+      case "per_couple":  return `${f(e.priceAmount * Math.ceil(adults/2))} (${f(e.priceAmount)} per couple)`;
+      case "per_event":   return f(e.priceAmount);
+      default:            return f(e.priceAmount);
+    }
+  };
+
+  const available = catalog.filter(e => !existingNames.has(e.name));
+  const filtered  = search
+    ? available.filter(e => e.name.toLowerCase().includes(search.toLowerCase()) || e.category.toLowerCase().includes(search.toLowerCase()))
+    : available;
+
+  const grouped = filtered.reduce<Record<string, CatalogEntry[]>>((acc, e) => {
+    acc[e.category] = acc[e.category] ?? [];
+    acc[e.category].push(e);
+    return acc;
+  }, {});
+
+  const handleAdd = async (serviceName: string) => {
+    setAdding(serviceName);
+    setError(null);
+    try {
+      const r = await fetch(`/api/itineraries/${itineraryId}/add-service`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serviceName }),
+      });
+      if (!r.ok) { const d = await r.json().catch(() => ({})); setError((d as { error?: string }).error ?? "Failed to add service"); setAdding(null); return; }
+      onSuccess();
+      onClose();
+    } catch { setError("Network error — please try again."); setAdding(null); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6" style={{ background: "rgba(5,36,48,0.65)", backdropFilter: "blur(4px)" }}>
+      <div className="w-full sm:max-w-xl flex flex-col bg-white" style={{ maxHeight: "88vh", borderRadius: "2px" }}>
+        <div className="flex items-center justify-between p-5 border-b border-[#E8E0DB]">
+          <div>
+            <h2 className="font-light text-lg" style={{ fontFamily: "'Source Serif 4', serif", color: "#053E50" }}>Add a Service</h2>
+            <p className="text-xs mt-0.5" style={{ color: "#8A7F7D" }}>
+              Prices calculated for {totalGuests} guest{totalGuests !== 1 ? "s" : ""} · {nights} night{nights !== 1 ? "s" : ""}
+            </p>
+          </div>
+          <button onClick={onClose} className="p-1.5 opacity-40 hover:opacity-100 transition-opacity"><X className="h-4 w-4 text-[#053E50]" /></button>
+        </div>
+
+        <div className="p-4 border-b border-[#E8E0DB]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#B0A9A6" }} />
+            <input
+              className="w-full pl-9 pr-4 py-2.5 text-sm border border-[#E8E0DB] bg-[#FDFCFB] outline-none focus:border-[#053E50]/40"
+              style={{ borderRadius: "2px" }}
+              placeholder="Search services…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              autoFocus
+            />
+          </div>
+          {error && <p className="mt-2 text-xs" style={{ color: "#B45309" }}>{error}</p>}
+        </div>
+
+        <div className="overflow-y-auto flex-1">
+          {catalog.length === 0 ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="h-5 w-5 border-2 border-[#053E50]/20 border-t-[#053E50] rounded-full animate-spin" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="p-8 text-center text-sm" style={{ color: "#8A7F7D" }}>No services match your search.</div>
+          ) : (
+            Object.entries(grouped).map(([cat, entries]) => (
+              <div key={cat}>
+                <div className="px-5 py-2.5 sticky top-0" style={{ background: "#F5F0EC" }}>
+                  <p className="text-xs tracking-[0.18em] uppercase font-medium" style={{ color: "#37729A" }}>{cat}</p>
+                </div>
+                {entries.map(entry => (
+                  <div key={entry.name} className="flex items-center gap-4 px-5 py-3.5 border-b border-[#F0EBE7] hover:bg-[#FDFCFB] transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium" style={{ color: "#1A2E35" }}>{entry.name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: "#8A7F7D" }}>{priceLabel(entry)}</p>
+                    </div>
+                    <button
+                      onClick={() => handleAdd(entry.name)}
+                      disabled={adding !== null}
+                      className="shrink-0 flex items-center gap-1.5 text-xs tracking-[0.1em] uppercase px-3 py-2 transition-colors disabled:opacity-50"
+                      style={{ background: "#053E50", color: "#EBE2E0", borderRadius: "2px" }}
+                    >
+                      {adding === entry.name
+                        ? <div className="h-3 w-3 border border-white/30 border-t-white rounded-full animate-spin" />
+                        : <Plus className="h-3 w-3" />}
+                      Add
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Invoice Panel ────────────────────────────────────────────────────────────
 
 function InvoicePanel({
@@ -252,7 +396,7 @@ function InvoicePanel({
   hostName, hostEmail, hostPhone, itineraryId, slug, approved,
   invoiceNumber, approvedAt,
   onApprove, isPending, isHostMode,
-  onQtyChange, isQtyPending,
+  onQtyChange, isQtyPending, onOpenAddService,
 }: {
   items: InvoiceItem[];
   guestName: string;
@@ -273,6 +417,7 @@ function InvoicePanel({
   isHostMode?: boolean;
   onQtyChange?: (idx: number, delta: number) => void;
   isQtyPending?: boolean;
+  onOpenAddService?: () => void;
 }) {
   const totalGuests = adults + children;
   const subtotal = items.reduce((s, i) => s + i.totalPrice, 0);
@@ -556,6 +701,16 @@ function InvoicePanel({
         <div className="print-hide mt-8 flex flex-col sm:flex-row gap-3">
           {isHostMode ? (
             <>
+              {!approved && onOpenAddService && (
+                <button
+                  onClick={onOpenAddService}
+                  className="flex items-center justify-center gap-2 border text-sm tracking-[0.1em] uppercase py-4 px-5 transition-colors duration-200 hover:border-[#053E50]/40"
+                  style={{ color: "#37729A", borderColor: "#C4D9E4", borderRadius: "1px", background: "rgba(55,114,154,0.04)" }}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Service
+                </button>
+              )}
               <a
                 href={pdfHref}
                 target="_blank"
@@ -650,6 +805,7 @@ export default function Trip() {
   const [editDraft,           setEditDraft]           = useState("");
   const [deletingKey,         setDeletingKey]         = useState<string | null>(null);
   const [showEmailModal,      setShowEmailModal]      = useState(false);
+  const [showAddService,      setShowAddService]      = useState(false);
 
   // ── Dynamic meta tags (must be before any early returns) ─────────────────
   useEffect(() => {
@@ -682,6 +838,13 @@ export default function Trip() {
       setMeta('meta[name="twitter:description"]', "content", "Bespoke luxury villa concierge on Kauai's north shore.");
     };
   }, [itinerary?.guestName]);
+
+  // ── View tracking: fire once on mount for non-host, non-journey guests ───
+  useEffect(() => {
+    if (!id || isHostMode || journeyOnly) return;
+    fetch(`/api/itineraries/${id}/view`, { method: "POST" }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading) {
@@ -876,6 +1039,18 @@ export default function Trip() {
 
       {/* Modals */}
       {showModal && <ApproveModal guestName={itinerary.guestName} onClose={() => setShowModal(false)} />}
+      {showAddService && (
+        <AddServiceModal
+          itineraryId={id}
+          existingNames={new Set((itinerary.invoice ?? []).map(i => i.name))}
+          adults={itinerary.adults}
+          children={itinerary.children}
+          checkIn={itinerary.checkIn}
+          checkOut={itinerary.checkOut}
+          onClose={() => setShowAddService(false)}
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: getGetItineraryQueryKey(id) })}
+        />
+      )}
       {showEmailModal && (
         <EmailGuestModal
           subject={emailSubject}
@@ -906,6 +1081,17 @@ export default function Trip() {
             <span className="text-xs hidden sm:block truncate" style={{ color: "rgba(235,226,224,0.55)" }}>
               Review this itinerary before sharing with {itinerary?.guestName ?? "your guest"}
             </span>
+            {itinerary && (itinerary.viewCount ?? 0) > 0 && (
+              <>
+                <span className="text-xs hidden md:block" style={{ color: "rgba(235,226,224,0.3)" }}>·</span>
+                <span className="text-xs hidden md:block shrink-0" style={{ color: "rgba(235,226,224,0.45)" }}>
+                  Guest opened {itinerary.viewCount} time{itinerary.viewCount !== 1 ? "s" : ""}
+                  {itinerary.lastViewedAt
+                    ? ` · Last seen ${format(parseISO(itinerary.lastViewedAt), "MMM d 'at' h:mm a")}`
+                    : ""}
+                </span>
+              </>
+            )}
             <div className="flex items-center gap-2 ml-auto shrink-0">
               <button
                 onClick={handleCopyLink}
@@ -1450,6 +1636,7 @@ export default function Trip() {
           isHostMode={isHostMode}
           onQtyChange={isHostMode ? handleInvoiceQtyChange : undefined}
           isQtyPending={patchItinerary.isPending}
+          onOpenAddService={isHostMode ? () => setShowAddService(true) : undefined}
         />
       </div>
 

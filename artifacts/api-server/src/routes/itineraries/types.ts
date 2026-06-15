@@ -64,5 +64,7 @@ export interface Itinerary {
   approved: boolean;
   invoiceNumber: string | null;
   approvedAt: string | null;
+  viewCount?: number;
+  lastViewedAt?: string | null;
   createdAt: string;
 }

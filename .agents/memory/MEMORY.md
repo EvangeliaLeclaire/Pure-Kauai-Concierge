@@ -1,1 +1,1 @@
-- [Pure Kauai architecture](pure-kauai-arch.md) — in-memory store, no DB; itineraries lost on server restart; Claude + Unsplash; host mode via ?host=1 param
+- [Pure Kauai architecture](pure-kauai-arch.md) — PostgreSQL + Drizzle, JSONB data column, claude-sonnet-4-6, Unsplash; host mode via ?host=1; journey-only via ?journey=1

@@ -92,19 +92,19 @@ function Stepper({
         type="button"
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
-        className="w-8 h-8 flex items-center justify-center transition-colors disabled:opacity-30"
+        className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center transition-colors disabled:opacity-30"
         style={{ border: "1px solid #E8E0DB", borderRadius: "2px", color: "#053E50" }}
       >
         <Minus className="h-3.5 w-3.5" />
       </button>
-      <span className="w-6 text-center text-base font-medium tabular-nums" style={{ color: "#1A2E35" }}>
+      <span className="w-8 text-center text-base font-medium tabular-nums" style={{ color: "#1A2E35" }}>
         {value}
       </span>
       <button
         type="button"
         onClick={() => onChange(Math.min(max, value + 1))}
         disabled={value >= max}
-        className="w-8 h-8 flex items-center justify-center transition-colors disabled:opacity-30"
+        className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center transition-colors disabled:opacity-30"
         style={{ border: "1px solid #E8E0DB", borderRadius: "2px", color: "#053E50" }}
       >
         <Plus className="h-3.5 w-3.5" />
@@ -222,7 +222,7 @@ function TileGroup({
           </button>
         )}
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
         {items.map((item) => (
           <TileButton
             key={item}
@@ -1010,29 +1010,31 @@ export default function Home() {
 
       {/* ── Sticky bottom bar ──────────────────────────────────────────────── */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 px-4 py-4 border-t"
+        className="fixed bottom-0 left-0 right-0 z-40 px-4 py-3 border-t"
         style={{ background: "rgba(250,248,246,0.97)", borderColor: "#E8E0DB", backdropFilter: "blur(8px)" }}
       >
-        <div className="max-w-3xl mx-auto flex items-center gap-4">
-          {totalSelected > 0 && (
-            <p className="text-xs whitespace-nowrap" style={{ color: "#8A7F7D" }}>
-              <span className="font-medium" style={{ color: "#053E50" }}>{totalSelected}</span> service{totalSelected !== 1 ? "s" : ""} selected
-            </p>
-          )}
-          <Button
-            type="button"
-            onClick={form.handleSubmit(onSubmit)}
-            className="flex-1 py-5 text-sm tracking-[0.14em] uppercase text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-            style={{ background: "#053E50", borderRadius: "2px" }}
-            disabled={isGenerating}
-          >
-            <Sparkles className="mr-2.5 h-4 w-4" />
-            Generate Itinerary
-          </Button>
+        <div className="max-w-3xl mx-auto flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            {totalSelected > 0 && (
+              <p className="hidden sm:block text-xs whitespace-nowrap shrink-0" style={{ color: "#8A7F7D" }}>
+                <span className="font-medium" style={{ color: "#053E50" }}>{totalSelected}</span> service{totalSelected !== 1 ? "s" : ""} selected
+              </p>
+            )}
+            <Button
+              type="button"
+              onClick={form.handleSubmit(onSubmit)}
+              className="flex-1 py-5 text-sm tracking-[0.14em] uppercase text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{ background: "#053E50", borderRadius: "2px" }}
+              disabled={isGenerating}
+            >
+              <Sparkles className="mr-2.5 h-4 w-4" />
+              {totalSelected > 0
+                ? <><span className="sm:hidden">{totalSelected} service{totalSelected !== 1 ? "s" : ""} · </span>Generate Itinerary</>
+                : "Generate Itinerary"}
+            </Button>
+          </div>
           {generationError && (
-            <p className="text-xs whitespace-nowrap" style={{ color: "#B45309" }}>
-              {generationError}
-            </p>
+            <p className="text-xs text-center" style={{ color: "#B45309" }}>{generationError}</p>
           )}
         </div>
       </div>

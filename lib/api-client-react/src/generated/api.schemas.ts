@@ -165,6 +165,9 @@ export interface Itinerary {
   invoiceNumber?: string | null;
   /** @nullable */
   approvedAt?: string | null;
+  viewCount?: number;
+  /** @nullable */
+  lastViewedAt?: string | null;
   createdAt: string;
 }
 
