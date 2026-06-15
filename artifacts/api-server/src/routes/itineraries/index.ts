@@ -222,6 +222,8 @@ router.post("/itineraries", async (req, res) => {
     days: generated.days,
     invoice,
     approved: false,
+    invoiceNumber: null,
+    approvedAt: null,
     createdAt: new Date().toISOString(),
   };
 
